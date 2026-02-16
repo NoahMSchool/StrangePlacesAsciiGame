@@ -1,0 +1,23 @@
+
+  h1{
+    color: darkolivegreen;
+  }
+  h2{
+    color: darkgoldenrod;
+  }
+  body{
+    background: #CCCCCC;
+    color: #119988;
+    font-family: "simpleMonoFont";
+  }
+
+@font-face{
+  font-family: "simpleMonoFont";
+  src: url("Fonts/JetBrainsMono-Regular.ttf");
+}
+
+@font-face{
+  font-family: "headerMonoFont";
+  src: url("Fonts/MajorMonoDisplay-Regular.ttf");
+}
+

@@ -41,7 +41,7 @@
       grid-template-rows: auto 1fr auto auto; /* ascii, log, input, buttons */
       grid-template-columns: 1fr;
       grid-template-areas:
-        "ascii"
+        "asciiOutput"
         "log"
         "input"
         "buttons";
@@ -52,10 +52,10 @@
         grid-template-rows: auto 1fr auto auto;
         grid-template-columns: 1fr auto;
         grid-template-areas:
-          "header  ascii"
-          "log     ascii"
-          "input   ascii"
-          "buttons ascii";
+          "header  asciiOutput"
+          "log     asciiOutput"
+          "input   asciiOutput"
+          "buttons asciiOutput";
         align-items: start;
       }
     }
@@ -110,7 +110,7 @@
       overflow: hidden; /* fixed-size panel */
     }
 
-    #ascii {
+    #asciiOutput {
       margin: 0;
       width: var(--ascii-w);
       line-height: var(--ascii-lh);
@@ -135,7 +135,7 @@
     </div>
 
     <div class="asciiWrap" aria-label="ASCII panel">
-      <pre id="ascii"></pre>
+      <pre id="asciiOutput"></pre>
     </div>
 
     <div id="log"></div>
@@ -161,38 +161,11 @@
   <script src="rooms.js"></script>
   <script src="parser.js"></script>
   <script src="game.js"></script>
+  <script src="ascii.js"></script>
 
   <script>
-    // Fill ASCII panel: 7x7 tiles, each tile 9 wide x 5 high (63 x 35)
-    (function fillAsciiTiles() {
-      const TILES_X = 7;
-      const TILES_Y = 7;
-      const TILE_W = 9;
-      const TILE_H = 5;
-
-      const lines = [];
-
-      for (let ty = 0; ty < TILES_Y; ty++) {
-        for (let row = 0; row < TILE_H; row++) {
-          let line = "";
-
-          for (let tx = 0; tx < TILES_X; tx++) {
-            // Tile border style
-            if (row === 0 || row === TILE_H - 1) {
-              line += "#".repeat(TILE_W);
-            } else {
-              line += "#"
-                   + " ".repeat(TILE_W - 2)
-                   + "#";
-            }
-          }
-
-          lines.push(line);
-        }
-      }
-
-      document.getElementById("ascii").textContent = lines.join("\n");
-    })();
+    
+    
 
     // ---- UI helpers ----
     const log = document.getElementById("log");
