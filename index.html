@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Strange Room</title>
+
+  <style>
+    :root {
+      --fg: #33ff33;
+      --bg: #000;
+      --panel-bg: #050505;
+      --border: 1px solid #33ff33;
+      --radius: 10px;
+
+      /* ASCII panel: 7x7 tiles, each tile 9x5 => 63x35 */
+      --ascii-w: 63ch;
+      --ascii-lines: 35;
+      --ascii-lh: 1.1em; /* tweak for density */
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    /* Mobile: ASCII top, log middle, input bottom.
+       Desktop: two columns, ASCII on right. */
+    .app {
+      height: 100%;
+      display: grid;
+      gap: 12px;
+      grid-template-rows: auto 1fr auto auto; /* ascii, log, input, buttons */
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "ascii"
+        "log"
+        "input"
+        "buttons";
+    }
+
+    @media (min-width: 900px) {
+      .app {
+        grid-template-rows: auto 1fr auto auto;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+          "header  ascii"
+          "log     ascii"
+          "input   ascii"
+          "buttons ascii";
+        align-items: start;
+      }
+    }
+
+    h3 { margin: 0 0 6px 0; }
+
+    .header { grid-area: header; }
+    .status {
+      opacity: 0.95;
+      margin: 0;
+      min-height: 1.2em;
+    }
+
+    #log {
+      grid-area: log;
+      border: var(--border);
+      padding: 10px;
+      border-radius: var(--radius);
+      background: var(--panel-bg);
+      white-space: pre-wrap;
+      overflow-y: auto;
+      min-height: 0; /* important for grid scrolling */
+    }
+
+    .row {
+      grid-area: input;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input, button { font: inherit; padding: 8px; }
+    input { width: min(520px, 100%); }
+    button { cursor: pointer; }
+
+    .buttons {
+      grid-area: buttons;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* ASCII panel */
+    .asciiWrap {
+      grid-area: ascii;
+      border: var(--border);
+      border-radius: var(--radius);
+      background: var(--panel-bg);
+      padding: 10px;
+      overflow: hidden; /* fixed-size panel */
+    }
+
+    #ascii {
+      margin: 0;
+      width: var(--ascii-w);
+      line-height: var(--ascii-lh);
+      height: calc(var(--ascii-lines) * var(--ascii-lh));
+      overflow: hidden;
+      white-space: pre;
+      user-select: none;
+    }
+
+    /* Mobile improvement: dynamic viewport height if supported */
+    @supports (height: 100dvh) {
+      html, body { height: 100dvh; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="header">
+      <h3>Strange Places</h3>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="asciiWrap" aria-label="ASCII panel">
+      <pre id="ascii"></pre>
+    </div>
+
+    <div id="log"></div>
+
+    <div class="row">
+      <input id="cmd" placeholder="Type anything…" disabled />
+      <button id="send" disabled>Send</button>
+    </div>
+
+    <div class="buttons">
+      <button id="test">Test</button>
+    </div>
+  </div>
+
+  <!-- If any file expects START_ROOM to already exist -->
+  <script>
+    window.START_ROOM = "CLEARING";
+  </script>
+
+  <!-- Load your game files (file:// friendly, no modules) -->
+  <script src="items.js"></script>
+  <script src="recipes.js"></script>
+  <script src="rooms.js"></script>
+  <script src="parser.js"></script>
+  <script src="game.js"></script>
+
+  <script>
+    // Fill ASCII panel: 7x7 tiles, each tile 9 wide x 5 high (63 x 35)
+    (function fillAsciiTiles() {
+      const TILES_X = 7;
+      const TILES_Y = 7;
+      const TILE_W = 9;
+      const TILE_H = 5;
+
+      const lines = [];
+
+      for (let ty = 0; ty < TILES_Y; ty++) {
+        for (let row = 0; row < TILE_H; row++) {
+          let line = "";
+
+          for (let tx = 0; tx < TILES_X; tx++) {
+            // Tile border style
+            if (row === 0 || row === TILE_H - 1) {
+              line += "#".repeat(TILE_W);
+            } else {
+              line += "#"
+                   + " ".repeat(TILE_W - 2)
+                   + "#";
+            }
+          }
+
+          lines.push(line);
+        }
+      }
+
+      document.getElementById("ascii").textContent = lines.join("\n");
+    })();
+
+    // ---- UI helpers ----
+    const log = document.getElementById("log");
+    const status = document.getElementById("status");
+    const cmd = document.getElementById("cmd");
+    const sendBtn = document.getElementById("send");
+    const testBtn = document.getElementById("test");
+
+    function say(t) {
+      log.textContent += t + "\n";
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function setStatus(t) {
+      status.textContent = t || "";
+    }
+
+    // Enable controls
+    cmd.disabled = false;
+    sendBtn.disabled = false;
+    cmd.focus();
+
+    async function run() {
+      const text = cmd.value.trim();
+      if (!text) return;
+
+      setStatus("");
+
+      const reply = parseCommands(text);
+
+      // Execute commands + show unknown errors
+      GameRuntime.executeParseResult(reply, say);
+
+      cmd.value = "";
+      say(""); // blank line for readability
+      cmd.focus();
+    }
+
+    async function runTests() {
+      const { report } = runParserUnitTests();
+      say(report);
+      say("");
+      cmd.focus();
+    }
+
+    testBtn.addEventListener("click", runTests);
+    sendBtn.addEventListener("click", run);
+    cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+
+    // Initial room render
+    if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
+      GameRuntime.renderRoom(say);
+      say("");
+    } else {
+      say("GameRuntime not loaded. Check that game.js is included and error-free.");
+    }
+  </script>
+</body>
+</html>
