@@ -1,9 +1,4 @@
-
-//function start() {
-  // body...
-//}
-
-console.log("hello")
+//console.log("hello")
 
 const alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
 const filler_characters = ["-", "=", "/", ";", ":", ",", "~", ".", ","," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "];
@@ -58,12 +53,13 @@ const default_tiles = {
 const tileheight = 5;
 const tilewidth = 9;
 
+const gridsize = 7;
 
-class TileGrid{
-  constructor(gridsize){
-    this.gridsize = gridsize;
-    this.tiles = [];
+var gridtiles = [];
+var gridstring = ""
 
+function intialise_tilegrid(){
+  let tiles = []
     for (var i = gridsize - 1; i >= 0; i--) {
       var current_row = []
       for (var j = gridsize - 1; j >= 0; j--) {
@@ -71,20 +67,18 @@ class TileGrid{
         let randomKey = keys[Math.floor(Math.random() * keys.length)];
         current_row.push(default_tiles[randomKey])
       }
-      this.tiles.push(current_row)
+      tiles.push(current_row)
     }
-    console.log(this.tiles)
-  }
+    return tiles
+    console.log(gridtiles)
+}
 
-  get_grid_display(){
-    var tilelist = this.tiles
-    var string = "";
-
-    
-    for (var rownum = 0; rownum < tilelist.length; rownum++) {
+function update_grid_display(){
+  let string = ""
+    for (var rownum = 0; rownum < gridtiles.length; rownum++) {
       for (var i = 0; i <tileheight; i++) {
-        for (var columnnum = 0;columnnum<tilelist[rownum].length;columnnum++){
-          string += tilelist[rownum][columnnum][i].slice(0,tilewidth)
+        for (var columnnum = 0;columnnum<gridtiles[rownum].length;columnnum++){
+          string += gridtiles[rownum][columnnum][i].slice(0,tilewidth)
         }
           string+="\n"
       }
@@ -94,39 +88,20 @@ class TileGrid{
 
       if (string[i] == "?") {
         newstring += filler_characters[Math.floor(Math.random()*filler_characters.length)];
-        console.log(string[i]);
       }
       else if (string[i] == "&") {
         newstring += alphabet[Math.floor(Math.random()*alphabet.length)];
-        console.log(string[i]);
       }
       else{
         newstring += string[i]
       };
-    }  
-    return newstring;
-  
-}
+    }
+    return newstring
 }
 
-class Player{
-  constructor(name){
-    this.name = name;
-    this.items = ["nothing"];
-    this.display_tile = "";
-  };
+gridtiles = intialise_tilegrid()
+gridstring = update_grid_display()
+console.log(gridstring)
+document.getElementById("asciiOutput").textContent = gridstring;
 
-  get_display_tile(){
-    return this.display_tile;
-  }
-}
-
-class item{
-  constructor(item_name){
-    this.item_name = item_name;
-  }
-}
-
-var map = new TileGrid(7)
-document.getElementById("asciiOutput").textContent = map.get_grid_display();
 
