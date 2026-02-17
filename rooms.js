@@ -28,7 +28,9 @@ const ROOM_DEFS = {
     id: ROOM.ENTRANCE_HALL,
     name: "Entrance Hall",
     desc: "A tall, dusty hall with a chandelier overhead. Footsteps echo on the wooden floor.",
-    items: [],
+    items: [
+      ITEM.DINOSAUR
+    ],
     exits: {
       SOUTH: ROOM.CLEARING,
       WEST: ROOM.DINING_ROOM,

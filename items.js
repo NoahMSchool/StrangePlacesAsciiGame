@@ -7,6 +7,7 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   CHICKEN: "CHICKEN",
+  DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
   LAMP: "LAMP",
   ROPE: "ROPE", 
@@ -46,7 +47,19 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
   },
-
+  [ITEM.DINOSAUR]: {
+    id: ITEM.DINOSAUR,
+    name: "Dinosaur",
+    emoji: "🦖",
+    synonyms: ["dinosaur", "trex"],
+    examine: "A rather large beast from the distant past.",
+    visible: true,
+    portable: false,
+    messages: {
+      // TODO: Figure these out?
+      portable: "Ummm, don't try carry a T-Rex"
+    }
+  },
   [ITEM.GRATE]: {
     id: ITEM.GRATE,
     name: "Grate",
