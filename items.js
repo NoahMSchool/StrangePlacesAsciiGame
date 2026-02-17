@@ -9,6 +9,7 @@ const ITEM = Object.freeze({
   CHICKEN: "CHICKEN",
   DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
+  CORN: "CORN",
   LAMP: "LAMP",
   ROPE: "ROPE", 
   HOOK: "HOOK", 
@@ -37,6 +38,7 @@ const ITEM = Object.freeze({
  *
  */
 
+
 const ITEM_DEFS = Object.freeze({
   [ITEM.CHICKEN]: {
     id: ITEM.CHICKEN,
@@ -47,6 +49,16 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
   },
+  [ITEM.CORN]: {
+    id: ITEM.CORN,
+    name: "Corn",
+    emoji: "🌽",
+    synonyms: ["corn", "cob"],
+    examine: "A juicy corn on the cob.",
+    visible: true,
+    portable: true,
+  },
+  
   [ITEM.DINOSAUR]: {
     id: ITEM.DINOSAUR,
     name: "Dinosaur",
