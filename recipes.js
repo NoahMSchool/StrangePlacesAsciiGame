@@ -33,6 +33,15 @@ const RECIPES = Object.freeze({
     text: "You lower the rod through the grate and snag something metal. A key!",
   },
 
+    // 🎣 Fishing rod + grate = key (rod/grate stay)
+  [keyOf([ITEM.WALL, ITEM.WALL])]: {
+    inputs: [ITEM.WALL, ITEM.WALL],
+    consume: [ITEM.WALL],               // consume nothing
+    produce: [ITEM.KEY],       // produce a key
+
+    text: "You bang two walls together and get a key!",
+  },
+
 
 });
 

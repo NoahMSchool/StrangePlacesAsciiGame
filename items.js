@@ -6,6 +6,7 @@
 // Canonical item IDs
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
+  WALL: "WALL",
   CHICKEN: "CHICKEN",
   DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
@@ -40,6 +41,23 @@ const ITEM = Object.freeze({
 
 
 const ITEM_DEFS = Object.freeze({
+  [ITEM.WALL]: {
+    id: ITEM.WALL,
+    name: "Wall",
+    emoji: "🧱",
+    synonyms: ["wall"],
+    examine: "A boring wall.",
+    visible: true,
+    portable: false,
+    eatText: "WTF?",
+    asciiTile: [
+     "#########",
+     "#########",
+     "#########",
+     "#########",
+     "#########",
+    ]
+  },
   [ITEM.CHICKEN]: {
     id: ITEM.CHICKEN,
     name: "Chicken",
