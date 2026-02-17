@@ -48,7 +48,14 @@ const ITEM_DEFS = Object.freeze({
     examine: "A suspiciously alert chicken watches your every move.",
     visible: true,
     portable: true,
-    eatText: "You don't want to eat little chiccie do you?"
+    eatText: "You don't want to eat little chiccie do you?",
+    asciiTile: [
+     "    ^.   ",
+     "    Bc   ",
+     " __/~\\__ ",
+     "(((\\_/)))",
+     "  _) (_  ",
+    ]
   },
   [ITEM.CORN]: {
     id: ITEM.CORN,
@@ -69,7 +76,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A rather large beast from the distant past.",
     visible: true,
     portable: false,
-    takeText: "That would be the last thinkg you ever try to take",
+    takeText: "That would be the last think you ever try to take",
     eatText: "Your stomach would explode"
   },
   [ITEM.GRATE]: {

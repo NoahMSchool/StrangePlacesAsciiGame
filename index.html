@@ -135,6 +135,7 @@
       <pre id="asciiOutput"></pre>
     </div>
 
+
     <div id="log"></div>
 
     <!-- Send + Test on the same row -->
@@ -143,6 +144,8 @@
       <button id="send" disabled>Send</button>
       <button id="test">Test</button>
     </div>
+
+    <pre id="testTile">hello</pre>
   </div>
 
   <script>
@@ -162,6 +165,7 @@
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
     const testBtn = document.getElementById("test");
+    const testTile = document.getElementById("testTile");
 
     function say(t) {
       log.textContent += t + "\n";
@@ -171,6 +175,11 @@
     function setStatus(t) {
       status.textContent = t || "";
     }
+
+    /* FUNCTIONS FOR NOAH TO CALL */
+    room = GameRuntime.getCurrentRoom();
+    chicken = GameRuntime.getItemDef(ITEM.CHICKEN);
+    testTile.textContent = chicken.asciiTile.join("\n")
 
     cmd.disabled = false;
     sendBtn.disabled = false;

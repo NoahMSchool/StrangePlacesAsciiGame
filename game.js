@@ -38,6 +38,9 @@
   }
 
   // ---------------- RENDERING ----------------
+  function getCurrentRoom() {
+    return getRoom(state.currentRoom);
+  }
 
   function renderRoom(sayFn) {
     const room = getRoom(state.currentRoom);
@@ -397,7 +400,12 @@
 
     // Placeholder for future:
     if (verb === "USE") {
-      return saySafe(sayFn, `(USE not wired yet: ${a}${b ? " " + b : ""}${c ? " " + c : ""})`);
+      // If USE has 2 or 3 nouns, route to recipe system (same as COMBINE)
+      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+
+      // Otherwise it's a single-target "use" (you can expand later)
+      if (!a) return saySafe(sayFn, "Use what?");
+      return saySafe(sayFn, `You can't figure out how to use ${formatItem(a)} here.`);
     }
 
     saySafe(sayFn, `(No handler yet for ${cmdStr})`);
@@ -430,7 +438,9 @@
   window.GameRuntime = {
     state,
     resetGame,
+    getItemDef,
 
+    getCurrentRoom,
     renderRoom,
     showInventory,
 
