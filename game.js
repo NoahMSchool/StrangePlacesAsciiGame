@@ -1,5 +1,6 @@
-// A tiny “runtime” that executes parsed commands against your rooms/items.
-// Designed for file:// usage (globals on window.*).
+// game.js
+// Runtime that executes parsed commands against your rooms/items/recipes.
+// file:// friendly (globals on window.*)
 
 (function () {
   // ---------------- GAME STATE ----------------
@@ -22,6 +23,18 @@
   function saySafe(sayFn, text) {
     if (typeof sayFn === "function") sayFn(text);
     else console.log(text);
+  }
+
+  function ensureRoomItemsArray(roomId = state.currentRoom) {
+    const room = getRoom(roomId);
+    if (!room) return null;
+    if (!Array.isArray(room.items)) room.items = [];
+    return room;
+  }
+
+  function formatItem(id) {
+    const d = getItemDef(id);
+    return d ? `${d.emoji} ${d.name}` : id;
   }
 
   // ---------------- RENDERING ----------------
@@ -59,10 +72,7 @@
       saySafe(sayFn, "You are carrying: (nothing)");
       return;
     }
-    const list = state.inventory.map((id) => {
-      const d = getItemDef(id);
-      return d ? `${d.emoji} ${d.name}` : id;
-    });
+    const list = state.inventory.map(formatItem);
     saySafe(sayFn, "You are carrying: " + list.join(", "));
   }
 
@@ -75,13 +85,6 @@
 
   function isInInventory(itemId) {
     return state.inventory.includes(itemId);
-  }
-
-  function ensureRoomItemsArray(roomId = state.currentRoom) {
-    const room = getRoom(roomId);
-    if (!room) return null;
-    if (!Array.isArray(room.items)) room.items = [];
-    return room;
   }
 
   // Remove one instance of itemId from inventory or room.
@@ -114,6 +117,12 @@
     room.items.push(itemId);
   }
 
+  function allAvailableItemsSet() {
+    const room = ensureRoomItemsArray();
+    const roomItems = room ? room.items : [];
+    return new Set([...state.inventory, ...roomItems]);
+  }
+
   // ---------------- ACTIONS ----------------
 
   function examineItem(itemId, sayFn) {
@@ -135,6 +144,25 @@
     renderRoom(sayFn);
   }
 
+  function eatItem(itemId, sayFn) {
+    const def = getItemDef(itemId);
+    if (!def) return saySafe(sayFn, "That doesn't exist.");
+
+    if (!isInInventory(itemId) && !isInRoom(itemId)) {
+      return saySafe(sayFn, "You can't see that here.");
+    }
+
+    if (!def.edible) {
+      return saySafe(sayFn, def.eatText || "You can't eat that.");
+    }
+
+    // remove from wherever it is
+    removeOne(itemId);
+
+    saySafe(sayFn, def.eatText || "You eat it.");
+  }
+
+
   function takeItem(itemId, sayFn) {
     const room = ensureRoomItemsArray();
     if (!room) return saySafe(sayFn, "You can't do that right now.");
@@ -143,7 +171,9 @@
 
     const def = getItemDef(itemId);
     if (!def) return saySafe(sayFn, "That doesn't exist.");
-    if (!def.portable) return saySafe(sayFn, "You can't pick that up.");
+    if (!def.portable) {
+      return saySafe(sayFn, def.takeText || "You can't pick that up.");
+    }
 
     room.items = room.items.filter((x) => x !== itemId);
     state.inventory.push(itemId);
@@ -198,16 +228,9 @@
     }
   }
 
-  // ---------------- COMBINE ----------------
-  // Supports recipes with:
-  //   inputs: [...]
-  //   consume: [...]   (optional; default = inputs)
-  //   produce: [...]   (optional; default = [output] if output exists)
-  // Leaves any inputs not listed in consume where they are (e.g. CHICKEN stays).
-  //
-  // Placement rule for produced items:
-  //   - If ALL inputs were in inventory -> produced items go to inventory.
-  //   - Otherwise -> produced items go to the room.
+  // ---------------- RECIPES / CRAFTING ----------------
+
+  // COMBINE: uses recipe matching by inputs (order independent) via window.findRecipe(inputs)
   function combineItems(itemIds, sayFn) {
     const inputs = itemIds.filter(Boolean);
     if (inputs.length < 2 || inputs.length > 3) {
@@ -218,28 +241,28 @@
     // Verify all inputs exist somewhere (room or inventory)
     for (const id of inputs) {
       if (!isInInventory(id) && !isInRoom(id)) {
-        const def = getItemDef(id);
-        const name = def ? def.name : id;
-        saySafe(sayFn, `You can't find ${name} here.`);
+        saySafe(sayFn, `You can't find ${formatItem(id)} here.`);
         return;
       }
     }
 
-    const recipe = (typeof window.findRecipe === "function")
-      ? window.findRecipe(inputs)
-      : null;
-
+    const recipe = (typeof window.findRecipe === "function") ? window.findRecipe(inputs) : null;
     if (!recipe) {
       saySafe(sayFn, "Nothing happens.");
       return;
     }
 
-    const consume = Array.isArray(recipe.consume) ? recipe.consume : (Array.isArray(recipe.inputs) ? recipe.inputs : inputs);
+    const consume = Array.isArray(recipe.consume)
+      ? recipe.consume
+      : (Array.isArray(recipe.inputs) ? recipe.inputs : inputs);
+
     const produce = Array.isArray(recipe.produce)
       ? recipe.produce
       : (recipe.output ? [recipe.output] : []);
 
-    // Decide where results go
+    // Place result:
+    // - If ALL inputs were in inventory -> produced items go to inventory.
+    // - Otherwise -> produced items go to room.
     const allInputsInInventory = inputs.every(isInInventory);
     const placeResult = allInputsInInventory ? "inventory" : "room";
 
@@ -247,9 +270,7 @@
     for (const id of consume) {
       const removedFrom = removeOne(id);
       if (!removedFrom) {
-        // If this happens, your world state diverged; fail safely.
-        const def = getItemDef(id);
-        saySafe(sayFn, `You can't seem to use ${def ? def.name : id} right now.`);
+        saySafe(sayFn, `You can't seem to use ${formatItem(id)} right now.`);
         return;
       }
     }
@@ -261,12 +282,64 @@
       else addToRoom(outId);
     }
 
-    if (recipe.text) saySafe(sayFn, recipe.text);
-    else saySafe(sayFn, "Done.");
+    saySafe(sayFn, recipe.text || "Done.");
+  }
 
-    // Optional: if you produced something in the room, refresh room text feel
-    // (comment out if you prefer less spam)
-    // if (placeResult === "room") renderRoom(sayFn);
+  // MAKE: player supplies target item, engine finds a recipe that produces it.
+  // Requires window.RECIPES to be exposed (recipes.js should do: window.RECIPES = RECIPES).
+  function recipeProduces(recipe, targetId) {
+    const produced = Array.isArray(recipe.produce)
+      ? recipe.produce
+      : (recipe.output ? [recipe.output] : []);
+    return produced.includes(targetId);
+  }
+
+  function listAllRecipes() {
+    return window.RECIPES ? Object.values(window.RECIPES) : [];
+  }
+
+  function canMake(recipe) {
+    const have = allAvailableItemsSet();
+    const inputs = Array.isArray(recipe.inputs) ? recipe.inputs : [];
+    return inputs.every((id) => have.has(id));
+  }
+
+  function missingFor(recipe) {
+    const have = allAvailableItemsSet();
+    const inputs = Array.isArray(recipe.inputs) ? recipe.inputs : [];
+    return inputs.filter((id) => !have.has(id));
+  }
+
+  function makeTarget(targetId, sayFn) {
+    if (!window.RECIPES) {
+      saySafe(
+        sayFn,
+        'MAKE needs recipes.js to expose RECIPES. Add:\nwindow.RECIPES = RECIPES;\nwindow.findRecipe = findRecipe;'
+      );
+      return;
+    }
+
+    const targetDef = getItemDef(targetId);
+    const targetName = targetDef ? targetDef.name : targetId;
+
+    const candidates = listAllRecipes().filter((r) => recipeProduces(r, targetId));
+    if (candidates.length === 0) {
+      saySafe(sayFn, `You don't know how to make ${targetName}.`);
+      return;
+    }
+
+    // Prefer a recipe you can make now; otherwise pick first and explain missing parts.
+    const doable = candidates.find(canMake);
+    const chosen = doable || candidates[0];
+
+    if (!canMake(chosen)) {
+      const miss = missingFor(chosen);
+      saySafe(sayFn, `You can't make ${targetName} yet. You need: ${miss.map(formatItem).join(", ")}.`);
+      return;
+    }
+
+    // Use the same logic as COMBINE (consume/produce rules)
+    combineItems(chosen.inputs, sayFn);
   }
 
   // ---------------- COMMAND EXECUTION ----------------
@@ -307,12 +380,24 @@
       return;
     }
 
-    if (verb === "USE") {
-      return saySafe(sayFn, `(USE not wired yet: ${a}${b ? " " + b : ""}${c ? " " + c : ""})`);
-    }
-
     if (verb === "COMBINE") {
       return combineItems([a, b, c].filter(Boolean), sayFn);
+    }
+
+    // MAKE <target>
+    if (verb === "MAKE") {
+      if (!a) return saySafe(sayFn, "Make what?");
+      return makeTarget(a, sayFn);
+    }
+
+    if (verb === "EAT") {
+      if (!a) return saySafe(sayFn, "Eat what?");
+      return eatItem(a, sayFn);
+    }
+
+    // Placeholder for future:
+    if (verb === "USE") {
+      return saySafe(sayFn, `(USE not wired yet: ${a}${b ? " " + b : ""}${c ? " " + c : ""})`);
     }
 
     saySafe(sayFn, `(No handler yet for ${cmdStr})`);
@@ -340,6 +425,8 @@
     state.inventory.length = 0;
   }
 
+  // ---------------- EXPOSE ----------------
+
   window.GameRuntime = {
     state,
     resetGame,
@@ -351,11 +438,12 @@
     executeKnownCommand,
     executeParseResult,
 
-    // actions in case you want them directly
+    // actions
     goDir,
     takeItem,
     dropItem,
     examineItem,
     combineItems,
+    makeTarget,
   };
 })();

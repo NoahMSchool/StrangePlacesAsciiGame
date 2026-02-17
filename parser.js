@@ -23,7 +23,7 @@ const VERB_SYNONYMS = {
   PULL:    ["pull", "drag"],
   LOOK:    ["l","look", "look at", "examine", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
   COMBINE: ["combine", "mix", "join", "attach", "merge", "connect", "tie", "feed"],
-  MAKE:    ["build", "construct"],
+  MAKE:    ["make", "craft", "build"],
   EAT:     ["eat", "consume", "devour"]
 };
 

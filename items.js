@@ -48,6 +48,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A suspiciously alert chicken watches your every move.",
     visible: true,
     portable: true,
+    eatText: "You don't want to eat little chiccie do you?"
   },
   [ITEM.CORN]: {
     id: ITEM.CORN,
@@ -57,6 +58,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A juicy corn on the cob.",
     visible: true,
     portable: true,
+    eatText: "I think someone else would enjoy this more than you"
   },
   
   [ITEM.DINOSAUR]: {
@@ -67,10 +69,8 @@ const ITEM_DEFS = Object.freeze({
     examine: "A rather large beast from the distant past.",
     visible: true,
     portable: false,
-    messages: {
-      // TODO: Figure these out?
-      portable: "Ummm, don't try carry a T-Rex"
-    }
+    takeText: "That would be the last thinkg you ever try to take",
+    eatText: "Your stomach would explode"
   },
   [ITEM.GRATE]: {
     id: ITEM.GRATE,
@@ -80,6 +80,8 @@ const ITEM_DEFS = Object.freeze({
     examine: "A heavy iron grate set into the ground. Something dark lies beneath.",
     visible: true,     // you can toggle this via the leaves interaction
     portable: false,
+    eatText: "Your dentist would not like that"
+
   },
 
   [ITEM.LAMP]: {
@@ -128,9 +130,11 @@ const ITEM_DEFS = Object.freeze({
     name: "Egg",
     emoji: "🥚",
     synonyms: ["egg"],
-    examine: "A fragile egg. Best handled gently.",
+    examine: "A fragile egg. Best handled gently. Maybe it will hatch?",
     visible: true,
     portable: true,
+    eatText: "It sounds like it has a creature inside"
+
   },
 
   [ITEM.MAGNET]: {
