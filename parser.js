@@ -22,9 +22,9 @@ const VERB_SYNONYMS = {
   PUSH:    ["push", "shove", "kick", "move"],
   PULL:    ["pull", "drag"],
   LOOK:    ["l","look", "look at", "examine", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
-  COMBINE: ["combine", "mix", "join", "attach", "merge", "connect", "tie"],
-  EAT:     ["eat", "consume", "devour"],
-  FEED:    ["feed","fatten"],
+  COMBINE: ["combine", "mix", "join", "attach", "merge", "connect", "tie", "feed"],
+  MAKE:    ["build", "construct"],
+  EAT:     ["eat", "consume", "devour"]
 };
 
 // How many noun arguments each verb accepts.

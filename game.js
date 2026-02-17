@@ -41,7 +41,6 @@
     if (Array.isArray(visible)) {
       saySafe(sayFn, "You see: " + (visible.length ? visible.join(", ") : "(nothing)"));
     } else {
-      // fallback if you haven't got getVisibleItems
       const ids = room.items || [];
       const list = ids
         .map((id) => getItemDef(id))
@@ -78,6 +77,43 @@
     return state.inventory.includes(itemId);
   }
 
+  function ensureRoomItemsArray(roomId = state.currentRoom) {
+    const room = getRoom(roomId);
+    if (!room) return null;
+    if (!Array.isArray(room.items)) room.items = [];
+    return room;
+  }
+
+  // Remove one instance of itemId from inventory or room.
+  // Prefer inventory if present there.
+  function removeOne(itemId) {
+    const invIdx = state.inventory.indexOf(itemId);
+    if (invIdx >= 0) {
+      state.inventory.splice(invIdx, 1);
+      return "inventory";
+    }
+
+    const room = ensureRoomItemsArray();
+    if (room) {
+      const roomIdx = room.items.indexOf(itemId);
+      if (roomIdx >= 0) {
+        room.items.splice(roomIdx, 1);
+        return "room";
+      }
+    }
+    return null;
+  }
+
+  function addToInventory(itemId) {
+    state.inventory.push(itemId);
+  }
+
+  function addToRoom(itemId) {
+    const room = ensureRoomItemsArray();
+    if (!room) return;
+    room.items.push(itemId);
+  }
+
   // ---------------- ACTIONS ----------------
 
   function examineItem(itemId, sayFn) {
@@ -100,9 +136,8 @@
   }
 
   function takeItem(itemId, sayFn) {
-    const room = getRoom(state.currentRoom);
+    const room = ensureRoomItemsArray();
     if (!room) return saySafe(sayFn, "You can't do that right now.");
-    if (!Array.isArray(room.items)) room.items = [];
 
     if (!isInRoom(itemId)) return saySafe(sayFn, "You can't see that here.");
 
@@ -117,30 +152,26 @@
   }
 
   function dropItem(itemId, sayFn) {
-    const room = getRoom(state.currentRoom);
+    const room = ensureRoomItemsArray();
     if (!room) return saySafe(sayFn, "You can't do that right now.");
-    if (!Array.isArray(room.items)) room.items = [];
 
     if (!isInInventory(itemId)) return saySafe(sayFn, "You're not carrying that.");
 
     const def = getItemDef(itemId);
     if (!def) return saySafe(sayFn, "That doesn't exist.");
 
-    // remove from inventory
     const idx = state.inventory.indexOf(itemId);
     if (idx >= 0) state.inventory.splice(idx, 1);
 
-    // add to room
     room.items.push(itemId);
 
     saySafe(sayFn, `Dropped. (${def.emoji} ${def.name})`);
   }
 
   function takeAll(sayFn) {
-    const room = getRoom(state.currentRoom);
-    if (!room || !Array.isArray(room.items)) return saySafe(sayFn, "There's nothing to take.");
+    const room = ensureRoomItemsArray();
+    if (!room) return saySafe(sayFn, "There's nothing to take.");
 
-    // Only portable + visible items
     const candidates = room.items.filter((id) => {
       const def = getItemDef(id);
       return def && def.portable && def.visible !== false;
@@ -151,7 +182,6 @@
       return;
     }
 
-    // Take one at a time (copy the list because room.items mutates)
     for (const id of [...candidates]) {
       takeItem(id, sayFn);
     }
@@ -163,22 +193,88 @@
       return;
     }
 
-    // Drop one at a time (copy the list because inventory mutates)
     for (const id of [...state.inventory]) {
       dropItem(id, sayFn);
     }
   }
 
+  // ---------------- COMBINE ----------------
+  // Supports recipes with:
+  //   inputs: [...]
+  //   consume: [...]   (optional; default = inputs)
+  //   produce: [...]   (optional; default = [output] if output exists)
+  // Leaves any inputs not listed in consume where they are (e.g. CHICKEN stays).
+  //
+  // Placement rule for produced items:
+  //   - If ALL inputs were in inventory -> produced items go to inventory.
+  //   - Otherwise -> produced items go to the room.
+  function combineItems(itemIds, sayFn) {
+    const inputs = itemIds.filter(Boolean);
+    if (inputs.length < 2 || inputs.length > 3) {
+      saySafe(sayFn, "That command needs 2 or 3 things.");
+      return;
+    }
+
+    // Verify all inputs exist somewhere (room or inventory)
+    for (const id of inputs) {
+      if (!isInInventory(id) && !isInRoom(id)) {
+        const def = getItemDef(id);
+        const name = def ? def.name : id;
+        saySafe(sayFn, `You can't find ${name} here.`);
+        return;
+      }
+    }
+
+    const recipe = (typeof window.findRecipe === "function")
+      ? window.findRecipe(inputs)
+      : null;
+
+    if (!recipe) {
+      saySafe(sayFn, "Nothing happens.");
+      return;
+    }
+
+    const consume = Array.isArray(recipe.consume) ? recipe.consume : (Array.isArray(recipe.inputs) ? recipe.inputs : inputs);
+    const produce = Array.isArray(recipe.produce)
+      ? recipe.produce
+      : (recipe.output ? [recipe.output] : []);
+
+    // Decide where results go
+    const allInputsInInventory = inputs.every(isInInventory);
+    const placeResult = allInputsInInventory ? "inventory" : "room";
+
+    // Consume specified items (one-by-one)
+    for (const id of consume) {
+      const removedFrom = removeOne(id);
+      if (!removedFrom) {
+        // If this happens, your world state diverged; fail safely.
+        const def = getItemDef(id);
+        saySafe(sayFn, `You can't seem to use ${def ? def.name : id} right now.`);
+        return;
+      }
+    }
+
+    // Produce outputs
+    for (const outId of produce) {
+      if (!outId) continue;
+      if (placeResult === "inventory") addToInventory(outId);
+      else addToRoom(outId);
+    }
+
+    if (recipe.text) saySafe(sayFn, recipe.text);
+    else saySafe(sayFn, "Done.");
+
+    // Optional: if you produced something in the room, refresh room text feel
+    // (comment out if you prefer less spam)
+    // if (placeResult === "room") renderRoom(sayFn);
+  }
 
   // ---------------- COMMAND EXECUTION ----------------
 
-  // Execute ONE canonical command string like:
-  // "LOOK", "LOOK GRATE", "GO NORTH", "TAKE EGG", "DROP MAGNET"
   function executeCommand(cmdStr, sayFn) {
     const parts = String(cmdStr || "").trim().split(/\s+/).filter(Boolean);
     const verb = parts[0] || "";
     const a = parts[1] || null;
-    // b/c are there for future verbs (USE/COMBINE)
     const b = parts[2] || null;
     const c = parts[3] || null;
 
@@ -196,47 +292,32 @@
 
     if (verb === "TAKE") {
       if (!a) return saySafe(sayFn, "Take what?");
-
-      if (a === "ALL") {
-        takeAll(sayFn);
-        return;
-      }
-
-      takeItem(a, sayFn);
-      return;
+      if (a === "ALL") return takeAll(sayFn);
+      return takeItem(a, sayFn);
     }
 
     if (verb === "DROP") {
       if (!a) return saySafe(sayFn, "Drop what?");
-
-      if (a === "ALL") {
-        dropAll(sayFn);
-        return;
-      }
-
-      dropItem(a, sayFn);
-      return;
+      if (a === "ALL") return dropAll(sayFn);
+      return dropItem(a, sayFn);
     }
-
 
     if (verb === "INVENTORY" || verb === "INV") {
       showInventory(sayFn);
       return;
     }
 
-    // Placeholder for future:
     if (verb === "USE") {
       return saySafe(sayFn, `(USE not wired yet: ${a}${b ? " " + b : ""}${c ? " " + c : ""})`);
     }
+
     if (verb === "COMBINE") {
-      return saySafe(sayFn, `(COMBINE not wired yet: ${[a, b, c].filter(Boolean).join(" ")})`);
+      return combineItems([a, b, c].filter(Boolean), sayFn);
     }
 
     saySafe(sayFn, `(No handler yet for ${cmdStr})`);
   }
 
-  // Execute a whole parse result (what parseCommands returns).
-  // Handles known list + unknown errors.
   function executeParseResult(parseResult, sayFn) {
     if (!parseResult) return;
 
@@ -250,13 +331,10 @@
     }
   }
 
-  // Convenience for your loop:
-  // for (const cmdStr of reply.known) executeKnownCommand(cmdStr, say);
   function executeKnownCommand(cmdStr, sayFn) {
     executeCommand(cmdStr, sayFn);
   }
 
-  // Reset game state (useful for testing)
   function resetGame({ roomId } = {}) {
     state.currentRoom = roomId ?? window.START_ROOM;
     state.inventory.length = 0;
@@ -278,5 +356,6 @@
     takeItem,
     dropItem,
     examineItem,
+    combineItems,
   };
 })();
