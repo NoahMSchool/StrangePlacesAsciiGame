@@ -6,7 +6,7 @@
 console.log("hello")
 
 const alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
-const filler_characters = ["-", "=", "/", ";", ":", ",", "~", ".", ","];
+const filler_characters = ["-", "=", "/", ";", ":", ",", "~", ".", ","," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "];
 
 const default_tiles = {
 "wall" : [
@@ -30,6 +30,14 @@ const default_tiles = {
 "?????????",
 "?????????"
 ],
+"randomletter" : [
+"&&&&&&&&&",
+"&&&&&&&&&",
+"&&&&&&&&&",
+"&&&&&&&&&",
+"&&&&&&&&&"
+],
+
 "teddybear" : [
  "  n___n  ",
  " {~._.~} ",
@@ -72,24 +80,34 @@ class TileGrid{
     var tilelist = this.tiles
     var string = "";
 
-    //console.log(tilelist);
+    
     for (var rownum = 0; rownum < tilelist.length; rownum++) {
-      //console.log(tilelist[row])
       for (var i = 0; i <tileheight; i++) {
         for (var columnnum = 0;columnnum<tilelist[rownum].length;columnnum++){
-          string += tilelist[rownum][columnnum][i]
-
-          //console.log(row[column][i]);
+          string += tilelist[rownum][columnnum][i].slice(0,tilewidth)
         }
           string+="\n"
       }
     }
-    console.log("hellothere")
-    console.log(string)
-    return string
-  }
-}
+    let newstring = ""
+    for (var i = 0; i < string.length; i++){
 
+      if (string[i] == "?") {
+        newstring += filler_characters[Math.floor(Math.random()*filler_characters.length)];
+        console.log(string[i]);
+      }
+      else if (string[i] == "&") {
+        newstring += alphabet[Math.floor(Math.random()*alphabet.length)];
+        console.log(string[i]);
+      }
+      else{
+        newstring += string[i]
+      };
+    }  
+    return newstring;
+  
+}
+}
 
 class Player{
   constructor(name){
