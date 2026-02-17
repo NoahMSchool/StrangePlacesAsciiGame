@@ -24,8 +24,21 @@ const RECIPES = Object.freeze({
     text: "The chicken happily pecks at the corn and lays an egg. Cluck!",
   },
 
+  // 🎣 Fishing rod + grate = key (rod/grate stay)
+  [keyOf([ITEM.FISHING_ROD, ITEM.GRATE])]: {
+    inputs: [ITEM.FISHING_ROD, ITEM.GRATE],
+    consume: [],               // consume nothing
+    produce: [ITEM.KEY],       // produce a key
+
+    text: "You lower the rod through the grate and snag something metal. A key!",
+  },
+
+
 });
 
 function findRecipe(inputs) {
   return RECIPES[keyOf(inputs)] ?? null;
 }
+
+window.RECIPES = RECIPES;
+window.findRecipe = findRecipe;
