@@ -6,6 +6,7 @@ const ROOM = Object.freeze({
   DINING_ROOM: "DINING_ROOM",
   PLAYROOM: "PLAYROOM",
   KITCHEN: "KITCHEN",
+  NOAHROOM: "NOAHROOM";
 });
 
 const ROOM_DEFS = {
@@ -79,6 +80,18 @@ const ROOM_DEFS = {
       SOUTH: ROOM.ENTRANCE_HALL,
     },
   },
+
+  [ROOM.NOAHROOM]: {
+      id: ROOM.NOAHROOM,
+      name: "Noahs Room",
+      desc: "Where Noah tests stuff",
+      items: [
+        
+      ],
+      exits: {
+        SOUTH: ROOM.ENTRANCE_HALL,
+      },
+    },
 
 };
 
