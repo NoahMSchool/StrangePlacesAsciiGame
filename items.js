@@ -6,8 +6,11 @@
 // Canonical item IDs
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
+  WALL: "WALL",
   CHICKEN: "CHICKEN",
+  DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
+  CORN: "CORN",
   LAMP: "LAMP",
   ROPE: "ROPE", 
   HOOK: "HOOK", 
@@ -36,7 +39,25 @@ const ITEM = Object.freeze({
  *
  */
 
+
 const ITEM_DEFS = Object.freeze({
+  [ITEM.WALL]: {
+    id: ITEM.WALL,
+    name: "Wall",
+    emoji: "🧱",
+    synonyms: ["wall"],
+    examine: "A boring wall.",
+    visible: true,
+    portable: false,
+    eatText: "WTF?",
+    asciiTile: [
+     "#########",
+     "#########",
+     "#########",
+     "#########",
+     "#########",
+    ]
+  },
   [ITEM.CHICKEN]: {
     id: ITEM.CHICKEN,
     name: "Chicken",
@@ -45,8 +66,37 @@ const ITEM_DEFS = Object.freeze({
     examine: "A suspiciously alert chicken watches your every move.",
     visible: true,
     portable: true,
+    eatText: "You don't want to eat little chiccie do you?",
+    asciiTile: [
+     "    ^.   ",
+     "    Bc   ",
+     " __/~\\__ ",
+     "(((\\_/)))",
+     "  _) (_  ",
+    ]
   },
-
+  [ITEM.CORN]: {
+    id: ITEM.CORN,
+    name: "Corn",
+    emoji: "🌽",
+    synonyms: ["corn", "cob"],
+    examine: "A juicy corn on the cob.",
+    visible: true,
+    portable: true,
+    eatText: "I think someone else would enjoy this more than you"
+  },
+  
+  [ITEM.DINOSAUR]: {
+    id: ITEM.DINOSAUR,
+    name: "Dinosaur",
+    emoji: "🦖",
+    synonyms: ["dinosaur", "trex"],
+    examine: "A rather large beast from the distant past.",
+    visible: true,
+    portable: false,
+    takeText: "That would be the last think you ever try to take",
+    eatText: "Your stomach would explode"
+  },
   [ITEM.GRATE]: {
     id: ITEM.GRATE,
     name: "Grate",
@@ -55,6 +105,8 @@ const ITEM_DEFS = Object.freeze({
     examine: "A heavy iron grate set into the ground. Something dark lies beneath.",
     visible: true,     // you can toggle this via the leaves interaction
     portable: false,
+    eatText: "Your dentist would not like that"
+
   },
 
   [ITEM.LAMP]: {
@@ -103,9 +155,11 @@ const ITEM_DEFS = Object.freeze({
     name: "Egg",
     emoji: "🥚",
     synonyms: ["egg"],
-    examine: "A fragile egg. Best handled gently.",
+    examine: "A fragile egg. Best handled gently. Maybe it will hatch?",
     visible: true,
     portable: true,
+    eatText: "It sounds like it has a creature inside"
+
   },
 
   [ITEM.MAGNET]: {

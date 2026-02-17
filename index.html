@@ -16,13 +16,10 @@
       /* ASCII panel: 7x7 tiles, each tile 9x5 => 63x35 */
       --ascii-w: 63ch;
       --ascii-lines: 35;
-      --ascii-lh: 1.1em; /* tweak for density */
+      --ascii-lh: 1.1em;
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
+    html, body { height: 100%; margin: 0; }
 
     body {
       font-family: ui-monospace, Menlo, Consolas, monospace;
@@ -32,41 +29,45 @@
       box-sizing: border-box;
     }
 
-    /* Mobile: ASCII top, log middle, input bottom.
-       Desktop: two columns, ASCII on right. */
+    /* Mobile first: header, map, log, input */
     .app {
       height: 100%;
+      min-height: 0;
+      overflow: hidden;
+
       display: grid;
       gap: 12px;
-      grid-template-rows: auto 1fr auto auto; /* ascii, log, input, buttons */
       grid-template-columns: 1fr;
+      grid-template-rows: auto auto minmax(0, 1fr) auto; /* no extra bottom box row */
       grid-template-areas:
-        "asciiOutput"
+        "header"
+        "ascii"
         "log"
-        "input"
-        "buttons";
+        "input";
     }
 
+    /* Desktop: 2 columns (left: header/log/input, right: map)
+       Header aligns with top of map. */
     @media (min-width: 900px) {
       .app {
-        grid-template-rows: auto 1fr auto auto;
         grid-template-columns: 1fr auto;
+        grid-template-rows: auto minmax(0, 1fr) auto;
         grid-template-areas:
-          "header  asciiOutput"
-          "log     asciiOutput"
-          "input   asciiOutput"
-          "buttons asciiOutput";
+          "header ascii"
+          "log    ascii"
+          "input  ascii";
         align-items: start;
       }
     }
 
-    h3 { margin: 0 0 6px 0; }
-
     .header { grid-area: header; }
-    .status {
-      opacity: 0.95;
-      margin: 0;
-      min-height: 1.2em;
+    h3 { margin: 0 0 6px 0; }
+    .status { opacity: 0.95; margin: 0; min-height: 1.2em; }
+
+    /* Make header and map top edges line up nicely */
+    @media (min-width: 900px) {
+      .header { padding-top: 2px; }
+      .asciiWrap { margin-top: 0; }
     }
 
     #log {
@@ -76,10 +77,13 @@
       border-radius: var(--radius);
       background: var(--panel-bg);
       white-space: pre-wrap;
+
       overflow-y: auto;
-      min-height: 0; /* important for grid scrolling */
+      min-height: 0;
+      height: 100%;
     }
 
+    /* Input row contains input + Send + Test (same line) */
     .row {
       grid-area: input;
       display: flex;
@@ -89,16 +93,8 @@
     }
 
     input, button { font: inherit; padding: 8px; }
-    input { width: min(520px, 100%); }
+    input { flex: 1 1 320px; min-width: 220px; } /* grows but doesn't force overlap */
     button { cursor: pointer; }
-
-    .buttons {
-      grid-area: buttons;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
 
     /* ASCII panel */
     .asciiWrap {
@@ -107,7 +103,8 @@
       border-radius: var(--radius);
       background: var(--panel-bg);
       padding: 10px;
-      overflow: hidden; /* fixed-size panel */
+      overflow: hidden;
+      align-self: start;
     }
 
     #asciiOutput {
@@ -118,9 +115,9 @@
       overflow: hidden;
       white-space: pre;
       user-select: none;
+      font-size: 0.5em;
     }
 
-    /* Mobile improvement: dynamic viewport height if supported */
     @supports (height: 100dvh) {
       html, body { height: 100dvh; }
     }
@@ -138,24 +135,23 @@
       <pre id="asciiOutput"></pre>
     </div>
 
+
     <div id="log"></div>
 
+    <!-- Send + Test on the same row -->
     <div class="row">
       <input id="cmd" placeholder="Type anything…" disabled />
       <button id="send" disabled>Send</button>
-    </div>
-
-    <div class="buttons">
       <button id="test">Test</button>
     </div>
+
+    <pre id="testTile">hello</pre>
   </div>
 
-  <!-- If any file expects START_ROOM to already exist -->
   <script>
     window.START_ROOM = "CLEARING";
   </script>
 
-  <!-- Load your game files (file:// friendly, no modules) -->
   <script src="items.js"></script>
   <script src="recipes.js"></script>
   <script src="rooms.js"></script>
@@ -164,15 +160,12 @@
   <script src="ascii.js"></script>
 
   <script>
-    
-    
-
-    // ---- UI helpers ----
     const log = document.getElementById("log");
     const status = document.getElementById("status");
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
     const testBtn = document.getElementById("test");
+    const testTile = document.getElementById("testTile");
 
     function say(t) {
       log.textContent += t + "\n";
@@ -183,7 +176,11 @@
       status.textContent = t || "";
     }
 
-    // Enable controls
+    /* FUNCTIONS FOR NOAH TO CALL */
+    room = GameRuntime.getCurrentRoom();
+    tile = GameRuntime.getItemDef(ITEM.WALL);
+    testTile.textContent = tile.asciiTile.join("\n")
+
     cmd.disabled = false;
     sendBtn.disabled = false;
     cmd.focus();
@@ -193,14 +190,11 @@
       if (!text) return;
 
       setStatus("");
-
       const reply = parseCommands(text);
-
-      // Execute commands + show unknown errors
       GameRuntime.executeParseResult(reply, say);
 
       cmd.value = "";
-      say(""); // blank line for readability
+      say("");
       cmd.focus();
     }
 
@@ -215,7 +209,6 @@
     sendBtn.addEventListener("click", run);
     cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
 
-    // Initial room render
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
       say("");

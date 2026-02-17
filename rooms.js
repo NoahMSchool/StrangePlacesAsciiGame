@@ -15,9 +15,16 @@ const ROOM_DEFS = {
     name: "Forest Clearing",
     desc: "You are standing in a quiet forest clearing. A large, slightly spooky house lies to the north.",
     items: [
+      ITEM.WALL,
+      ITEM.WALL,
+      ITEM.WALL,
       ITEM.CHICKEN,
       ITEM.STICK,
       ITEM.LEAVES,
+      ITEM.CORN,
+      ITEM.MAGNET,
+      ITEM.GRATE,
+      ITEM.ROPE, // your "string"
     ],
     exits: {
       NORTH: ROOM.ENTRANCE_HALL,
@@ -28,7 +35,9 @@ const ROOM_DEFS = {
     id: ROOM.ENTRANCE_HALL,
     name: "Entrance Hall",
     desc: "A tall, dusty hall with a chandelier overhead. Footsteps echo on the wooden floor.",
-    items: [],
+    items: [
+      ITEM.DINOSAUR
+    ],
     exits: {
       SOUTH: ROOM.CLEARING,
       WEST: ROOM.DINING_ROOM,

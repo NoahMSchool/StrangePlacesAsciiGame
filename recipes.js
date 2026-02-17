@@ -1,23 +1,53 @@
 // recipes.js
 
-// For your parser, COMBINE outputs: `COMBINE A B` or `COMBINE A B C`
-// so recipes should match by sorted inputs (order-independent).
-
 const keyOf = (items) => [...items].sort().join("+");
 
 const RECIPES = Object.freeze({
-  // magnet + string + stick = fishing rod
+
+  // magnet + string + stick = fishing rod (classic full consume)
   [keyOf([ITEM.MAGNET, ITEM.ROPE, ITEM.STICK])]: {
     inputs: [ITEM.MAGNET, ITEM.ROPE, ITEM.STICK],
-    output: ITEM.FISHING_ROD,
+
+    consume: [ITEM.MAGNET, ITEM.ROPE, ITEM.STICK],
+    produce: [ITEM.FISHING_ROD],
+
     text: "You tie the string to the stick and fasten the magnet to the end. A weird little fishing rod!",
-    // Suggested behavior for your action system:
-    // - remove inputs from inventory
-    // - add output to inventory
   },
+
+  // 🌽 CORN + 🐔 CHICKEN = 🥚 EGG + 🐔 CHICKEN
+  [keyOf([ITEM.CORN, ITEM.CHICKEN])]: {
+    inputs: [ITEM.CORN, ITEM.CHICKEN],
+
+    consume: [ITEM.CORN],           // only corn disappears
+    produce: [ITEM.EGG],            // chicken remains automatically
+
+    text: "The chicken happily pecks at the corn and lays an egg. Cluck!",
+  },
+
+  // 🎣 Fishing rod + grate = key (rod/grate stay)
+  [keyOf([ITEM.FISHING_ROD, ITEM.GRATE])]: {
+    inputs: [ITEM.FISHING_ROD, ITEM.GRATE],
+    consume: [],               // consume nothing
+    produce: [ITEM.KEY],       // produce a key
+
+    text: "You lower the rod through the grate and snag something metal. A key!",
+  },
+
+    // 🎣 Fishing rod + grate = key (rod/grate stay)
+  [keyOf([ITEM.WALL, ITEM.WALL])]: {
+    inputs: [ITEM.WALL, ITEM.WALL],
+    consume: [ITEM.WALL],               // consume nothing
+    produce: [ITEM.KEY],       // produce a key
+
+    text: "You bang two walls together and get a key!",
+  },
+
+
 });
 
-// Helper to look up a recipe with 2 or 3 inputs.
 function findRecipe(inputs) {
   return RECIPES[keyOf(inputs)] ?? null;
 }
+
+window.RECIPES = RECIPES;
+window.findRecipe = findRecipe;
