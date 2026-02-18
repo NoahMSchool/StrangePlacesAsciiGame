@@ -6,9 +6,24 @@
     color: darkgoldenrod;
   }
   body{
-    background: #CCCCCC;
-    color: #119988;
+    background: #2e3d2f;
+    color: #292720;
     font-family: "simpleMonoFont";
+  }
+  #asciiOutput{
+    background: #bec7af;
+    color: #292720;
+    
+  }
+
+  #asciiOutput{
+    background: #bec7af;
+    color: #292720;
+  }
+
+  #textInput{
+    background: #bec7af;
+    color: #292720;
   }
 
 @font-face{

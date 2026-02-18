@@ -103,6 +103,14 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     eatText: "I think someone else would enjoy this more than you"
+
+    asciiTile: [
+     " ____  ",
+     "(CORN) ",
+     "  -- -   ",
+     " =  -  ",
+     "       "
+   ]
   },
   
   [ITEM.DINOSAUR]: {
@@ -115,7 +123,35 @@ const ITEM_DEFS = Object.freeze({
     portable: false,
     takeText: "That would be the last think you ever try to take",
     eatText: "Your stomach would explode"
+    asciiTile: [
+     "     ___ ",
+     "    (_o \\",
+     "   ^--/ |",
+     " _/     /",
+     "<_.||-|| "
+   ]
   },
+
+  [ITEM.ALPHAPARTICLE]: {
+    id: ITEM.ALPHAPARTICLE,
+    name: "Alpha Particle",
+    emoji: "⚛",
+    synonyms: ["alpha", "Helium", "He"],
+    examine: "A highly ionising particle, also a Helium neucleus. (can cause mutations)",
+    visible: true,
+    portable: true,
+    takeText: "Try hold it far away so you dont get ionised",
+    eatText: "You should not have alpha particles inside your body"
+    asciiTile: [
+     " __A__ ",
+     "(-) (+)",
+     "{alpha}",
+     "(+) (-)",
+     " --_-- "
+   ]
+  },
+
+
   [ITEM.GRATE]: {
     id: ITEM.GRATE,
     name: "Grate",
@@ -124,9 +160,16 @@ const ITEM_DEFS = Object.freeze({
     examine: "A heavy iron grate set into the ground. Something dark lies beneath.",
     visible: true,     // you can toggle this via the leaves interaction
     portable: false,
-    eatText: "Your dentist would not like that"
-
+    eatText: "Your dentist would not like that",
+    asciiTile: [
+     "G R A T",
+     " E G R ",
+     "A T E G",
+     " R A T ",
+     "E G R A"
+   ]
   },
+
 
   [ITEM.LAMP]: {
     id: ITEM.LAMP,
@@ -147,6 +190,13 @@ const ITEM_DEFS = Object.freeze({
     examine: "A length of string. Useful for tying things together.",
     visible: true,
     portable: true,
+    asciiTile: [
+     "   |\\  ",
+     "   {   ",
+     "   }   ",
+     "  /    ",
+     "       "
+   ]
   },
 
   [ITEM.HOOK]: {
@@ -157,6 +207,13 @@ const ITEM_DEFS = Object.freeze({
     examine: "A small metal hook. It could be attached to something.",
     visible: true,
     portable: true,
+    asciiTile: [
+     "   ^   ",
+     "   \\   ",
+     "   |   ",
+     "   /   ",
+     "       "
+   ]
   },
 
   [ITEM.KEY]: {
@@ -167,6 +224,13 @@ const ITEM_DEFS = Object.freeze({
     examine: "A small brass key with worn teeth.",
     visible: true,
     portable: true,
+    asciiTile: [
+     "  /-o\\ ",
+     "  \\_ / ",
+     "  <|/  ",
+     "  <|\\  "
+     "  <|/  "
+   ]
   },
 
   [ITEM.EGG]: {
@@ -178,6 +242,13 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     eatText: "It sounds like it has a creature inside"
+    asciiTile: [
+     "       ",
+     "       ",
+     "       ",
+     "       ",
+     "       "
+   ]
 
   },
 
@@ -189,6 +260,13 @@ const ITEM_DEFS = Object.freeze({
     examine: "A strong magnet. It tugs faintly toward metal objects.",
     visible: true,
     portable: true,
+    asciiTile: [
+     "       ",
+     "       ",
+     "       ",
+     "       ",
+     "       "
+   ]
   },
 
   // ---- Example: leaves you can push to reveal a grate ----
