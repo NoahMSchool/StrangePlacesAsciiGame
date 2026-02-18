@@ -87,15 +87,12 @@ const ROOM_DEFS = {
       name: "Noahs Room",
       desc: "Where Noah tests stuff",
       items: [
-        [ITEM.WALL, [0,2]],
-        [ITEM.WALL, [1,2]],
-        [ITEM.WALL, [2,2]],
-        [ITEM.WALL, [3,2]],
-        [ITEM.TEDDYBEAR, [4,2]],
+
+        [ITEM.TEDDYBEAR, [2,1]],
         [ITEM.TEDDYBEAR, [3,5]],
 
-        [ITEM.TEDDYBEAR, [6,3]],
-        [ITEM.CHICKEN, [0,5]],
+        [ITEM.TEDDYBEAR, [4,3]],
+        [ITEM.CHICKEN, [5,3]],
         
         
       ],

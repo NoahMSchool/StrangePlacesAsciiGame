@@ -2,6 +2,9 @@
 
 const alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
 const filler_characters = ["-", "=", "/", ";", ":", ",", "~", ".", ","," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "];
+const wall_characters = ["|","|","#","#","|","|","!","#",":","{","}","[","]","\\","/","(",")",]
+const fire_characters = ["/","/","/","\\","\\","\\","`", "#", "*", "^", " ", " ", " ", " ", " "]
+
 
 const default_tiles = {
 "wall" : [
@@ -31,6 +34,14 @@ const default_tiles = {
 "&&&&&&&&&",
 "&&&&&&&&&",
 "&&&&&&&&&"
+],
+
+"fire" : [
+"/////////",
+"/////////",
+"/////////",
+"/////////",
+"/////////"
 ],
 
 "teddybear" : [
@@ -65,7 +76,7 @@ function intialise_tilegrid(){
       for (var j = gridsize - 1; j >= 0; j--) {
         //let keys = Object.keys(default_tiles);
         //let randomKey = keys[Math.floor(Math.random() * keys.length)];
-        current_row.push(default_tiles["randomchar"])
+        current_row.push(default_tiles["blank"])
       }
       tiles.push(current_row)
     }
@@ -77,18 +88,22 @@ function grid_to_room(){
   let newtiles = intialise_tilegrid()
   console.log(room)
   console.log(newtiles)
+  if (true) {
+    for (var i = 0; i < (gridsize); i++) {
+        newtiles[i][0] = ITEM_DEFS.WALL.asciiTile
+        newtiles[i][gridsize-1] = ITEM_DEFS.WALL.asciiTile
+        newtiles[0][i] = ITEM_DEFS.WALL.asciiTile
+        newtiles[gridsize-1][i] = ITEM_DEFS.WALL.asciiTile
+    }
+  }
   for (var i = 0; i < room.items.length; i++) {
     let item_coord = room.items[i]
-    let roomrow = item_coord[1][0]//[0]
-    let roomcolumn = item_coord[1][1]
+    let roomrow = item_coord[1][1]//[0]
+    let roomcolumn = item_coord[1][0]
     let item = ITEM_DEFS[item_coord[0]]
-    console.log(item)
     let item_ascii = item.asciiTile
-    console.log(item_ascii)    
-
     newtiles[roomrow][roomcolumn] = item_ascii
   }
-  console.log(newtiles)
   return newtiles
 }
 
@@ -110,6 +125,9 @@ function get_grid_display(){
       }
       else if (string[i] == "&") {
         newstring += alphabet[Math.floor(Math.random()*alphabet.length)];
+      }
+      else if (string[i] == "#") {
+        newstring += wall_characters[Math.floor(Math.random()*wall_characters.length)];
       }
       else{
         newstring += string[i]
