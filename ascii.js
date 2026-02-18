@@ -63,17 +63,36 @@ function intialise_tilegrid(){
     for (var i = gridsize - 1; i >= 0; i--) {
       var current_row = []
       for (var j = gridsize - 1; j >= 0; j--) {
-        let keys = Object.keys(default_tiles);
-        let randomKey = keys[Math.floor(Math.random() * keys.length)];
-        current_row.push(default_tiles[randomKey])
+        //let keys = Object.keys(default_tiles);
+        //let randomKey = keys[Math.floor(Math.random() * keys.length)];
+        current_row.push(default_tiles["randomchar"])
       }
       tiles.push(current_row)
     }
     return tiles
     console.log(gridtiles)
 }
+function grid_to_room(){
+  let room = ROOM_DEFS.NOAHROOM;
+  let newtiles = intialise_tilegrid()
+  console.log(room)
+  console.log(newtiles)
+  for (var i = 0; i < room.items.length; i++) {
+    let item_coord = room.items[i]
+    let roomrow = item_coord[1][0]//[0]
+    let roomcolumn = item_coord[1][1]
+    let item = ITEM_DEFS[item_coord[0]]
+    console.log(item)
+    let item_ascii = item.asciiTile
+    console.log(item_ascii)    
 
-function update_grid_display(){
+    newtiles[roomrow][roomcolumn] = item_ascii
+  }
+  console.log(newtiles)
+  return newtiles
+}
+
+function get_grid_display(){
   let string = ""
     for (var rownum = 0; rownum < gridtiles.length; rownum++) {
       for (var i = 0; i <tileheight; i++) {
@@ -100,8 +119,10 @@ function update_grid_display(){
 }
 
 gridtiles = intialise_tilegrid()
-gridstring = update_grid_display()
-console.log(gridstring)
+gridtiles = grid_to_room()
+gridstring = get_grid_display()
+
+//console.log(gridstring)
 document.getElementById("asciiOutput").textContent = gridstring;
 
 

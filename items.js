@@ -7,6 +7,7 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   WALL: "WALL",
+  TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
@@ -58,6 +59,24 @@ const ITEM_DEFS = Object.freeze({
      "#########",
     ]
   },
+  [ITEM.TEDDYBEAR] : {
+    id: ITEM.TEDDYBEAR,
+    name: "Teddybear",
+    emoji: "🧸",
+    synonyms: ["teddy", "bear"],
+    examine: "A cute old Teddybear.",
+    visible: true,
+    portable: true,
+    eatText: "Do you want fluff in your mouth?",
+    asciiTile: [
+     "  n___n  ",
+     " {~._.~} ",
+     "  ( Y )  ",
+     " ()~*~() ",
+     " (_)-(_) "
+    ],
+  },
+
   [ITEM.CHICKEN]: {
     id: ITEM.CHICKEN,
     name: "Chicken",
