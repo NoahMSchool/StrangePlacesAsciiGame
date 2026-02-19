@@ -319,9 +319,9 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     asciiTile: [
-     "    (|  ",
-     "   -{]` ",
-     "    |}o    ",
+     "    (|   ",
+     "   -{]`  ",
+     "    |}o  ",
      "    {]   ",
      "    /`   "
    ]
