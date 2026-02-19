@@ -102,8 +102,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A juicy corn on the cob.",
     visible: true,
     portable: true,
-    eatText: "I think someone else would enjoy this more than you"
-
+    eatText: "I think someone else would enjoy this more than you",
     asciiTile: [
      " ____  ",
      "(CORN) ",
@@ -122,7 +121,7 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: false,
     takeText: "That would be the last think you ever try to take",
-    eatText: "Your stomach would explode"
+    eatText: "Your stomach would explode",
     asciiTile: [
      "     ___ ",
      "    (_o \\",
@@ -141,7 +140,7 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     takeText: "Try hold it far away so you dont get ionised",
-    eatText: "You should not have alpha particles inside your body"
+    eatText: "You should not have alpha particles inside your body",
     asciiTile: [
      " __A__ ",
      "(-) (+)",
@@ -228,7 +227,7 @@ const ITEM_DEFS = Object.freeze({
      "  /-o\\ ",
      "  \\_ / ",
      "  <|/  ",
-     "  <|\\  "
+     "  <|\\  ",
      "  <|/  "
    ]
   },
@@ -241,7 +240,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A fragile egg. Best handled gently. Maybe it will hatch?",
     visible: true,
     portable: true,
-    eatText: "It sounds like it has a creature inside"
+    eatText: "It sounds like it has a creature inside",
     asciiTile: [
      "       ",
      "       ",

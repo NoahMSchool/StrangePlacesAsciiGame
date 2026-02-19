@@ -37,6 +37,94 @@
     return d ? `${d.emoji} ${d.name}` : id;
   }
 
+  // ---------------- NEW: room item entry helpers ----------------
+
+  function isEntryWithCoord(entry) {
+    return Array.isArray(entry) && entry.length === 2 && Array.isArray(entry[1]);
+  }
+
+  function entryToId(entry) {
+    return isEntryWithCoord(entry) ? entry[0] : entry;
+  }
+
+  function entryToCoord(entry) {
+    return isEntryWithCoord(entry) ? entry[1] : null;
+  }
+
+  function roomItemIds(room) {
+    return (room?.items || []).map(entryToId);
+  }
+
+  function roomHasItem(room, itemId) {
+    return (room?.items || []).some((e) => entryToId(e) === itemId);
+  }
+
+  function removeOneFromRoom(room, itemId) {
+    if (!room || !Array.isArray(room.items)) return false;
+    const idx = room.items.findIndex((e) => entryToId(e) === itemId);
+    if (idx >= 0) {
+      room.items.splice(idx, 1);
+      return true;
+    }
+    return false;
+  }
+
+  // Random interior coord (7x7, not on border)
+  const ROOM_SIZE = 7; // 0..6
+  const MIN_INTERIOR = 1;
+  const MAX_INTERIOR = ROOM_SIZE - 2; // 5
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function coordKey(x, y) {
+    return `${x},${y}`;
+  }
+
+  function getUsedCoords(room) {
+    const used = new Set();
+    for (const entry of room?.items || []) {
+      const c = entryToCoord(entry);
+      if (c) used.add(coordKey(c[0], c[1]));
+    }
+    return used;
+  }
+
+  function randomInteriorCoord(used) {
+    for (let attempts = 0; attempts < 200; attempts++) {
+      const x = randInt(MIN_INTERIOR, MAX_INTERIOR);
+      const y = randInt(MIN_INTERIOR, MAX_INTERIOR);
+      const key = coordKey(x, y);
+      if (!used.has(key)) {
+        used.add(key);
+        return [x, y];
+      }
+    }
+
+    // fallback scan
+    for (let x = MIN_INTERIOR; x <= MAX_INTERIOR; x++) {
+      for (let y = MIN_INTERIOR; y <= MAX_INTERIOR; y++) {
+        const key = coordKey(x, y);
+        if (!used.has(key)) {
+          used.add(key);
+          return [x, y];
+        }
+      }
+    }
+
+    // overfull; overlap
+    return [MIN_INTERIOR, MIN_INTERIOR];
+  }
+
+  function addToRoomAtRandomInterior(room, itemId) {
+    if (!room) return;
+    if (!Array.isArray(room.items)) room.items = [];
+    const used = getUsedCoords(room);
+    const coord = randomInteriorCoord(used);
+    room.items.push([itemId, coord]);
+  }
+
   // ---------------- RENDERING ----------------
   function getCurrentRoom() {
     return getRoom(state.currentRoom);
@@ -57,8 +145,9 @@
     if (Array.isArray(visible)) {
       saySafe(sayFn, "You see: " + (visible.length ? visible.join(", ") : "(nothing)"));
     } else {
-      const ids = room.items || [];
-      const list = ids
+      const entries = room.items || [];
+      const list = entries
+        .map(entryToId)
         .map((id) => getItemDef(id))
         .filter((d) => d && d.visible !== false)
         .map((d) => `${d.emoji} ${d.name}`);
@@ -83,7 +172,7 @@
 
   function isInRoom(itemId, roomId = state.currentRoom) {
     const room = getRoom(roomId);
-    return Array.isArray(room?.items) && room.items.includes(itemId);
+    return roomHasItem(room, itemId);
   }
 
   function isInInventory(itemId) {
@@ -101,11 +190,8 @@
 
     const room = ensureRoomItemsArray();
     if (room) {
-      const roomIdx = room.items.indexOf(itemId);
-      if (roomIdx >= 0) {
-        room.items.splice(roomIdx, 1);
-        return "room";
-      }
+      const removed = removeOneFromRoom(room, itemId);
+      if (removed) return "room";
     }
     return null;
   }
@@ -117,12 +203,14 @@
   function addToRoom(itemId) {
     const room = ensureRoomItemsArray();
     if (!room) return;
-    room.items.push(itemId);
+
+    // Put it somewhere sensible in the new format
+    addToRoomAtRandomInterior(room, itemId);
   }
 
   function allAvailableItemsSet() {
     const room = ensureRoomItemsArray();
-    const roomItems = room ? room.items : [];
+    const roomItems = room ? roomItemIds(room) : [];
     return new Set([...state.inventory, ...roomItems]);
   }
 
@@ -165,12 +253,11 @@
     saySafe(sayFn, def.eatText || "You eat it.");
   }
 
-
   function takeItem(itemId, sayFn) {
     const room = ensureRoomItemsArray();
     if (!room) return saySafe(sayFn, "You can't do that right now.");
 
-    if (!isInRoom(itemId)) return saySafe(sayFn, "You can't see that here.");
+    if (!roomHasItem(room, itemId)) return saySafe(sayFn, "You can't see that here.");
 
     const def = getItemDef(itemId);
     if (!def) return saySafe(sayFn, "That doesn't exist.");
@@ -178,7 +265,7 @@
       return saySafe(sayFn, def.takeText || "You can't pick that up.");
     }
 
-    room.items = room.items.filter((x) => x !== itemId);
+    removeOneFromRoom(room, itemId);
     state.inventory.push(itemId);
 
     saySafe(sayFn, `Taken. (${def.emoji} ${def.name})`);
@@ -196,7 +283,8 @@
     const idx = state.inventory.indexOf(itemId);
     if (idx >= 0) state.inventory.splice(idx, 1);
 
-    room.items.push(itemId);
+    // Put it back into the room with a random interior coordinate
+    addToRoomAtRandomInterior(room, itemId);
 
     saySafe(sayFn, `Dropped. (${def.emoji} ${def.name})`);
   }
@@ -205,10 +293,12 @@
     const room = ensureRoomItemsArray();
     if (!room) return saySafe(sayFn, "There's nothing to take.");
 
-    const candidates = room.items.filter((id) => {
-      const def = getItemDef(id);
-      return def && def.portable && def.visible !== false;
-    });
+    const candidates = (room.items || [])
+      .map(entryToId)
+      .filter((id) => {
+        const def = getItemDef(id);
+        return def && def.portable && def.visible !== false;
+      });
 
     if (candidates.length === 0) {
       saySafe(sayFn, "There's nothing here you can take.");
@@ -282,7 +372,7 @@
     for (const outId of produce) {
       if (!outId) continue;
       if (placeResult === "inventory") addToInventory(outId);
-      else addToRoom(outId);
+      else addToRoom(outId); // <-- now drops with coords
     }
 
     saySafe(sayFn, recipe.text || "Done.");
