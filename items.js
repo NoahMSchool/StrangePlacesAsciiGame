@@ -208,11 +208,11 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     asciiTile: [
-     "   ^   ",
-     "   \\   ",
-     "   |   ",
-     "   /   ",
-     "       "
+     "    ^    ",
+     "    \\    ",
+     "    |    ",
+     "    /    ",
+     "         "
    ]
   },
 
@@ -225,11 +225,11 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     asciiTile: [
-     "  /-o\\ ",
-     "  \\_ / ",
-     "  <|/  ",
-     "  <|\\  ",
-     "  <|/  "
+     "   /-o\\  ",
+     "   \\_ /  ",
+     "   <|/   ",
+     "   <|\\   ",
+     "   <|/   "
    ]
   },
 
@@ -243,13 +243,12 @@ const ITEM_DEFS = Object.freeze({
     portable: true,
     eatText: "It sounds like it has a creature inside",
     asciiTile: [
-     "       ",
-     "       ",
-     "       ",
-     "       ",
-     "       "
+     "         ",
+     "   .-.   ",
+     "  (   )  ",
+     "   '-'   ",
+     "         "
    ]
-
   },
 
   [ITEM.MAGNET]: {
@@ -261,11 +260,11 @@ const ITEM_DEFS = Object.freeze({
     visible: true,
     portable: true,
     asciiTile: [
-     "       ",
-     "       ",
-     "       ",
-     "       ",
-     "       "
+     "   ____  ",
+     "  // \\\   ",
+     "  (( ))  ",
+     "  ^   ^  ",
+     "  -   +  "
    ]
   },
 
@@ -278,6 +277,14 @@ const ITEM_DEFS = Object.freeze({
     examine: "A messy pile of dry leaves. Something might be hidden under them.",
     visible: true,
     portable: false,
+    asciiTile: [
+     "     a l ",
+     "  s v  e ",
+     " ~  l~   ",
+     "l~    v  ",
+     "    e    "
+   ]
+
   },
 
   // ---- Needed for magnet + string + stick = fishing rod ----
@@ -289,6 +296,13 @@ const ITEM_DEFS = Object.freeze({
     examine: "A sturdy stick. Straight enough to be useful.",
     visible: true,
     portable: true,
+    asciiTile: [
+     "    (|  ",
+     "   -{]` ",
+     "    |}o    ",
+     "    {]   ",
+     "    /`   "
+   ]
   },
 
   // ---- Needed for magnet + string + stick = fishing rod ----
@@ -300,6 +314,14 @@ const ITEM_DEFS = Object.freeze({
     examine: "A coin.",
     visible: true,
     portable: true,
+    asciiTile: [
+     "   ___   ",
+     "  /   \\  ",
+     " {  $  } ",
+     "  \\   /  ",
+     "   ---   "
+   ]
+
   },
 
   [ITEM.FISHING_ROD]: {
@@ -310,6 +332,16 @@ const ITEM_DEFS = Object.freeze({
     examine: "A homemade fishing rod. Crude, but it should do the job.",
     visible: true,
     portable: true,
+
+      asciiTile: [
+     
+     "     0   ",
+     "    / \\  ",
+     "   {   \\ ",
+     "  /     U",
+     " }       "
+   ]
+
   },
 });
 
