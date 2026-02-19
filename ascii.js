@@ -55,6 +55,7 @@ const default_tiles = {
 "/////////",
 "/////////",
 "/////////"
+
 ],
 
 };
@@ -173,12 +174,27 @@ function grid_to_room(room){
 
   // Safe wall borders (in case WALL has no asciiTile or wrong size)
   const wallTile = safeAsciiTileForItem("WALL", ITEM_DEFS.WALL);
-
+  var exits = room.exits
   for (var i = 0; i < gridsize; i++) {
     newtiles[i][0] = wallTile
     newtiles[i][gridsize-1] = wallTile
     newtiles[0][i] = wallTile
     newtiles[gridsize-1][i] = wallTile
+  }
+
+  if (room.exits["WEST"]){
+    newtiles[Math.floor(gridsize/2)][0] = default_tiles["horizontalExit"]
+  }
+  if (room.exits["EAST"]){
+    newtiles[Math.floor(gridsize/2)][gridsize-1] = default_tiles["horizontalExit"]
+  }
+
+  if (room.exits["SOUTH"]){
+    newtiles[gridsize-1][Math.floor(gridsize/2)] = default_tiles["verticalExit"]
+  }
+
+  if (room.exits["NORTH"]){
+     newtiles[0][Math.floor(gridsize/2)] = default_tiles["verticalExit"]
   }
 
   for (var i = 0; i < (room.items?.length || 0); i++) {
@@ -207,9 +223,9 @@ function grid_to_room(room){
 
     newtiles[roomrow][roomcolumn] = item_ascii
   }
-
-  return newtiles
+  return newtiles 
 }
+
 
 function get_grid_display(gridtiles){
   let string = ""
@@ -245,4 +261,4 @@ function get_grid_display(gridtiles){
 function getRoomTile(room = ROOM_DEFS.NOAHROOM) {
   gridtiles = grid_to_room(room)
   return get_grid_display(gridtiles)
-}
+};
