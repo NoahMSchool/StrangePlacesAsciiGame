@@ -21,7 +21,6 @@ const ROOM_DEFS = {
       ITEM.LEAVES,
       ITEM.CORN,
       ITEM.MAGNET,
-      ITEM.GRATE,
       ITEM.ROPE, // your "string"
     ],
     exits: {
@@ -100,6 +99,7 @@ const ROOM_DEFS = {
     items: [
       // You can still pin specific items if you want:
       [ITEM.ROPE, [2, 1]],
+      [ITEM.MICROWAVE, [4, 4]],
     ],
     exits: {
       SOUTH: ROOM.ENTRANCE_HALL,

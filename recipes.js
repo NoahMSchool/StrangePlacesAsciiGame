@@ -33,15 +33,25 @@ const RECIPES = Object.freeze({
     text: "You lower the rod through the grate and snag something metal. A key!",
   },
 
-    // 🎣 Fishing rod + grate = key (rod/grate stay)
-  [keyOf([ITEM.WALL, ITEM.WALL])]: {
-    inputs: [ITEM.WALL, ITEM.WALL],
-    consume: [ITEM.WALL],               // consume nothing
-    produce: [ITEM.KEY],       // produce a key
-
-    text: "You bang two walls together and get a key!",
+  // ---------------- ACTION RECIPE: PUSH LEAVES reveals GRATE ----------------
+  // This makes PUSH LEAVES work, and it will NOT make EAT LEAVES work.
+  PUSH_LEAVES_REVEAL_GRATE: {
+    action: "PUSH",
+    target: ITEM.LEAVES,
+    consume: [ITEM.LEAVES],   // remove leaves
+    produce: [ITEM.GRATE],    // reveal grate
+    placeResult: "room",
+    text: "You push aside the leaves, revealing a grate.",
   },
 
+  [keyOf([ITEM.EGG, ITEM.MICROWAVE])]: {
+  inputs: [ITEM.EGG, ITEM.MICROWAVE],
+
+  consume: [ITEM.EGG],
+  produce: [ITEM.DINOSAUR_EGG],
+
+  text: "The microwave hums loudly. When it stops, the egg has grown… scaly.",
+},
 
 });
 

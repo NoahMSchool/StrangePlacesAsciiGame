@@ -13,15 +13,24 @@ const ITEM = Object.freeze({
   GRATE: "GRATE",
   CORN: "CORN",
   LAMP: "LAMP",
-  ROPE: "ROPE", 
-  HOOK: "HOOK", 
+  ROPE: "ROPE",
+  HOOK: "HOOK",
   KEY: "KEY",
   EGG: "EGG",
+  DINOSAUR_EGG: "DINOSAUR_EGG",
+
   MAGNET: "MAGNET",
   LEAVES: "LEAVES",
   STICK: "STICK",
   FISHING_ROD: "FISHING_ROD",
   COIN: "COIN",
+
+  // ✅ Fix: this was referenced in ITEM_DEFS but missing from ITEM
+  ALPHAPARTICLE: "ALPHAPARTICLE",
+
+  // ✅ New items
+  MICROWAVE: "MICROWAVE",
+  TIME_LEVER: "TIME_LEVER",
 });
 
 // -----------------------------------------------------------------------------
@@ -38,9 +47,8 @@ const ITEM = Object.freeze({
  *   examine: "Short description shown when EXAMINE/LOOK item",
  *   visible: true|false,        // should it appear in room listing
  *   portable: true|false,       // can TAKE pick it up
- *
+ * }
  */
-
 
 const ITEM_DEFS = Object.freeze({
   [ITEM.WALL]: {
@@ -53,14 +61,15 @@ const ITEM_DEFS = Object.freeze({
     portable: false,
     eatText: "WTF?",
     asciiTile: [
-     "#########",
-     "#########",
-     "#########",
-     "#########",
-     "#########",
-    ]
+      "#########",
+      "#########",
+      "#########",
+      "#########",
+      "#########",
+    ],
   },
-  [ITEM.TEDDYBEAR] : {
+
+  [ITEM.TEDDYBEAR]: {
     id: ITEM.TEDDYBEAR,
     name: "Teddybear",
     emoji: "🧸",
@@ -70,11 +79,11 @@ const ITEM_DEFS = Object.freeze({
     portable: true,
     eatText: "Do you want fluff in your mouth?",
     asciiTile: [
-     "  n___n  ",
-     " {~._.~} ",
-     "  ( Y )  ",
-     " ()~*~() ",
-     " (_)-(_) "
+      "  n___n  ",
+      " {~._.~} ",
+      "  ( Y )  ",
+      " ()~*~() ",
+      " (_)-(_) ",
     ],
   },
 
@@ -88,13 +97,14 @@ const ITEM_DEFS = Object.freeze({
     portable: true,
     eatText: "You don't want to eat little chiccie do you?",
     asciiTile: [
-     "    ^.   ",
-     "    Bc   ",
-     " __/~\\__ ",
-     "(((\\_/)))",
-     "  _) (_  ",
-    ]
+      "    ^.   ",
+      "    Bc   ",
+      " __/~\\__ ",
+      "(((\\_/)))",
+      "  _) (_  ",
+    ],
   },
+
   [ITEM.CORN]: {
     id: ITEM.CORN,
     name: "Corn",
@@ -105,14 +115,14 @@ const ITEM_DEFS = Object.freeze({
     portable: true,
     eatText: "I think someone else would enjoy this more than you",
     asciiTile: [
-     " ____  ",
-     "(CORN) ",
-     "  -- -   ",
-     " =  -  ",
-     "       "
-   ]
+      " ____    ",
+      "(CORN)   ",
+      "  -- -   ",
+      " =  -    ",
+      "         ",
+    ],
   },
-  
+
   [ITEM.DINOSAUR]: {
     id: ITEM.DINOSAUR,
     name: "Dinosaur",
@@ -124,33 +134,32 @@ const ITEM_DEFS = Object.freeze({
     takeText: "That would be the last think you ever try to take",
     eatText: "Your stomach would explode",
     asciiTile: [
-     "     ___ ",
-     "    (_o \\",
-     "   ^--/ |",
-     " _/     /",
-     "<_.||-|| "
-   ]
+      "     ___ ",
+      "    (_o \\",
+      "   ^--/ |",
+      " _/     /",
+      "<_.||-|| ",
+    ],
   },
 
   [ITEM.ALPHAPARTICLE]: {
     id: ITEM.ALPHAPARTICLE,
     name: "Alpha Particle",
     emoji: "⚛",
-    synonyms: ["alpha", "Helium", "He"],
-    examine: "A highly ionising particle, also a Helium neucleus. (can cause mutations)",
+    synonyms: ["alpha", "helium", "he"],
+    examine: "A highly ionising particle, also a Helium nucleus. (can cause mutations)",
     visible: true,
     portable: true,
     takeText: "Try hold it far away so you dont get ionised",
     eatText: "You should not have alpha particles inside your body",
     asciiTile: [
-     " __A__ ",
-     "(-) (+)",
-     "{alpha}",
-     "(+) (-)",
-     " --_-- "
-   ]
+      " __A__   ",
+      "(-) (+)  ",
+      "{alpha}  ",
+      "(+) (-)  ",
+      " --_--   ",
+    ],
   },
-
 
   [ITEM.GRATE]: {
     id: ITEM.GRATE,
@@ -158,18 +167,17 @@ const ITEM_DEFS = Object.freeze({
     emoji: "🕳️",
     synonyms: ["grate", "grating", "metal grate", "iron grate"],
     examine: "A heavy iron grate set into the ground. Something dark lies beneath.",
-    visible: true,     // you can toggle this via the leaves interaction
+    visible: true,
     portable: false,
     eatText: "Your dentist would not like that",
     asciiTile: [
-     "G R A T",
-     " E G R ",
-     "A T E G",
-     " R A T ",
-     "E G R A"
-   ]
+      "G R A T ",
+      " E G R  ",
+      "A T E G ",
+      " R A T  ",
+      "E G R A ",
+    ],
   },
-
 
   [ITEM.LAMP]: {
     id: ITEM.LAMP,
@@ -185,18 +193,17 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.ROPE,
     name: "String",
     emoji: "🧵",
-    // Keep rope synonyms so existing parser works, but add "string" too.
     synonyms: ["rope", "cord", "line", "string", "twine"],
     examine: "A length of string. Useful for tying things together.",
     visible: true,
     portable: true,
     asciiTile: [
-     "   |\\  ",
-     "   {   ",
-     "   }   ",
-     "  /    ",
-     "       "
-   ]
+      "   |\\    ",
+      "   {     ",
+      "   }     ",
+      "  /      ",
+      "         ",
+    ],
   },
 
   [ITEM.HOOK]: {
@@ -237,11 +244,28 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.EGG,
     name: "Egg",
     emoji: "🥚",
-    synonyms: ["egg"],
+    synonyms: ["egg","chicken egg"],
     examine: "A fragile egg. Best handled gently. Maybe it will hatch?",
     visible: true,
     portable: true,
     eatText: "It sounds like it has a creature inside",
+    asciiTile: [
+     "         ",
+     "   .-.   ",
+     "  (   )  ",
+     "   '-'   ",
+     "         "
+   ]
+  },
+  [ITEM.DINOSAUR_EGG]: {
+  id: ITEM.DINOSAUR_EGG,
+  name: "Dino Egg", 
+  emoji: "🥚", // visually different
+  synonyms: ["dinosaur egg", "big egg", "strange egg", "egg"],
+  examine: "A large egg with a leathery shell. Something prehistoric moves inside.",
+  visible: true,
+  portable: true,
+  eatText: "That would crunch.",
     asciiTile: [
      "         ",
      "   .-.   ",
@@ -268,7 +292,6 @@ const ITEM_DEFS = Object.freeze({
    ]
   },
 
-  // ---- Example: leaves you can push to reveal a grate ----
   [ITEM.LEAVES]: {
     id: ITEM.LEAVES,
     name: "Pile of Leaves",
@@ -277,6 +300,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A messy pile of dry leaves. Something might be hidden under them.",
     visible: true,
     portable: false,
+    eatText: "You can't eat that.",
     asciiTile: [
      "     a l ",
      "  s v  e ",
@@ -284,10 +308,8 @@ const ITEM_DEFS = Object.freeze({
      "l~    v  ",
      "    e    "
    ]
-
   },
 
-  // ---- Needed for magnet + string + stick = fishing rod ----
   [ITEM.STICK]: {
     id: ITEM.STICK,
     name: "Stick",
@@ -305,7 +327,6 @@ const ITEM_DEFS = Object.freeze({
    ]
   },
 
-  // ---- Needed for magnet + string + stick = fishing rod ----
   [ITEM.COIN]: {
     id: ITEM.COIN,
     name: "Coin",
@@ -343,6 +364,31 @@ const ITEM_DEFS = Object.freeze({
    ]
 
   },
+
+  // ---------------- ✅ NEW: MICROWAVE ----------------
+  [ITEM.MICROWAVE]: {
+    id: ITEM.MICROWAVE,
+    name: "Microwave",
+    emoji: "📡",
+    synonyms: ["microwave", "micro wave", "oven", "microwave oven"],
+    examine: "A slightly greasy microwave. The door squeaks when you touch it. The buttons look tempting.",
+    visible: true,
+    portable: false,
+    eatText: "Please don't try to eat a microwave.",
+    // (optional) give it an ascii tile later; your renderer can handle missing tiles now
+  },
+
+  // ---------------- ✅ NEW: TIME MACHINE LEVER ----------------
+  [ITEM.TIME_LEVER]: {
+    id: ITEM.TIME_LEVER,
+    name: "Time Machine Lever",
+    emoji: "🕹️",
+    synonyms: ["lever", "time lever", "time machine lever", "switch"],
+    examine: "A chunky lever labelled: PAST ⟷ FUTURE. It hums quietly, like it wants to be pulled.",
+    visible: true,
+    portable: false,
+    eatText: "Probably not edible. Also, what?",
+  },
 });
 
 // -----------------------------------------------------------------------------
@@ -355,10 +401,3 @@ function buildNounSynonymsFromItems(itemDefs = ITEM_DEFS) {
   }
   return out;
 }
-
-/*
-window.ITEM = ITEM;
-window.ITEM_DEFS = ITEM_DEFS;
-window.buildNounSynonymsFromItems = buildNounSynonymsFromItems;
-*/
-
