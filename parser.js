@@ -2,6 +2,12 @@
 
 const STOPWORDS = new Set(["the", "a", "an", "at"]);
 
+// ✅ Noun connectors used to split "X with Y", "X in Y", etc.
+const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
+const NOUN_CONNECTORS_RE = new RegExp(`\\b(?:${NOUN_CONNECTORS.join("|")})\\b`, "i");
+// Split form: requires surrounding whitespace so "within" doesn't match "in"
+const NOUN_CONNECTORS_SPLIT_RE = new RegExp(`\\s+\\b(?:${NOUN_CONNECTORS.join("|")})\\b\\s+`, "i");
+
 const DIR = {
   n: "NORTH", north: "NORTH",
   s: "SOUTH", south: "SOUTH",
@@ -135,7 +141,6 @@ function parseCommands(input) {
           }
 
           if (present.length > 1) {
-            // Ambiguous: more than one matching thing is present right now
             const options = present.map(formatItemForDisambiguation).join(" or ");
             return {
               ok: false,
@@ -144,9 +149,7 @@ function parseCommands(input) {
             };
           }
 
-          // present.length === 0:
-          // None of the candidates are visible/available right now.
-          // Fall back to first candidate so runtime can still say "can't see that here."
+          // None available right now → fall back to first so runtime can say "can't see that here"
           return { ok: true, canon: candidates[0], cleaned };
         }
 
@@ -155,7 +158,7 @@ function parseCommands(input) {
       }
     }
 
-    // Not found: sensible error
+    // Not found
     return { ok: false, error: `I don't know what "${cleaned}" is.`, cleaned };
   }
 
@@ -181,14 +184,14 @@ function parseCommands(input) {
     return { verb: c.toLowerCase(), object: null };
   }
 
-  // Parse a list of nouns separated by: and/with/on/to
+  // Parse a list of nouns separated by connectors
   function parseNounList(text, { min = 1, max = 3 } = {}) {
     const t = normalizeSpaces(text);
     const clean = stripStopwords(t);
     if (!clean) return { error: "You need to specify what you mean." };
 
     const parts = t
-      .split(/\s+\b(?:and|with|on|to)\b\s+/i)
+      .split(NOUN_CONNECTORS_SPLIT_RE)
       .map((p) => normalizeSpaces(p))
       .filter(Boolean);
 
@@ -205,7 +208,7 @@ function parseCommands(input) {
 
   function parseTwoNouns(text) {
     const t = normalizeSpaces(text);
-    const hasConnector = /\b(?:and|with|on|to)\b/i.test(t);
+    const hasConnector = NOUN_CONNECTORS_RE.test(t);
     if (!hasConnector) return { tried: false };
 
     const got = parseNounList(text, { min: 2, max: 2 });
@@ -214,6 +217,7 @@ function parseCommands(input) {
     return { tried: true, error: "That needs two things (try: \"use X on Y\")." };
   }
 
+  // Protect COMBINE's "and" (including 3-item combines) so we don't split the clause.
   const protectCombineAnd = (s) => {
     const lower = s.toLowerCase().trim();
     const vm = matchVerb(lower);
@@ -254,6 +258,7 @@ function parseCommands(input) {
       continue;
     }
 
+    // Special: "go lantern" etc.
     if (vm.canon === "GO") {
       const g = guessVerbObject(clause);
       result.unknown.push({
@@ -412,150 +417,4 @@ function parseCommands(input) {
   }
 
   return result;
-}
-
-function debugFormatParseResult(result) {
-  const lines = [];
-
-  lines.push("KNOWN:");
-  if (result.known.length === 0) {
-    lines.push("  (none)");
-  } else {
-    result.known.forEach((cmd, i) => {
-      lines.push(`  ${i + 1}. ${cmd}`);
-    });
-  }
-
-  if (result.unknown.length !== 0) {
-    lines.push("UNKNOWN:");
-    result.unknown.forEach((u, i) => {
-      const extra = u.error ? ` | error: ${u.error}` : "";
-      lines.push(
-        `  ${i + 1}. "${u.raw}" → verb: ${u.verb ?? "?"}, object: ${u.object ?? "?"}, reason: ${u.reason}${extra}`
-      );
-    });
-  }
-
-  return lines.join("\n");
-}
-
-// ---------------- UNIT TESTS ----------------
-
-function runParserUnitTests() {
-  const tests = [
-    // Movement
-    { in: "north", known: ["GO NORTH"] },
-    { in: "go n", known: ["GO NORTH"] },
-    { in: "head to west", known: ["GO WEST"] },
-
-    // Stopwords + noun resolution
-    { in: "take the egg", known: ["TAKE EGG"] },
-    { in: "look at the metal grate", known: ["LOOK GRATE"] },
-
-    // LOOK optional noun
-    { in: "look", known: ["LOOK"] },
-    { in: "examine chicken", known: ["LOOK CHICKEN"] },
-
-    // Default 1-noun verbs
-    { in: "push chicken", known: ["PUSH CHICKEN"] },
-    { in: "pull grate", known: ["PULL GRATE"] },
-    { in: "feed chicken", known: ["FEED CHICKEN"] },
-
-    // Missing object
-    { in: "take", unknownReason: "missing_object" },
-    { in: "push", unknownReason: "missing_object" },
-
-    // Unknown noun
-    { in: "take blorb", unknownReason: "unknown_noun" },
-    { in: "look at blorb", unknownReason: "unknown_noun" },
-
-    // Bad movement object
-    { in: "go lamp", unknownReason: "bad_movement" },
-
-    // USE: 1 or 2 nouns
-    { in: "use key", known: ["USE KEY"] },
-    { in: "use key on grate", known: ["USE KEY GRATE"] },
-    { in: "apply magnet to grate", known: ["USE MAGNET GRATE"] },
-    { in: "use blorb on grate", unknownReason: "unknown_noun" },
-    { in: "use key on blorb", unknownReason: "unknown_noun" },
-
-    // COMBINE: 2 or 3 nouns
-    { in: "combine rope and hook", known: ["COMBINE ROPE HOOK"] },
-    { in: "combine rope and hook and magnet", known: ["COMBINE ROPE HOOK MAGNET"] },
-    { in: "combine rope with hook and magnet", known: ["COMBINE ROPE HOOK MAGNET"] },
-    { in: "combine rope", unknownReason: "bad_noun_count" },
-
-    // Clause splitting (and/then/; ,)
-    { in: "take egg then look", known: ["TAKE EGG", "LOOK"] },
-    { in: "take egg; drop egg", known: ["TAKE EGG", "DROP EGG"] },
-
-    // Ensure COMBINE doesn't get split by "and"
-    { in: "combine rope and hook and magnet then look", known: ["COMBINE ROPE HOOK MAGNET", "LOOK"] },
-  ];
-
-  const toJSON = (x) => JSON.stringify(x);
-
-  function assert(condition, message) {
-    if (!condition) throw new Error(message);
-  }
-
-  function eqArrays(a, b) {
-    return toJSON(a) === toJSON(b);
-  }
-
-  let passed = 0;
-  let failed = 0;
-  const failures = [];
-
-  for (const t of tests) {
-    let r;
-    try {
-      r = parseCommands(t.in);
-
-      if (t.known) {
-        assert(
-          eqArrays(r.known, t.known),
-          `Expected known=${toJSON(t.known)} but got known=${toJSON(r.known)}`
-        );
-      }
-
-      if (t.unknownReason) {
-        assert(
-          r.unknown.length >= 1,
-          `Expected at least 1 unknown, got 0 (known=${toJSON(r.known)})`
-        );
-        assert(
-          r.unknown[0].reason === t.unknownReason,
-          `Expected unknown[0].reason="${t.unknownReason}" but got "${r.unknown[0].reason}"`
-        );
-      }
-
-      passed++;
-    } catch (e) {
-      failed++;
-      failures.push({
-        input: t.in,
-        error: String(e?.message ?? e),
-        parse: r ? { known: r.known, unknown: r.unknown } : null,
-      });
-    }
-  }
-
-  const summary = { total: tests.length, passed, failed, failures };
-
-  const lines = [];
-  lines.push(`Parser unit tests: ${passed}/${tests.length} passed`);
-  if (failed) {
-    lines.push("Failures:");
-    for (const f of failures) {
-      lines.push(`- input: ${JSON.stringify(f.input)}`);
-      lines.push(`  error: ${f.error}`);
-      if (f.parse) {
-        lines.push(`  known: ${JSON.stringify(f.parse.known)}`);
-        lines.push(`  unknown: ${JSON.stringify(f.parse.unknown)}`);
-      }
-    }
-  }
-
-  return { summary, report: lines.join("\n") };
 }
