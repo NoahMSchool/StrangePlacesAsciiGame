@@ -8,6 +8,15 @@
     return;
   }
 
+  // ---------------- helpers ----------------
+
+  function formatProducedList(produceIds) {
+    const ids = (produceIds || []).filter(Boolean);
+    if (ids.length === 0) return "";
+    const parts = ids.map((id) => G.formatItem(id)); // includes emoji + name
+    return ` (${parts.join(", ")})`;
+  }
+
   // ---------------- RECIPES / CRAFTING ----------------
 
   function combineItems(itemIds, sayFn) {
@@ -61,20 +70,11 @@
       else G.addToRoom(outId);
     }
 
-    G.saySafe(sayFn, recipe.text || "Done.");
+    const suffix = formatProducedList(produce);
+    G.saySafe(sayFn, (recipe.text || "Done.") + suffix);
   }
 
   // ---------------- ACTION RECIPES (EAT / PUSH / PULL) ----------------
-  // Add these as entries inside RECIPES in recipes.js:
-  // {
-  //   action: "PUSH" | "PULL" | "EAT",
-  //   target: ITEM.SOMETHING,
-  //   requires: [...optional...],
-  //   consume: [...optional...],
-  //   produce: [...optional...],
-  //   placeResult: "room" | "inventory" (default "room"),
-  //   text: "..."
-  // }
 
   function listAllRecipes() {
     return window.RECIPES ? Object.values(window.RECIPES) : [];
@@ -114,7 +114,6 @@
 
     const recipe = findActionRecipe(verb, targetId);
 
-    // No recipe = doesn't work
     if (!recipe) {
       if (verb === "EAT") return G.saySafe(sayFn, G.cantEatMessage(targetId));
       return G.saySafe(sayFn, "Nothing happens.");
@@ -138,7 +137,6 @@
       }
     }
 
-    // Consume
     for (const id of consume) {
       const removedFrom = G.removeOne(id);
       if (!removedFrom) {
@@ -146,14 +144,14 @@
       }
     }
 
-    // Produce
     for (const outId of produce) {
       if (!outId) continue;
       if (placeResult === "inventory") G.addToInventory(outId);
       else G.addToRoom(outId);
     }
 
-    G.saySafe(sayFn, recipe.text || "Done.");
+    const suffix = formatProducedList(produce);
+    G.saySafe(sayFn, (recipe.text || "Done.") + suffix);
   }
 
   // ---------------- MAKE system (unchanged) ----------------
@@ -255,7 +253,7 @@
       return makeTarget(a, sayFn);
     }
 
-    // ✅ Recipe-driven actions:
+    // Recipe-driven actions:
     if (verb === "EAT") {
       if (!a) return G.saySafe(sayFn, "Eat what?");
       return doAction("EAT", a, sayFn);

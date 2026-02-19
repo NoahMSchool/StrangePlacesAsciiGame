@@ -324,9 +324,5 @@ function buildNounSynonymsFromItems(itemDefs = ITEM_DEFS) {
   return out;
 }
 
-/*
-window.ITEM = ITEM;
-window.ITEM_DEFS = ITEM_DEFS;
-window.buildNounSynonymsFromItems = buildNounSynonymsFromItems;
-*/
+
 
