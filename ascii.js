@@ -1,4 +1,3 @@
-//console.log("hello")
 
 const alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
 const filler_characters = ["-", "=", "/", ";", ":", ",", "~", ".", ","," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "];
@@ -43,20 +42,6 @@ const default_tiles = {
 "/////////"
 ],
 
-"teddybear" : [
- "  n___n  ",
- " {~._.~} ",
- "  ( Y )  ",
- " ()~*~() ",
- " (_)-(_) "
-],
-"chicken" : [
- "    ^.   ",
- "    Bc   ",
- " __/~\\__ ",
- "(((\\_/)))",
- "  _) (_  ",
-]
 };
 
 const tileheight = 5;
@@ -167,6 +152,8 @@ function intialise_tilegrid(){
 }
 
 function grid_to_room(room){
+  console.log("%cExits", "color: green; font-weight: bold;", room.exits);
+
   let newtiles = intialise_tilegrid()
 
   // Safe wall borders (in case WALL has no asciiTile or wrong size)
