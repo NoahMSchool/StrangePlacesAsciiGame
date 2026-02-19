@@ -1,4 +1,3 @@
-
 // ---------------- CONFIG (declare once) ----------------
 
 const STOPWORDS = new Set(["the", "a", "an", "at"]);
@@ -29,14 +28,6 @@ const VERB_SYNONYMS = {
 };
 
 // How many noun arguments each verb accepts.
-// Default = [1]  (so only list exceptions)
-// Examples:
-//   [0]     => no nouns
-//   [1]     => exactly 1 noun (default)
-//   [0,1]   => optional noun (0 or 1)
-//   [2]     => exactly 2 nouns
-//   [1,2]   => 1 or 2 nouns (USE key / USE key ON grate)
-//   [2,3]   => 2 or 3 nouns (COMBINE rope + hook (+ magnet))
 const VERB_NOUN_COUNTS = {
   GO: [0],
   INV: [0],
@@ -50,11 +41,17 @@ const NOUN_SYNONYMS = buildNounSynonymsFromItems(ITEM_DEFS);
 
 // ---------------- LOOKUPS (build once) ----------------
 
-// Build noun synonym->canonical lookup once
+// ✅ Build noun synonym -> [canonical IDs] lookup once (not just one ID)
 const NOUN_LOOKUP = new Map();
+// { "egg" => ["EGG", "DINOSAUR_EGG"], ... }
 for (const [canon, list] of Object.entries(NOUN_SYNONYMS)) {
-  for (const n of list) NOUN_LOOKUP.set(n, canon);
+  for (const n of list) {
+    const key = String(n).toLowerCase();
+    if (!NOUN_LOOKUP.has(key)) NOUN_LOOKUP.set(key, []);
+    NOUN_LOOKUP.get(key).push(canon);
+  }
 }
+
 // Precompute noun synonyms sorted by length (multi-word nouns first)
 const NOUN_KEYS_LONGEST_FIRST = [...NOUN_LOOKUP.keys()].sort((a, b) => b.length - a.length);
 
@@ -82,6 +79,25 @@ function parseCommands(input) {
     return VERB_NOUN_COUNTS[canonVerb] ?? [1]; // default = 1 noun
   }
 
+  // ✅ returns Set of items currently available (room + inventory), if GameCore is loaded
+  function getAvailableItemSet() {
+    const G = window.GameCore;
+    if (G && typeof G.allAvailableItemsSet === "function") {
+      try {
+        return G.allAvailableItemsSet(); // already a Set
+      } catch (e) {
+        // fall through
+      }
+    }
+    return null; // unknown availability
+  }
+
+  function formatItemForDisambiguation(itemId) {
+    const G = window.GameCore;
+    if (G && typeof G.formatItem === "function") return G.formatItem(itemId);
+    return itemId;
+  }
+
   // Convert a player-typed noun phrase into a canonical noun ID.
   // Returns { ok:true, canon:"LAMP" } or { ok:false, error:"..." }
   function resolveNoun(phrase, { allowEmpty = false } = {}) {
@@ -91,18 +107,53 @@ function parseCommands(input) {
       return { ok: false, error: "You need to specify what you mean.", cleaned: "" };
     }
 
-    // Longest-first match so "metal grate" beats "grate"
-    for (const key of NOUN_KEYS_LONGEST_FIRST) {
-      if (cleaned === key || cleaned.startsWith(key + " ")) {
-        return { ok: true, canon: NOUN_LOOKUP.get(key), cleaned };
-      }
-    }
-
     // Magic keyword
     if (cleaned === "all" || cleaned === "everything") {
       return { ok: true, canon: "ALL", cleaned };
     }
 
+    // Longest-first match so "metal grate" beats "grate"
+    for (const key of NOUN_KEYS_LONGEST_FIRST) {
+      if (cleaned === key || cleaned.startsWith(key + " ")) {
+        const candidates = NOUN_LOOKUP.get(key) || [];
+        if (candidates.length === 0) {
+          return { ok: false, error: `I don't know what "${cleaned}" is.`, cleaned };
+        }
+
+        // If only one candidate, done
+        if (candidates.length === 1) {
+          return { ok: true, canon: candidates[0], cleaned };
+        }
+
+        // ✅ If multiple candidates, pick the one that's actually available (room/inventory)
+        const available = getAvailableItemSet();
+        if (available) {
+          const present = candidates.filter((id) => available.has(id));
+
+          if (present.length === 1) {
+            return { ok: true, canon: present[0], cleaned };
+          }
+
+          if (present.length > 1) {
+            // Ambiguous: more than one matching thing is present right now
+            const options = present.map(formatItemForDisambiguation).join(" or ");
+            return {
+              ok: false,
+              error: `Which do you mean: ${options}?`,
+              cleaned
+            };
+          }
+
+          // present.length === 0:
+          // None of the candidates are visible/available right now.
+          // Fall back to first candidate so runtime can still say "can't see that here."
+          return { ok: true, canon: candidates[0], cleaned };
+        }
+
+        // No GameCore / can't check availability — keep old behaviour (first wins)
+        return { ok: true, canon: candidates[0], cleaned };
+      }
+    }
 
     // Not found: sensible error
     return { ok: false, error: `I don't know what "${cleaned}" is.`, cleaned };
@@ -131,10 +182,6 @@ function parseCommands(input) {
   }
 
   // Parse a list of nouns separated by: and/with/on/to
-  // Returns:
-  //   { nouns: ["ROPE","HOOK"] } on success
-  //   { error: "..." } if a noun is unknown / missing
-  //   { parts: ["rope"] } if wrong number of parts (count mismatch)
   function parseNounList(text, { min = 1, max = 3 } = {}) {
     const t = normalizeSpaces(text);
     const clean = stripStopwords(t);
@@ -156,8 +203,6 @@ function parseCommands(input) {
     return { nouns };
   }
 
-  // For verbs that accept 2 nouns (or 1/2 nouns), but we only consider it "two noun form"
-  // if the input contains a connector, i.e. the player tried "X on Y" etc.
   function parseTwoNouns(text) {
     const t = normalizeSpaces(text);
     const hasConnector = /\b(?:and|with|on|to)\b/i.test(t);
@@ -169,16 +214,13 @@ function parseCommands(input) {
     return { tried: true, error: "That needs two things (try: \"use X on Y\")." };
   }
 
-  // Protect COMBINE's "and" (including 3-item combines) so we don't split the clause.
   const protectCombineAnd = (s) => {
     const lower = s.toLowerCase().trim();
     const vm = matchVerb(lower);
     if (!vm || vm.canon !== "COMBINE") return s;
-    // Replace *all* " and " after the verb with marker
     return s.replace(/\s+\band\b\s+/gi, " __AND__ ");
   };
 
-  // Split on connectors, but after protection "__AND__" won't be split
   const splitClauses = (s) =>
     s.split(/\b(?:and|then)\b|[;,]/i).map(normalizeSpaces).filter(Boolean);
 
@@ -196,13 +238,12 @@ function parseCommands(input) {
 
     if (!clause) continue;
 
-    // 1) Movement: "go north", "go n", "north", "n"
+    // 1) Movement
     let m = clause.match(/^(?:(go|move|walk|run|head)\s+)?(?:to\s+)?(north|south|east|west|n|s|e|w)\b/);
     if (m) {
       const dir = DIR[m[2]];
       if (dir) { result.known.push(`GO ${dir}`); continue; }
     }
-    // Also allow single-token direction
     if (DIR[clause]) { result.known.push(`GO ${DIR[clause]}`); continue; }
 
     // 2) Verb matching
@@ -213,7 +254,6 @@ function parseCommands(input) {
       continue;
     }
 
-    // Special: "go lantern" etc.
     if (vm.canon === "GO") {
       const g = guessVerbObject(clause);
       result.unknown.push({
@@ -313,7 +353,6 @@ function parseCommands(input) {
         continue;
       }
 
-      // Try two-noun form *only if the player used a connector*
       const two = parseTwoNouns(vm.rest);
 
       if (two.tried) {
@@ -328,10 +367,9 @@ function parseCommands(input) {
             error: two.error,
           });
         }
-        continue; // IMPORTANT: never fall back if they tried 2-noun form
+        continue;
       }
 
-      // Otherwise: true 1-noun form
       const rn = resolveNoun(vm.rest);
       if (rn.ok && rn.canon) {
         result.known.push(`${vm.canon} ${rn.canon}`);
