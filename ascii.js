@@ -66,7 +66,6 @@ const tilewidth = 9;
 
 const gridsize = 7;
 
-var gridtiles = [];
 var gridstring = ""
 
 function intialise_tilegrid(){
@@ -80,14 +79,11 @@ function intialise_tilegrid(){
       }
       tiles.push(current_row)
     }
+    // console.log(tiles)
     return tiles
-    console.log(gridtiles)
 }
-function grid_to_room(){
-  let room = ROOM_DEFS.NOAHROOM;
+function grid_to_room(room){
   let newtiles = intialise_tilegrid()
-  console.log(room)
-  console.log(newtiles)
   if (true) {
     for (var i = 0; i < (gridsize); i++) {
         newtiles[i][0] = ITEM_DEFS.WALL.asciiTile
@@ -107,7 +103,7 @@ function grid_to_room(){
   return newtiles
 }
 
-function get_grid_display(){
+function get_grid_display(gridtiles){
   let string = ""
     for (var rownum = 0; rownum < gridtiles.length; rownum++) {
       for (var i = 0; i <tileheight; i++) {
@@ -136,11 +132,10 @@ function get_grid_display(){
     return newstring
 }
 
-gridtiles = intialise_tilegrid()
-gridtiles = grid_to_room()
-gridstring = get_grid_display()
+function getRoomTile(room = ROOM_DEFS.NOAHROOM) {
+  gridtiles = grid_to_room(room)
+  return get_grid_display(gridtiles)
+}
 
-//console.log(gridstring)
-document.getElementById("asciiOutput").textContent = gridstring;
 
 

@@ -176,14 +176,14 @@
       status.textContent = t || "";
     }
 
-    /* FUNCTIONS FOR NOAH TO CALL */
-    room = GameRuntime.getCurrentRoom();
-    tile = GameRuntime.getItemDef(ITEM.WALL);
-    testTile.textContent = tile.asciiTile.join("\n")
-
     cmd.disabled = false;
     sendBtn.disabled = false;
     cmd.focus();
+
+    async function updateRoomTile() {
+        gridstring = getRoomTile(GameRuntime.getCurrentRoom());
+        document.getElementById("asciiOutput").textContent = gridstring;
+    }
 
     async function run() {
       const text = cmd.value.trim();
@@ -196,6 +196,9 @@
       cmd.value = "";
       say("");
       cmd.focus();
+
+      updateRoomTile();
+
     }
 
     async function runTests() {
@@ -211,6 +214,8 @@
 
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
+      updateRoomTile();
+
       say("");
     } else {
       say("GameRuntime not loaded. Check that game.js is included and error-free.");
