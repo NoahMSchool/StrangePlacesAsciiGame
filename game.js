@@ -257,6 +257,11 @@
     saySafe(sayFn, def.eatText || "You eat it.");
   }
 
+  function helpText(sayFn) {
+    saySafe(sayFn, "This is a game of skill and cunning. Type in commands such as LOOK (L) or INVENTORY (I). Help yourself!");
+  }
+
+
   function takeItem(itemId, sayFn) {
     const room = ensureRoomItemsArray();
     if (!room) return saySafe(sayFn, "You can't do that right now.");
@@ -514,6 +519,10 @@
     if (verb === "EAT") {
       if (!a) return saySafe(sayFn, "Eat what?");
       return eatItem(a, sayFn);
+    }
+
+    if (verb === "HELP") {
+      return helpText(sayFn);
     }
 
     // Placeholder for future:

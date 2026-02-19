@@ -11,6 +11,7 @@ const DIR = {
 };
 
 const VERB_SYNONYMS = {
+  HELP:      ["help", "?", "??", "???", "wtf"],
   GO:      ["go", "walk", "run", "head"],
   INV:     ["inventory", "i"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
@@ -39,6 +40,7 @@ const VERB_SYNONYMS = {
 const VERB_NOUN_COUNTS = {
   GO: [0],
   INV: [0],
+  HELP: [0],
   LOOK: [0, 1],
   USE: [1, 2],
   COMBINE: [2, 3],
