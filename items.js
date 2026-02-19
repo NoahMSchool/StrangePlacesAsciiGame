@@ -296,7 +296,7 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.COIN,
     name: "Coin",
     emoji: "💰",
-    synonyms: ["money"],
+    synonyms: ["coin", "money"],
     examine: "A coin.",
     visible: true,
     portable: true,

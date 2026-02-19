@@ -3,6 +3,10 @@
 // file:// friendly (globals on window.*)
 
 (function () {
+  // ---------------- GAME CONSTANTS ----------------
+
+  const MAX_INVENTORY_SIZE = 5;
+
   // ---------------- GAME STATE ----------------
 
   const state = {
@@ -165,7 +169,7 @@
       return;
     }
     const list = state.inventory.map(formatItem);
-    saySafe(sayFn, "You are carrying: " + list.join(", "));
+    saySafe(sayFn, `You are carrying (${state.inventory.length}/${MAX_INVENTORY_SIZE}): ` + list.join(", "));
   }
 
   // ---------------- WORLD QUERIES ----------------
@@ -265,6 +269,10 @@
       return saySafe(sayFn, def.takeText || "You can't pick that up.");
     }
 
+    if (state.inventory.length >= MAX_INVENTORY_SIZE) {
+      return saySafe(sayFn, `Your inventory is full (${MAX_INVENTORY_SIZE} max). Drop something first.`);
+    }
+
     removeOneFromRoom(room, itemId);
     state.inventory.push(itemId);
 
@@ -305,8 +313,18 @@
       return;
     }
 
+    // Take until inventory is full
+    let takenAny = false;
     for (const id of [...candidates]) {
+      if (state.inventory.length >= MAX_INVENTORY_SIZE) break;
       takeItem(id, sayFn);
+      takenAny = true;
+    }
+
+    if (!takenAny) {
+      saySafe(sayFn, `Your inventory is full (${MAX_INVENTORY_SIZE} max).`);
+    } else if (state.inventory.length >= MAX_INVENTORY_SIZE) {
+      saySafe(sayFn, `Your inventory is now full (${MAX_INVENTORY_SIZE} max).`);
     }
   }
 
@@ -359,6 +377,16 @@
     const allInputsInInventory = inputs.every(isInInventory);
     const placeResult = allInputsInInventory ? "inventory" : "room";
 
+    // If producing to inventory, ensure capacity
+    if (placeResult === "inventory") {
+      const space = MAX_INVENTORY_SIZE - state.inventory.length;
+      const needed = produce.filter(Boolean).length;
+      if (needed > space) {
+        saySafe(sayFn, `You don't have enough space to carry that. (${state.inventory.length}/${MAX_INVENTORY_SIZE})`);
+        return;
+      }
+    }
+
     // Consume specified items (one-by-one)
     for (const id of consume) {
       const removedFrom = removeOne(id);
@@ -372,7 +400,7 @@
     for (const outId of produce) {
       if (!outId) continue;
       if (placeResult === "inventory") addToInventory(outId);
-      else addToRoom(outId); // <-- now drops with coords
+      else addToRoom(outId); // drops with coords
     }
 
     saySafe(sayFn, recipe.text || "Done.");
