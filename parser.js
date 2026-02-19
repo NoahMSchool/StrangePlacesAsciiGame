@@ -21,7 +21,7 @@ const VERB_SYNONYMS = {
   INV:     ["inventory", "i"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
-  USE:     ["use", "apply"],
+  USE:     ["use", "apply", "fish"],
   OPEN:    ["open", "unlock"],
   CLOSE:   ["close", "shut"],
   THROW:   ["throw", "toss", "hurl"],
