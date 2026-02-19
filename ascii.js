@@ -66,9 +66,25 @@ const gridsize = 7;
 
 var gridstring = ""
 
-// --------- NEW: safe ascii tile helpers ---------
+// ---------- NEW: one-time warning tracking ----------
+const _warnedMissingAscii = new Set();
+const _warnedBadSizeAscii = new Set();
 
-function logNoAsciiTile(itemDefOrId) {
+function _itemWarnKey(itemDefOrId) {
+  if (itemDefOrId && typeof itemDefOrId === "object") {
+    // Prefer stable identifiers if present
+    return itemDefOrId.id || itemDefOrId.key || itemDefOrId.name || JSON.stringify(itemDefOrId);
+  }
+  return String(itemDefOrId);
+}
+
+// ---------- NEW: safe ascii tile helpers ----------
+
+function logNoAsciiTileOnce(itemDefOrId) {
+  const key = _itemWarnKey(itemDefOrId);
+  if (_warnedMissingAscii.has(key)) return;
+  _warnedMissingAscii.add(key);
+
   const name =
     (itemDefOrId && typeof itemDefOrId === "object" && itemDefOrId.name)
       ? itemDefOrId.name
@@ -77,21 +93,61 @@ function logNoAsciiTile(itemDefOrId) {
   console.log(`%cNo Ascii Map for Tile: ${name}`, "color: red; font-weight: bold;");
 }
 
-function isValidAsciiTile(tile) {
-  return (
-    Array.isArray(tile) &&
-    tile.length >= tileheight &&
-    tile.every(line => typeof line === "string")
+function logWrongAsciiSizeOnce(itemDefOrId, width, height) {
+  const key = _itemWarnKey(itemDefOrId);
+  if (_warnedBadSizeAscii.has(key)) return;
+  _warnedBadSizeAscii.add(key);
+
+  const name =
+    (itemDefOrId && typeof itemDefOrId === "object" && itemDefOrId.name)
+      ? itemDefOrId.name
+      : String(itemDefOrId);
+
+  console.log(
+    `%cAscii Tile Wrong Size for: ${name} (got ${width}x${height}, expected ${tilewidth}x${tileheight})`,
+    "color: orange; font-weight: bold;"
   );
+}
+
+function isValidAsciiTile(tile, itemDefOrId) {
+  if (!Array.isArray(tile)) return false;
+
+  const height = tile.length;
+
+  // Height check
+  if (height !== tileheight) {
+    const widthGuess = (typeof tile[0] === "string") ? tile[0].length : 0;
+    logWrongAsciiSizeOnce(itemDefOrId, widthGuess, height);
+    return false;
+  }
+
+  // Width + row type checks
+  for (let r = 0; r < tileheight; r++) {
+    const row = tile[r];
+    if (typeof row !== "string") {
+      logWrongAsciiSizeOnce(itemDefOrId, 0, height);
+      return false;
+    }
+    if (row.length !== tilewidth) {
+      logWrongAsciiSizeOnce(itemDefOrId, row.length, height);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function safeAsciiTileForItem(itemId, itemDef) {
   const tile = itemDef?.asciiTile;
-  if (isValidAsciiTile(tile)) return tile;
 
-  logNoAsciiTile(itemDef || itemId);
+  if (isValidAsciiTile(tile, itemDef || itemId)) return tile;
 
-  // Fallback (pick one):
+  // Missing entirely -> red (once)
+  if (!tile) logNoAsciiTileOnce(itemDef || itemId);
+
+  // Wrong size -> orange already logged (once) by isValidAsciiTile
+
+  // Fallback: choose what you prefer:
   // return default_tiles["blank"];
   return default_tiles["randomchar"];
 }
@@ -113,7 +169,7 @@ function intialise_tilegrid(){
 function grid_to_room(room){
   let newtiles = intialise_tilegrid()
 
-  // Safe wall borders (in case WALL has no asciiTile)
+  // Safe wall borders (in case WALL has no asciiTile or wrong size)
   const wallTile = safeAsciiTileForItem("WALL", ITEM_DEFS.WALL);
 
   for (var i = 0; i < gridsize; i++) {
@@ -159,7 +215,7 @@ function get_grid_display(gridtiles){
     for (var i = 0; i < tileheight; i++) {
       for (var columnnum = 0; columnnum < gridtiles[rownum].length; columnnum++){
         const tile = gridtiles[rownum][columnnum]
-        const safeTile = isValidAsciiTile(tile) ? tile : default_tiles["randomchar"]
+        const safeTile = isValidAsciiTile(tile, "UNKNOWN_TILE") ? tile : default_tiles["randomchar"]
         string += safeTile[i].slice(0, tilewidth)
       }
       string += "\n"
