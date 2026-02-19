@@ -21,7 +21,6 @@ const ROOM_DEFS = {
       ITEM.LEAVES,
       ITEM.CORN,
       ITEM.MAGNET,
-      ITEM.GRATE,
       ITEM.ROPE, // your "string"
     ],
     exits: {

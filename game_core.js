@@ -37,6 +37,12 @@
     return d ? `${d.emoji} ${d.name}` : id;
   }
 
+  // If EAT has no recipe, this provides the item-specific rejection text.
+  function cantEatMessage(itemId) {
+    const def = getItemDef(itemId);
+    return def?.eatText || "You can't eat that.";
+  }
+
   // ---------------- room item entry helpers ----------------
   function isEntryWithCoord(entry) {
     return Array.isArray(entry) && entry.length === 2 && Array.isArray(entry[1]);
@@ -168,7 +174,7 @@
   function helpText(sayFn) {
     saySafe(
       sayFn,
-      "This is a game of skill and cunning. Type commands like LOOK (L), GO NORTH, TAKE <item>, DROP <item>, INVENTORY (I), COMBINE, MAKE, EAT, HELP."
+      "This is a game of skill and cunning. Type commands like LOOK (L), GO NORTH, TAKE <item>, DROP <item>, INVENTORY (I), COMBINE, MAKE, EAT, PUSH, PULL, HELP."
     );
   }
 
@@ -231,22 +237,6 @@
 
     state.currentRoom = next;
     renderRoom(sayFn);
-  }
-
-  function eatItem(itemId, sayFn) {
-    const def = getItemDef(itemId);
-    if (!def) return saySafe(sayFn, "That doesn't exist.");
-
-    if (!isInInventory(itemId) && !isInRoom(itemId)) {
-      return saySafe(sayFn, "You can't see that here.");
-    }
-
-    if (!def.edible) {
-      return saySafe(sayFn, def.eatText || "You can't eat that.");
-    }
-
-    removeOne(itemId);
-    saySafe(sayFn, def.eatText || "You eat it.");
   }
 
   function takeItem(itemId, sayFn) {
@@ -326,6 +316,7 @@
     getItemDef,
     saySafe,
     formatItem,
+    cantEatMessage,
 
     // room entry helpers (useful elsewhere)
     entryToId,
@@ -354,7 +345,6 @@
     dropItem,
     takeAll,
     dropAll,
-    eatItem,
     examineItem,
   };
 })();

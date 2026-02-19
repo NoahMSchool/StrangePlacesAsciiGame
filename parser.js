@@ -11,7 +11,7 @@ const DIR = {
 };
 
 const VERB_SYNONYMS = {
-  HELP:      ["help", "?", "??", "???", "wtf"],
+  HELP:    ["help", "?", "??", "???", "wtf"],
   GO:      ["go", "walk", "run", "head"],
   INV:     ["inventory", "i"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
@@ -20,9 +20,9 @@ const VERB_SYNONYMS = {
   OPEN:    ["open", "unlock"],
   CLOSE:   ["close", "shut"],
   THROW:   ["throw", "toss", "hurl"],
-  PUSH:    ["push", "shove", "kick", "move"],
+  PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
-  LOOK:    ["l","look", "look at", "examine", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
+  LOOK:    ["l","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
   COMBINE: ["combine", "mix", "join", "attach", "merge", "connect", "tie", "feed"],
   MAKE:    ["make", "craft", "build"],
   EAT:     ["eat", "consume", "devour"]

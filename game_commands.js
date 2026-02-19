@@ -64,15 +64,105 @@
     G.saySafe(sayFn, recipe.text || "Done.");
   }
 
+  // ---------------- ACTION RECIPES (EAT / PUSH / PULL) ----------------
+  // Add these as entries inside RECIPES in recipes.js:
+  // {
+  //   action: "PUSH" | "PULL" | "EAT",
+  //   target: ITEM.SOMETHING,
+  //   requires: [...optional...],
+  //   consume: [...optional...],
+  //   produce: [...optional...],
+  //   placeResult: "room" | "inventory" (default "room"),
+  //   text: "..."
+  // }
+
+  function listAllRecipes() {
+    return window.RECIPES ? Object.values(window.RECIPES) : [];
+  }
+
+  function findActionRecipe(action, targetId) {
+    const a = String(action || "").toUpperCase();
+    return listAllRecipes().find((r) =>
+      r &&
+      String(r.action || "").toUpperCase() === a &&
+      r.target === targetId
+    ) || null;
+  }
+
+  function hasAllRequired(requireIds) {
+    if (!Array.isArray(requireIds) || requireIds.length === 0) return true;
+    const have = G.allAvailableItemsSet();
+    return requireIds.every((id) => have.has(id));
+  }
+
+  function doAction(action, targetId, sayFn) {
+    if (!targetId) return;
+
+    const verb = String(action || "").toUpperCase();
+
+    const inRoom = G.isInRoom(targetId);
+    const inInv = G.isInInventory(targetId);
+
+    // Presence rules:
+    // - EAT: can be in room OR inventory
+    // - PUSH/PULL: must be in room
+    if (verb === "EAT") {
+      if (!inRoom && !inInv) return G.saySafe(sayFn, "You can't see that here.");
+    } else {
+      if (!inRoom) return G.saySafe(sayFn, "You can't see that here.");
+    }
+
+    const recipe = findActionRecipe(verb, targetId);
+
+    // No recipe = doesn't work
+    if (!recipe) {
+      if (verb === "EAT") return G.saySafe(sayFn, G.cantEatMessage(targetId));
+      return G.saySafe(sayFn, "Nothing happens.");
+    }
+
+    if (!hasAllRequired(recipe.requires)) {
+      const have = G.allAvailableItemsSet();
+      const missing = (recipe.requires || []).filter((id) => !have.has(id));
+      return G.saySafe(sayFn, `You can't do that yet. You need: ${missing.map(G.formatItem).join(", ")}.`);
+    }
+
+    const consume = Array.isArray(recipe.consume) ? recipe.consume : [targetId];
+    const produce = Array.isArray(recipe.produce) ? recipe.produce : (recipe.output ? [recipe.output] : []);
+    const placeResult = recipe.placeResult === "inventory" ? "inventory" : "room";
+
+    if (placeResult === "inventory") {
+      const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
+      const needed = produce.filter(Boolean).length;
+      if (needed > space) {
+        return G.saySafe(sayFn, `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`);
+      }
+    }
+
+    // Consume
+    for (const id of consume) {
+      const removedFrom = G.removeOne(id);
+      if (!removedFrom) {
+        return G.saySafe(sayFn, `You can't seem to ${verb.toLowerCase()} ${G.formatItem(targetId)} right now.`);
+      }
+    }
+
+    // Produce
+    for (const outId of produce) {
+      if (!outId) continue;
+      if (placeResult === "inventory") G.addToInventory(outId);
+      else G.addToRoom(outId);
+    }
+
+    G.saySafe(sayFn, recipe.text || "Done.");
+  }
+
+  // ---------------- MAKE system (unchanged) ----------------
+
   function recipeProduces(recipe, targetId) {
     const produced = Array.isArray(recipe.produce)
       ? recipe.produce
       : (recipe.output ? [recipe.output] : []);
     return produced.includes(targetId);
-  }
-
-  function listAllRecipes() {
-    return window.RECIPES ? Object.values(window.RECIPES) : [];
   }
 
   function canMake(recipe) {
@@ -165,9 +255,20 @@
       return makeTarget(a, sayFn);
     }
 
+    // ✅ Recipe-driven actions:
     if (verb === "EAT") {
       if (!a) return G.saySafe(sayFn, "Eat what?");
-      return G.eatItem(a, sayFn);
+      return doAction("EAT", a, sayFn);
+    }
+
+    if (verb === "PUSH") {
+      if (!a) return G.saySafe(sayFn, "Push what?");
+      return doAction("PUSH", a, sayFn);
+    }
+
+    if (verb === "PULL") {
+      if (!a) return G.saySafe(sayFn, "Pull what?");
+      return doAction("PULL", a, sayFn);
     }
 
     if (verb === "HELP") {
@@ -224,7 +325,12 @@
     takeItem: G.takeItem,
     dropItem: G.dropItem,
     examineItem: G.examineItem,
+
+    // crafting
     combineItems,
     makeTarget,
+
+    // new action system (optional external use)
+    doAction,
   };
 })();
