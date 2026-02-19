@@ -6,6 +6,7 @@ const ROOM = Object.freeze({
   DINING_ROOM: "DINING_ROOM",
   PLAYROOM: "PLAYROOM",
   KITCHEN: "KITCHEN",
+  BANK: "BANK",
   NOAHROOM: "NOAHROOM",
 });
 
@@ -15,7 +16,7 @@ const ROOM_DEFS = {
     name: "Forest Clearing",
     desc: "You are standing in a quiet forest clearing. A large, slightly spooky house lies to the north.",
     items: [
-      ITEM.CHICKEN,
+      [ITEM.CHICKEN, [5, 3]],
       ITEM.STICK,
       ITEM.LEAVES,
       ITEM.CORN,
@@ -25,6 +26,7 @@ const ROOM_DEFS = {
     ],
     exits: {
       NORTH: ROOM.ENTRANCE_HALL,
+      EAST: ROOM.BANK,
     },
   },
 
@@ -62,6 +64,32 @@ const ROOM_DEFS = {
     ],
     exits: {
       WEST: ROOM.ENTRANCE_HALL,
+    },
+  },
+
+  [ROOM.BANK]: {
+    id: ROOM.PLAYROOM,
+    name: "Bank",
+    desc: "Loads of coins.",
+    items: [
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+      ITEM.COIN,
+    ],
+    exits: {
+      WEST: ROOM.CLEARING,
     },
   },
 

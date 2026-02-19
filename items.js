@@ -21,6 +21,7 @@ const ITEM = Object.freeze({
   LEAVES: "LEAVES",
   STICK: "STICK",
   FISHING_ROD: "FISHING_ROD",
+  COIN: "COIN",
 });
 
 // -----------------------------------------------------------------------------
@@ -286,6 +287,17 @@ const ITEM_DEFS = Object.freeze({
     emoji: "🪵",
     synonyms: ["stick", "branch", "wooden stick"],
     examine: "A sturdy stick. Straight enough to be useful.",
+    visible: true,
+    portable: true,
+  },
+
+  // ---- Needed for magnet + string + stick = fishing rod ----
+  [ITEM.COIN]: {
+    id: ITEM.COIN,
+    name: "Coin",
+    emoji: "💰",
+    synonyms: ["money"],
+    examine: "A coin.",
     visible: true,
     portable: true,
   },
