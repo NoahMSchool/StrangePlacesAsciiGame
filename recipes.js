@@ -44,6 +44,15 @@ const RECIPES = Object.freeze({
     text: "You push aside the leaves, revealing a grate.",
   },
 
+  [keyOf([ITEM.EGG, ITEM.MICROWAVE])]: {
+  inputs: [ITEM.EGG, ITEM.MICROWAVE],
+
+  consume: [ITEM.EGG],
+  produce: [ITEM.DINOSAUR_EGG],
+
+  text: "The microwave hums loudly. When it stops, the egg has grown… scaly.",
+},
+
 });
 
 function findRecipe(inputs) {
