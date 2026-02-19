@@ -1,21 +1,17 @@
-// game.js
-// Runtime that executes parsed commands against your rooms/items/recipes.
-// file:// friendly (globals on window.*)
+// game_core.js
+// Core game state + utilities + world operations (no command parsing)
 
 (function () {
   // ---------------- GAME CONSTANTS ----------------
-
   const MAX_INVENTORY_SIZE = 5;
 
   // ---------------- GAME STATE ----------------
-
   const state = {
     currentRoom: window.START_ROOM,
     inventory: [], // array of ITEM IDs
   };
 
   // ---------------- UTIL ----------------
-
   function getRoom(roomId) {
     return window.getRoom ? window.getRoom(roomId) : window.ROOM_DEFS?.[roomId];
   }
@@ -41,8 +37,7 @@
     return d ? `${d.emoji} ${d.name}` : id;
   }
 
-  // ---------------- NEW: room item entry helpers ----------------
-
+  // ---------------- room item entry helpers ----------------
   function isEntryWithCoord(entry) {
     return Array.isArray(entry) && entry.length === 2 && Array.isArray(entry[1]);
   }
@@ -73,7 +68,7 @@
     return false;
   }
 
-  // Random interior coord (7x7, not on border)
+  // ---------------- coord placement helpers ----------------
   const ROOM_SIZE = 7; // 0..6
   const MIN_INTERIOR = 1;
   const MAX_INTERIOR = ROOM_SIZE - 2; // 5
@@ -144,7 +139,6 @@
     saySafe(sayFn, `You are in ${room.name}.`);
     saySafe(sayFn, room.desc);
 
-    // Visible items
     const visible = (window.getVisibleItems ? window.getVisibleItems(state.currentRoom) : null);
     if (Array.isArray(visible)) {
       saySafe(sayFn, "You see: " + (visible.length ? visible.join(", ") : "(nothing)"));
@@ -158,7 +152,6 @@
       saySafe(sayFn, "You see: " + (list.length ? list.join(", ") : "(nothing)"));
     }
 
-    // Exits
     const exits = Object.keys(room.exits || {});
     saySafe(sayFn, "Exits: " + (exits.length ? exits.join(", ") : "(none)"));
   }
@@ -172,8 +165,14 @@
     saySafe(sayFn, `You are carrying (${state.inventory.length}/${MAX_INVENTORY_SIZE}): ` + list.join(", "));
   }
 
-  // ---------------- WORLD QUERIES ----------------
+  function helpText(sayFn) {
+    saySafe(
+      sayFn,
+      "This is a game of skill and cunning. Type commands like LOOK (L), GO NORTH, TAKE <item>, DROP <item>, INVENTORY (I), COMBINE, MAKE, EAT, HELP."
+    );
+  }
 
+  // ---------------- WORLD QUERIES ----------------
   function isInRoom(itemId, roomId = state.currentRoom) {
     const room = getRoom(roomId);
     return roomHasItem(room, itemId);
@@ -183,8 +182,6 @@
     return state.inventory.includes(itemId);
   }
 
-  // Remove one instance of itemId from inventory or room.
-  // Prefer inventory if present there.
   function removeOne(itemId) {
     const invIdx = state.inventory.indexOf(itemId);
     if (invIdx >= 0) {
@@ -207,8 +204,6 @@
   function addToRoom(itemId) {
     const room = ensureRoomItemsArray();
     if (!room) return;
-
-    // Put it somewhere sensible in the new format
     addToRoomAtRandomInterior(room, itemId);
   }
 
@@ -219,7 +214,6 @@
   }
 
   // ---------------- ACTIONS ----------------
-
   function examineItem(itemId, sayFn) {
     const def = getItemDef(itemId);
     if (!def) return saySafe(sayFn, "You see nothing special.");
@@ -251,16 +245,9 @@
       return saySafe(sayFn, def.eatText || "You can't eat that.");
     }
 
-    // remove from wherever it is
     removeOne(itemId);
-
     saySafe(sayFn, def.eatText || "You eat it.");
   }
-
-  function helpText(sayFn) {
-    saySafe(sayFn, "This is a game of skill and cunning. Type in commands such as LOOK (L) or INVENTORY (I). Help yourself!");
-  }
-
 
   function takeItem(itemId, sayFn) {
     const room = ensureRoomItemsArray();
@@ -270,9 +257,7 @@
 
     const def = getItemDef(itemId);
     if (!def) return saySafe(sayFn, "That doesn't exist.");
-    if (!def.portable) {
-      return saySafe(sayFn, def.takeText || "You can't pick that up.");
-    }
+    if (!def.portable) return saySafe(sayFn, def.takeText || "You can't pick that up.");
 
     if (state.inventory.length >= MAX_INVENTORY_SIZE) {
       return saySafe(sayFn, `Your inventory is full (${MAX_INVENTORY_SIZE} max). Drop something first.`);
@@ -280,7 +265,6 @@
 
     removeOneFromRoom(room, itemId);
     state.inventory.push(itemId);
-
     saySafe(sayFn, `Taken. (${def.emoji} ${def.name})`);
   }
 
@@ -296,9 +280,7 @@
     const idx = state.inventory.indexOf(itemId);
     if (idx >= 0) state.inventory.splice(idx, 1);
 
-    // Put it back into the room with a random interior coordinate
     addToRoomAtRandomInterior(room, itemId);
-
     saySafe(sayFn, `Dropped. (${def.emoji} ${def.name})`);
   }
 
@@ -313,12 +295,8 @@
         return def && def.portable && def.visible !== false;
       });
 
-    if (candidates.length === 0) {
-      saySafe(sayFn, "There's nothing here you can take.");
-      return;
-    }
+    if (candidates.length === 0) return saySafe(sayFn, "There's nothing here you can take.");
 
-    // Take until inventory is full
     let takenAny = false;
     for (const id of [...candidates]) {
       if (state.inventory.length >= MAX_INVENTORY_SIZE) break;
@@ -326,261 +304,57 @@
       takenAny = true;
     }
 
-    if (!takenAny) {
-      saySafe(sayFn, `Your inventory is full (${MAX_INVENTORY_SIZE} max).`);
-    } else if (state.inventory.length >= MAX_INVENTORY_SIZE) {
-      saySafe(sayFn, `Your inventory is now full (${MAX_INVENTORY_SIZE} max).`);
-    }
+    if (!takenAny) saySafe(sayFn, `Your inventory is full (${MAX_INVENTORY_SIZE} max).`);
+    else if (state.inventory.length >= MAX_INVENTORY_SIZE) saySafe(sayFn, `Your inventory is now full (${MAX_INVENTORY_SIZE} max).`);
   }
 
   function dropAll(sayFn) {
-    if (state.inventory.length === 0) {
-      saySafe(sayFn, "You're not carrying anything.");
-      return;
-    }
-
-    for (const id of [...state.inventory]) {
-      dropItem(id, sayFn);
-    }
+    if (state.inventory.length === 0) return saySafe(sayFn, "You're not carrying anything.");
+    for (const id of [...state.inventory]) dropItem(id, sayFn);
   }
 
-  // ---------------- RECIPES / CRAFTING ----------------
+  // ---------------- EXPOSE CORE ----------------
+  window.GameCore = {
+    // constants
+    MAX_INVENTORY_SIZE,
 
-  // COMBINE: uses recipe matching by inputs (order independent) via window.findRecipe(inputs)
-  function combineItems(itemIds, sayFn) {
-    const inputs = itemIds.filter(Boolean);
-    if (inputs.length < 2 || inputs.length > 3) {
-      saySafe(sayFn, "That command needs 2 or 3 things.");
-      return;
-    }
-
-    // Verify all inputs exist somewhere (room or inventory)
-    for (const id of inputs) {
-      if (!isInInventory(id) && !isInRoom(id)) {
-        saySafe(sayFn, `You can't find ${formatItem(id)} here.`);
-        return;
-      }
-    }
-
-    const recipe = (typeof window.findRecipe === "function") ? window.findRecipe(inputs) : null;
-    if (!recipe) {
-      saySafe(sayFn, "Nothing happens.");
-      return;
-    }
-
-    const consume = Array.isArray(recipe.consume)
-      ? recipe.consume
-      : (Array.isArray(recipe.inputs) ? recipe.inputs : inputs);
-
-    const produce = Array.isArray(recipe.produce)
-      ? recipe.produce
-      : (recipe.output ? [recipe.output] : []);
-
-    // Place result:
-    // - If ALL inputs were in inventory -> produced items go to inventory.
-    // - Otherwise -> produced items go to room.
-    const allInputsInInventory = inputs.every(isInInventory);
-    const placeResult = allInputsInInventory ? "inventory" : "room";
-
-    // If producing to inventory, ensure capacity
-    if (placeResult === "inventory") {
-      const space = MAX_INVENTORY_SIZE - state.inventory.length;
-      const needed = produce.filter(Boolean).length;
-      if (needed > space) {
-        saySafe(sayFn, `You don't have enough space to carry that. (${state.inventory.length}/${MAX_INVENTORY_SIZE})`);
-        return;
-      }
-    }
-
-    // Consume specified items (one-by-one)
-    for (const id of consume) {
-      const removedFrom = removeOne(id);
-      if (!removedFrom) {
-        saySafe(sayFn, `You can't seem to use ${formatItem(id)} right now.`);
-        return;
-      }
-    }
-
-    // Produce outputs
-    for (const outId of produce) {
-      if (!outId) continue;
-      if (placeResult === "inventory") addToInventory(outId);
-      else addToRoom(outId); // drops with coords
-    }
-
-    saySafe(sayFn, recipe.text || "Done.");
-  }
-
-  // MAKE: player supplies target item, engine finds a recipe that produces it.
-  // Requires window.RECIPES to be exposed (recipes.js should do: window.RECIPES = RECIPES).
-  function recipeProduces(recipe, targetId) {
-    const produced = Array.isArray(recipe.produce)
-      ? recipe.produce
-      : (recipe.output ? [recipe.output] : []);
-    return produced.includes(targetId);
-  }
-
-  function listAllRecipes() {
-    return window.RECIPES ? Object.values(window.RECIPES) : [];
-  }
-
-  function canMake(recipe) {
-    const have = allAvailableItemsSet();
-    const inputs = Array.isArray(recipe.inputs) ? recipe.inputs : [];
-    return inputs.every((id) => have.has(id));
-  }
-
-  function missingFor(recipe) {
-    const have = allAvailableItemsSet();
-    const inputs = Array.isArray(recipe.inputs) ? recipe.inputs : [];
-    return inputs.filter((id) => !have.has(id));
-  }
-
-  function makeTarget(targetId, sayFn) {
-    if (!window.RECIPES) {
-      saySafe(
-        sayFn,
-        'MAKE needs recipes.js to expose RECIPES. Add:\nwindow.RECIPES = RECIPES;\nwindow.findRecipe = findRecipe;'
-      );
-      return;
-    }
-
-    const targetDef = getItemDef(targetId);
-    const targetName = targetDef ? targetDef.name : targetId;
-
-    const candidates = listAllRecipes().filter((r) => recipeProduces(r, targetId));
-    if (candidates.length === 0) {
-      saySafe(sayFn, `You don't know how to make ${targetName}.`);
-      return;
-    }
-
-    // Prefer a recipe you can make now; otherwise pick first and explain missing parts.
-    const doable = candidates.find(canMake);
-    const chosen = doable || candidates[0];
-
-    if (!canMake(chosen)) {
-      const miss = missingFor(chosen);
-      saySafe(sayFn, `You can't make ${targetName} yet. You need: ${miss.map(formatItem).join(", ")}.`);
-      return;
-    }
-
-    // Use the same logic as COMBINE (consume/produce rules)
-    combineItems(chosen.inputs, sayFn);
-  }
-
-  // ---------------- COMMAND EXECUTION ----------------
-
-  function executeCommand(cmdStr, sayFn) {
-    const parts = String(cmdStr || "").trim().split(/\s+/).filter(Boolean);
-    const verb = parts[0] || "";
-    const a = parts[1] || null;
-    const b = parts[2] || null;
-    const c = parts[3] || null;
-
-    if (verb === "LOOK") {
-      if (!a) renderRoom(sayFn);
-      else examineItem(a, sayFn);
-      return;
-    }
-
-    if (verb === "GO") {
-      if (!a) return saySafe(sayFn, "Go where?");
-      goDir(a, sayFn);
-      return;
-    }
-
-    if (verb === "TAKE") {
-      if (!a) return saySafe(sayFn, "Take what?");
-      if (a === "ALL") return takeAll(sayFn);
-      return takeItem(a, sayFn);
-    }
-
-    if (verb === "DROP") {
-      if (!a) return saySafe(sayFn, "Drop what?");
-      if (a === "ALL") return dropAll(sayFn);
-      return dropItem(a, sayFn);
-    }
-
-    if (verb === "INVENTORY" || verb === "INV") {
-      showInventory(sayFn);
-      return;
-    }
-
-    if (verb === "COMBINE") {
-      return combineItems([a, b, c].filter(Boolean), sayFn);
-    }
-
-    // MAKE <target>
-    if (verb === "MAKE") {
-      if (!a) return saySafe(sayFn, "Make what?");
-      return makeTarget(a, sayFn);
-    }
-
-    if (verb === "EAT") {
-      if (!a) return saySafe(sayFn, "Eat what?");
-      return eatItem(a, sayFn);
-    }
-
-    if (verb === "HELP") {
-      return helpText(sayFn);
-    }
-
-    // Placeholder for future:
-    if (verb === "USE") {
-      // If USE has 2 or 3 nouns, route to recipe system (same as COMBINE)
-      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
-
-      // Otherwise it's a single-target "use" (you can expand later)
-      if (!a) return saySafe(sayFn, "Use what?");
-      return saySafe(sayFn, `You can't figure out how to use ${formatItem(a)} here.`);
-    }
-
-    saySafe(sayFn, `(No handler yet for ${cmdStr})`);
-  }
-
-  function executeParseResult(parseResult, sayFn) {
-    if (!parseResult) return;
-
-    for (const cmdStr of parseResult.known || []) {
-      executeCommand(cmdStr, sayFn);
-    }
-
-    for (const u of parseResult.unknown || []) {
-      if (u?.error) saySafe(sayFn, u.error);
-      else saySafe(sayFn, `I don't understand "${u?.raw ?? "that"}".`);
-    }
-  }
-
-  function executeKnownCommand(cmdStr, sayFn) {
-    executeCommand(cmdStr, sayFn);
-  }
-
-  function resetGame({ roomId } = {}) {
-    state.currentRoom = roomId ?? window.START_ROOM;
-    state.inventory.length = 0;
-  }
-
-  // ---------------- EXPOSE ----------------
-
-  window.GameRuntime = {
+    // state
     state,
-    resetGame,
-    getItemDef,
 
+    // util
+    getRoom,
+    getItemDef,
+    saySafe,
+    formatItem,
+
+    // room entry helpers (useful elsewhere)
+    entryToId,
+    entryToCoord,
+    roomHasItem,
+    removeOneFromRoom,
+    addToRoomAtRandomInterior,
+
+    // world queries
+    isInRoom,
+    isInInventory,
+    removeOne,
+    addToInventory,
+    addToRoom,
+    allAvailableItemsSet,
+
+    // rendering
     getCurrentRoom,
     renderRoom,
     showInventory,
 
-    executeCommand,
-    executeKnownCommand,
-    executeParseResult,
-
     // actions
+    helpText,
     goDir,
     takeItem,
     dropItem,
+    takeAll,
+    dropAll,
+    eatItem,
     examineItem,
-    combineItems,
-    makeTarget,
   };
 })();
