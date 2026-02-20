@@ -8,6 +8,16 @@ const RECIPES = Object.freeze({
   // Fishing rod recipes (now supports 2-step crafting)
   // ---------------------------------------------------------------------------
 
+  UNLOCK_LOCKED_DOOR: {
+    action: "UNLOCK",
+    target: ITEM.DOOR_LOCKED,
+    consume: [ITEM.DOOR_LOCKED, ITEM.KEY],
+    produce: [ITEM.DOOR_CLOSED],
+    keepCoord: true,          
+    placeResult: "room",
+    text: "You unlock the door. The key breaks.",
+  },
+
   OPEN_CLOSED_DOOR: {
     action: "OPEN",
     target: ITEM.DOOR_CLOSED,
@@ -115,6 +125,15 @@ const RECIPES = Object.freeze({
     placeResult: "room",
     keepCoord: true,          
     text: "You push aside the leaves, revealing a grate.",
+  },
+
+  FREE_CHICKEN: {
+    action: "PUSH",
+    target: ITEM.CHICKEN_IN_WEB,
+    consume: [ITEM.CHICKEN_IN_WEB],
+    produce: [ITEM.CHICKEN, ITEM.ROPE],
+    placeResult: "room",
+    text: "Squaaawk! You free the chicken from the web. It eyes you suspicisouly. Strings of web are all over the floor",
   },
 
   // Egg + microwave => dinosaur egg
