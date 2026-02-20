@@ -3,140 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Strange Places</title>
+  <title>A Strange Character Is In (ASCII)</title>
+  <link rel="stylesheet" href="style.css">
 
-  <style>
-    :root {
-      --fg: #33ff33;
-      --bg: #000;
-      --panel-bg: #050505;
-      --border: 1px solid #33ff33;
-      --radius: 10px;
-
-      /* ASCII panel: 7x7 tiles, each tile 9x5 => 63x35 */
-      --ascii-w: 63ch;
-      --ascii-lines: 35;
-      --ascii-lh: 1.1em;
-    }
-
-    html, body { height: 100%; margin: 0; }
-
-    body {
-      font-family: ui-monospace, Menlo, Consolas, monospace;
-      background: var(--bg);
-      color: var(--fg);
-      padding: 16px;
-      box-sizing: border-box;
-    }
-
-    /* Mobile first: header, map, log, input */
-    .app {
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1fr;
-      grid-template-rows: auto auto minmax(0, 1fr) auto; /* no extra bottom box row */
-      grid-template-areas:
-        "header"
-        "ascii"
-        "log"
-        "input";
-    }
-
-    /* Desktop: 2 columns (left: header/log/input, right: map)
-       Header aligns with top of map. */
-    @media (min-width: 900px) {
-      .app {
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto minmax(0, 1fr) auto;
-        grid-template-areas:
-          "header ascii"
-          "log    ascii"
-          "input  ascii";
-        align-items: start;
-      }
-    }
-
-    .header { grid-area: header; }
-    h3 { margin: 0 0 6px 0; }
-    .status { opacity: 0.95; margin: 0; min-height: 1.2em; }
-
-    /* Make header and map top edges line up nicely */
-    @media (min-width: 900px) {
-      .header { padding-top: 2px; }
-      .asciiWrap { margin-top: 0; }
-    }
-
-    #log {
-      grid-area: log;
-      border: var(--border);
-      padding: 10px;
-      border-radius: var(--radius);
-      background: var(--panel-bg);
-      white-space: pre-wrap;
-
-      overflow-y: auto;
-      min-height: 0;
-      height: 100%;
-    }
-
-    /* Input row contains input + Send + Test (same line) */
-    .row {
-      grid-area: input;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    input, button { font: inherit; padding: 8px; }
-    input { flex: 1 1 320px; min-width: 220px; } /* grows but doesn't force overlap */
-    button { cursor: pointer; }
-
-    /* ASCII panel */
-    .asciiWrap {
-      grid-area: ascii;
-      border: var(--border);
-      border-radius: var(--radius);
-      background: var(--panel-bg);
-      padding: 10px;
-      overflow: hidden;
-      align-self: start;
-    }
-
-    #asciiOutput {
-      margin: 0;
-      width: var(--ascii-w);
-      line-height: var(--ascii-lh);
-      height: calc(var(--ascii-lines) * var(--ascii-lh));
-      overflow: hidden;
-      white-space: pre;
-      user-select: none;
-      font-size: 0.5em;
-    }
-
-    @supports (height: 100dvh) {
-      html, body { height: 100dvh; }
-    }
-  </style>
 </head>
 
 <body>
   <div class="app">
     <div class="header">
-      <h3>Strange Places</h3>
+      <h1>A Strange Character Is In (ASCII)</h1>
       <div class="status" id="status"></div>
     </div>
+    <h2> A Submission for Brackeys GameJam 2026.2</h2>
 
     <div class="asciiWrap" aria-label="ASCII panel">
       <pre id="asciiOutput"></pre>
     </div>
 
 
-    <div id="log"></div>
+    <div id="inputBox"></div>
 
     <!-- Send + Test on the same row -->
     <div class="row">
@@ -160,7 +45,7 @@
   <script src="ascii.js"></script>
 
   <script>
-    const log = document.getElementById("log");
+    const inputBox = document.getElementById("inputBox");
     const status = document.getElementById("status");
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
@@ -168,6 +53,8 @@
     const testTile = document.getElementById("testTile");
 
     function say(t) {
+      inputBox.textContent += t + "\n";
+      inputBox.scrollTop = inputBox.scrollHeight;
     }
 
     function setStatus(t) {
