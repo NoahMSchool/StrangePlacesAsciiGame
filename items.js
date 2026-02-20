@@ -7,10 +7,13 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   WALL: "WALL",
+  TREE: "TREE",
   DOOR_CLOSED: "DOOR_CLOSED",
   DOOR_OPEN: "DOOR_OPEN",
+  DOOR_LOCKED: "DOOR_LOCKED",
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
+  CHICKEN_IN_WEB: "CHICKEN_IN_WEB",
   DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
   CORN: "CORN",
@@ -72,6 +75,23 @@ const ITEM_DEFS = Object.freeze({
     ],
   },
 
+  [ITEM.DOOR_LOCKED]: {
+    id: ITEM.DOOR_LOCKED,
+    name: "Locked Door",
+    emoji: "🔒",
+    synonyms: ["door", "locked door"],
+    examine: "A locked door. The keyhole looks inviting.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "|=======|",
+      "||  _  ||",
+      "|| |_| ||",
+      "||  O  ||",
+      "||_XXX_||",
+    ],
+  },
+
   [ITEM.DOOR_CLOSED]: {
     id: ITEM.DOOR_CLOSED,
     name: "Closed Door",
@@ -106,6 +126,24 @@ const ITEM_DEFS = Object.freeze({
     ],
   },
 
+
+ [ITEM.TREE]: {
+    id: ITEM.TREE,
+    name: "Tree",
+    emoji: "🌲",
+    synonyms: ["tree"],
+    examine: "A spooky tree",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "  TREE   ",
+      "  TREE   ",
+      "  TREE   ",
+      "  TREE   ",
+      "  TREE   "
+    ],
+  },
+
   [ITEM.TEDDYBEAR]: {
     id: ITEM.TEDDYBEAR,
     name: "Teddybear",
@@ -121,6 +159,24 @@ const ITEM_DEFS = Object.freeze({
       "  ( Y )  ",
       " ()~*~() ",
       " (_)-(_) ",
+    ],
+  },
+
+ [ITEM.CHICKEN_IN_WEB]: {
+    id: ITEM.CHICKEN_IN_WEB,
+    name: "Chicken In Web",
+    emoji: "🐔",
+    synonyms: ["chicken", "chick", "chiccie", "hen", "bird", "simon"],
+    examine: "A poor chicken trapped by spider webs. The spiders next meal?",
+    visible: true,
+    portable: false,
+    eatText: "That's the spiders food",
+    asciiTile: [
+      "    ^.   ",
+      "    Bc   ",
+      " __/~\\__ ",
+      "(((\\_/)))",
+      "  _) (_  ",
     ],
   },
 
@@ -230,7 +286,7 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.ROPE,
     name: "String",
     emoji: "🧵",
-    synonyms: ["rope", "cord", "line", "string", "twine"],
+    synonyms: ["rope", "cord", "line", "string", "twine","web"],
     examine: "A length of string. Useful for tying things together.",
     visible: true,
     portable: true,

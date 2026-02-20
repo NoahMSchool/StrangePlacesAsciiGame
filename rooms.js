@@ -8,9 +8,82 @@ const ROOM = Object.freeze({
   KITCHEN: "KITCHEN",
   BANK: "BANK",
   NOAHROOM: "NOAHROOM",
+
+  DARKFOREST: "DARKFOREST",
+  DARKCLEARING: "DARKCLEARING",
+  SHED: "SHED",
+  RIVER: "RIVER",
+  SPIDERFOREST: "SPIDERFOREST",
 });
 
 const ROOM_DEFS = {
+  [ROOM.DARKFOREST]: {
+    id: ROOM.DARKFOREST,
+    name: "Dark Forest",
+    desc: "A dark an spooky forest with trees everywhere except a small gap to the east",
+    items: [
+      [ITEM.TREE, [3, 3]],
+      [ITEM.TREE, [5, 5]],
+      ITEM.KEY,
+    ],    
+    exits: {
+      EAST: ROOM.DARKCLEARING,
+    },
+  },
+
+  [ROOM.DARKCLEARING]: {
+    id: ROOM.DARKCLEARING,
+    name: "Dark Clearing",
+    desc: "A clearing. A shed to the north, and path to the south. A door to the east",
+    items: [
+      [ITEM.LEAVES, [5, 4]],
+    ],
+    exits: {
+      NORTH: ROOM.SHED,
+      SOUTH: ROOM.RIVER,
+      WEST: ROOM.DARKFOREST,
+      EAST: { to: ROOM.BANK, barrier: ITEM.DOOR_LOCKED },
+    },
+  },
+
+  [ROOM.SHED]: {
+    id: ROOM.SHED,
+    name: "Shed",
+    desc: "A shed with a beer fridge. Worth a closer look ... ",
+    items: [
+      ITEM.MAGNET,
+      ITEM.LAMP,
+    ],
+    exits: {
+      SOUTH: ROOM.DARKCLEARING,
+    },
+  },
+
+  [ROOM.RIVER]: {
+    id: ROOM.RIVER,
+    name: "River",
+    desc: "The bank of a running river",
+    items: [
+      ITEM.STICK,
+    ],
+    exits: {
+      NORTH: ROOM.DARKCLEARING,
+      EAST: ROOM.SPIDERFOREST,
+    },
+  },
+
+  [ROOM.SPIDERFOREST]: {
+    id: ROOM.SPIDERFOREST,
+    name: "Spider Forest",
+    desc: "Spider webs everywhere!",
+    items: [
+      ITEM.CHICKEN_IN_WEB,
+    ],
+    exits: {
+      WEST: ROOM.RIVER,
+    },
+  },
+
   [ROOM.CLEARING]: {
     id: ROOM.CLEARING,
     name: "Forest Clearing",
@@ -155,8 +228,7 @@ function exitBarrier(exit) {
 }
 
 function isDoorBarrier(barrierId) {
-  // Step 1: only closed doors are barriers, but keep it flexible
-  return barrierId === ITEM.DOOR_CLOSED;
+  return barrierId === ITEM.DOOR_CLOSED || barrierId === ITEM.DOOR_LOCKED;
 }
 
 // Put door items into room.items based on exits[].barrier

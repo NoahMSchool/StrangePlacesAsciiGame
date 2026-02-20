@@ -38,6 +38,45 @@
     G.saySafe(sayFn, (text || "Done.") + suffix + "\n" + summary);
   }
 
+  // ---------------- availability helpers (prevent partial consume bugs) ----------------
+
+  function isEntryWithCoord(e) {
+    return Array.isArray(e) && e.length === 2 && Array.isArray(e[1]);
+  }
+  function entryId(e) {
+    return isEntryWithCoord(e) ? e[0] : e;
+  }
+  function entryCoord(e) {
+    return isEntryWithCoord(e) ? e[1] : null;
+  }
+
+  function countInRoom(room, itemId) {
+    if (!room || !Array.isArray(room.items)) return 0;
+    let n = 0;
+    for (const e of room.items) if (entryId(e) === itemId) n++;
+    return n;
+  }
+
+  function countInInv(itemId) {
+    return G.state.inventory.filter((x) => x === itemId).length;
+  }
+
+  function canConsumeAllHere(consumeIds) {
+    const want = new Map();
+    for (const id of (consumeIds || [])) {
+      if (!id) continue;
+      want.set(id, (want.get(id) || 0) + 1);
+    }
+
+    const room = G.getRoom(G.state.currentRoom);
+
+    for (const [id, needed] of want.entries()) {
+      const have = countInInv(id) + countInRoom(room, id);
+      if (have < needed) return false;
+    }
+    return true;
+  }
+
   // ---------------- RECIPES / CRAFTING ----------------
 
   function combineItems(itemIds, sayFn) {
@@ -54,7 +93,7 @@
       }
     }
 
-    const recipe = (typeof window.findRecipe === "function") ? window.findRecipe(inputs) : null;
+    const recipe = typeof window.findRecipe === "function" ? window.findRecipe(inputs) : null;
     if (!recipe) return G.saySafe(sayFn, "Nothing happens.");
 
     const consume = Array.isArray(recipe.consume)
@@ -64,6 +103,12 @@
     const produce = Array.isArray(recipe.produce)
       ? recipe.produce
       : (recipe.output ? [recipe.output] : []);
+
+    // Prevent “half-used” bugs: never remove anything unless we can remove everything.
+    if (!canConsumeAllHere(consume)) {
+      G.saySafe(sayFn, "You can't do that right now.");
+      return;
+    }
 
     const allInputsInInventory = inputs.every(G.isInInventory);
     const placeResult = allInputsInInventory ? "inventory" : "room";
@@ -97,7 +142,7 @@
     sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
   }
 
-  // ---------------- ACTION RECIPES (EAT / PUSH / PULL / OPEN / CLOSE) ----------------
+  // ---------------- ACTION RECIPES (EAT / PUSH / PULL / OPEN / UNLOCK / CLOSE) ----------------
 
   function listAllRecipes() {
     return window.RECIPES ? Object.values(window.RECIPES) : [];
@@ -105,11 +150,11 @@
 
   function findActionRecipe(action, targetId) {
     const a = String(action || "").toUpperCase();
-    return listAllRecipes().find((r) =>
-      r &&
-      String(r.action || "").toUpperCase() === a &&
-      r.target === targetId
-    ) || null;
+    return (
+      listAllRecipes().find(
+        (r) => r && String(r.action || "").toUpperCase() === a && r.target === targetId
+      ) || null
+    );
   }
 
   function hasAllRequired(requireIds) {
@@ -118,21 +163,10 @@
     return requireIds.every((id) => have.has(id));
   }
 
-  function isEntryWithCoord(e) {
-    return Array.isArray(e) && e.length === 2 && Array.isArray(e[1]);
-  }
-
-  function entryId(e) {
-    return isEntryWithCoord(e) ? e[0] : e;
-  }
-
-  function entryCoord(e) {
-    return isEntryWithCoord(e) ? e[1] : null;
-  }
-
   function coordToDir(coord) {
     // must match rooms.js edgeCoordForDir layout (7x7)
-    const x = coord?.[0], y = coord?.[1];
+    const x = coord?.[0],
+      y = coord?.[1];
     if (x == null || y == null) return null;
 
     // MID=3 in 7x7
@@ -141,6 +175,10 @@
     if (x === 0 && y === 3) return "WEST";
     if (x === 6 && y === 3) return "EAST";
     return null;
+  }
+
+  function isDoorOpenId(id) {
+    return typeof ITEM !== "undefined" && id === ITEM.DOOR_OPEN;
   }
 
   function replaceRoomItemKeepingCoord(room, fromId, toId) {
@@ -154,14 +192,21 @@
 
     room.items[idx] = [toId, c];
 
-    // If that coord is an edge midpoint, also update exits barrier
+    // If this is an edge midpoint, also update exits barrier
     const dir = coordToDir(c);
     if (dir && room.exits && room.exits[dir] && typeof room.exits[dir] === "object") {
-      // OPEN door means "no barrier" for movement (your rooms.js should treat DOOR_OPEN as passable)
-      room.exits[dir].barrier = (toId === ITEM.DOOR_OPEN) ? ITEM.DOOR_OPEN : toId;
+      // If open door -> no barrier (movement allowed)
+      // Otherwise barrier is the new door state item id (locked/closed/etc)
+      room.exits[dir].barrier = isDoorOpenId(toId) ? null : toId;
     }
 
     return true;
+  }
+
+  function lockedDoorFailMessage(verb, targetId) {
+    // Nice default, but don’t hard-crash if you haven’t added DOOR_LOCKED yet.
+    if (verb === "OPEN" && typeof ITEM !== "undefined" && targetId === ITEM.DOOR_LOCKED) return "It's locked.";
+    return null;
   }
 
   function doAction(action, targetId, sayFn) {
@@ -195,7 +240,9 @@
     }
 
     const consume = Array.isArray(recipe.consume) ? recipe.consume : [targetId];
-    const produce = Array.isArray(recipe.produce) ? recipe.produce : (recipe.output ? [recipe.output] : []);
+    const produce = Array.isArray(recipe.produce)
+      ? recipe.produce
+      : (recipe.output ? [recipe.output] : []);
     const placeResult = recipe.placeResult === "inventory" ? "inventory" : "room";
 
     if (placeResult === "inventory") {
@@ -209,22 +256,49 @@
       }
     }
 
-    // ✅ If recipe says keepCoord, and it's a simple swap, do it in-place:
-    if (recipe.keepCoord && Array.isArray(recipe.consume) && Array.isArray(recipe.produce)) {
-      if (recipe.consume.length === 1 && recipe.produce.length === 1) {
-        const room = G.getRoom(G.state.currentRoom);
-
-        // Only makes sense if the consumed thing is in the room
-        if (G.isInRoom(recipe.consume[0])) {
-          const ok = replaceRoomItemKeepingCoord(room, recipe.consume[0], recipe.produce[0]);
-          if (ok) {
-            sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
-            return;
-          }
-        }
-      }
+    // ✅ Don’t partially consume (this was the “door disappears” bug)
+    if (!canConsumeAllHere(consume)) {
+      const nicer = lockedDoorFailMessage(verb, targetId);
+      return G.saySafe(sayFn, nicer || "You can't do that.");
     }
 
+    // ✅ keepCoord simple rule:
+    // replace FIRST item in consume with FIRST item in produce, keeping coord
+    // then consume the rest normally, and add any extra outputs normally.
+    if (recipe.keepCoord && consume.length >= 1 && produce.length >= 1) {
+      const fromId = consume[0];
+      const toId = produce[0];
+
+      // Only makes sense if the replaced thing is in the room
+      if (G.isInRoom(fromId)) {
+        const room = G.getRoom(G.state.currentRoom);
+
+        // Consume everything except the first (we replace it instead)
+        for (let i = 1; i < consume.length; i++) {
+          const id = consume[i];
+          const removedFrom = G.removeOne(id);
+          if (!removedFrom) return G.saySafe(sayFn, "You can't do that right now.");
+        }
+
+        // Replace the first consumed item in-place
+        const ok = replaceRoomItemKeepingCoord(room, fromId, toId);
+        if (!ok) return G.saySafe(sayFn, "You can't do that right now.");
+
+        // Add any extra produced items
+        for (let i = 1; i < produce.length; i++) {
+          const outId = produce[i];
+          if (!outId) continue;
+          if (placeResult === "inventory") G.addToInventory(outId);
+          else G.addToRoom(outId);
+        }
+
+        sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
+        return;
+      }
+      // If not in room, just fall through to normal consume/produce.
+    }
+
+    // Normal path
     for (const id of consume) {
       const removedFrom = G.removeOne(id);
       if (!removedFrom) {
@@ -241,7 +315,7 @@
     sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
   }
 
-  // ---------------- MAKE system (unchanged) ----------------
+  // ---------------- MAKE system ----------------
 
   function recipeProduces(recipe, targetId) {
     const produced = Array.isArray(recipe.produce)
@@ -356,6 +430,11 @@
       return doAction("PULL", a, sayFn);
     }
 
+    if (verb === "UNLOCK") {
+      if (!a) return G.saySafe(sayFn, "Unlock what?");
+      return doAction("UNLOCK", a, sayFn);
+    }
+
     if (verb === "OPEN") {
       if (!a) return G.saySafe(sayFn, "Open what?");
       return doAction("OPEN", a, sayFn);
@@ -370,6 +449,7 @@
       return G.helpText(sayFn);
     }
 
+    // Keep USE mapped to crafting for now
     if (verb === "USE") {
       if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
       if (!a) return G.saySafe(sayFn, "Use what?");
@@ -382,9 +462,7 @@
   function executeParseResult(parseResult, sayFn) {
     if (!parseResult) return;
 
-    for (const cmdStr of parseResult.known || []) {
-      executeCommand(cmdStr, sayFn);
-    }
+    for (const cmdStr of parseResult.known || []) executeCommand(cmdStr, sayFn);
 
     for (const u of parseResult.unknown || []) {
       if (u?.error) G.saySafe(sayFn, u.error);
