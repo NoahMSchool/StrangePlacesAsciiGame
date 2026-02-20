@@ -8,6 +8,26 @@ const RECIPES = Object.freeze({
   // Fishing rod recipes (now supports 2-step crafting)
   // ---------------------------------------------------------------------------
 
+  OPEN_CLOSED_DOOR: {
+    action: "OPEN",
+    target: ITEM.DOOR_CLOSED,
+    consume: [ITEM.DOOR_CLOSED],
+    produce: [ITEM.DOOR_OPEN],
+    keepCoord: true,          // ✅ this is the magic bit
+    placeResult: "room",
+    text: "You open the door.",
+  },
+
+  CLOSE_OPEN_DOOR: {
+    action: "CLOSE",
+    target: ITEM.DOOR_OPEN,
+    consume: [ITEM.DOOR_OPEN],
+    produce: [ITEM.DOOR_CLOSED],
+    keepCoord: true,          // ✅ this is the magic bit
+    placeResult: "room",
+    text: "You close the door.",
+  },
+
   // magnet + string = magnet-on-a-string (interim)
   [keyOf([ITEM.MAGNET, ITEM.ROPE])]: {
     inputs: [ITEM.MAGNET, ITEM.ROPE],
@@ -93,6 +113,7 @@ const RECIPES = Object.freeze({
     consume: [ITEM.LEAVES],   // remove leaves
     produce: [ITEM.GRATE],    // reveal grate
     placeResult: "room",
+    keepCoord: true,          
     text: "You push aside the leaves, revealing a grate.",
   },
 

@@ -17,6 +17,27 @@
     return ` (${parts.join(", ")})`;
   }
 
+  function formatItemEmojiOnly(id) {
+    const def = G.getItemDef(id);
+    return def?.emoji ?? "❓";
+  }
+
+  function formatEmojiList(ids) {
+    const list = (ids || []).filter(Boolean);
+    if (list.length === 0) return "(nothing)";
+    return list.map(formatItemEmojiOnly).join(" ");
+  }
+
+  function formatRecipeSummaryLine(consume, produce) {
+    return `(used: ${formatEmojiList(consume)} → made: ${formatEmojiList(produce)})`;
+  }
+
+  function sayRecipeResult(sayFn, text, consume, produce) {
+    const suffix = formatProducedList(produce);
+    const summary = formatRecipeSummaryLine(consume, produce);
+    G.saySafe(sayFn, (text || "Done.") + suffix + "\n" + summary);
+  }
+
   // ---------------- RECIPES / CRAFTING ----------------
 
   function combineItems(itemIds, sayFn) {
@@ -51,7 +72,10 @@
       const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
       const needed = produce.filter(Boolean).length;
       if (needed > space) {
-        G.saySafe(sayFn, `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`);
+        G.saySafe(
+          sayFn,
+          `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
+        );
         return;
       }
     }
@@ -70,11 +94,10 @@
       else G.addToRoom(outId);
     }
 
-    const suffix = formatProducedList(produce);
-    G.saySafe(sayFn, (recipe.text || "Done.") + suffix);
+    sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
   }
 
-  // ---------------- ACTION RECIPES (EAT / PUSH / PULL) ----------------
+  // ---------------- ACTION RECIPES (EAT / PUSH / PULL / OPEN / CLOSE) ----------------
 
   function listAllRecipes() {
     return window.RECIPES ? Object.values(window.RECIPES) : [];
@@ -95,6 +118,52 @@
     return requireIds.every((id) => have.has(id));
   }
 
+  function isEntryWithCoord(e) {
+    return Array.isArray(e) && e.length === 2 && Array.isArray(e[1]);
+  }
+
+  function entryId(e) {
+    return isEntryWithCoord(e) ? e[0] : e;
+  }
+
+  function entryCoord(e) {
+    return isEntryWithCoord(e) ? e[1] : null;
+  }
+
+  function coordToDir(coord) {
+    // must match rooms.js edgeCoordForDir layout (7x7)
+    const x = coord?.[0], y = coord?.[1];
+    if (x == null || y == null) return null;
+
+    // MID=3 in 7x7
+    if (x === 3 && y === 0) return "NORTH";
+    if (x === 3 && y === 6) return "SOUTH";
+    if (x === 0 && y === 3) return "WEST";
+    if (x === 6 && y === 3) return "EAST";
+    return null;
+  }
+
+  function replaceRoomItemKeepingCoord(room, fromId, toId) {
+    if (!room || !Array.isArray(room.items)) return false;
+
+    const idx = room.items.findIndex((e) => entryId(e) === fromId);
+    if (idx < 0) return false;
+
+    const c = entryCoord(room.items[idx]) ?? null;
+    if (!c) return false;
+
+    room.items[idx] = [toId, c];
+
+    // If that coord is an edge midpoint, also update exits barrier
+    const dir = coordToDir(c);
+    if (dir && room.exits && room.exits[dir] && typeof room.exits[dir] === "object") {
+      // OPEN door means "no barrier" for movement (your rooms.js should treat DOOR_OPEN as passable)
+      room.exits[dir].barrier = (toId === ITEM.DOOR_OPEN) ? ITEM.DOOR_OPEN : toId;
+    }
+
+    return true;
+  }
+
   function doAction(action, targetId, sayFn) {
     if (!targetId) return;
 
@@ -105,7 +174,7 @@
 
     // Presence rules:
     // - EAT: can be in room OR inventory
-    // - PUSH/PULL: must be in room
+    // - others: must be in room
     if (verb === "EAT") {
       if (!inRoom && !inInv) return G.saySafe(sayFn, "You can't see that here.");
     } else {
@@ -133,7 +202,26 @@
       const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
       const needed = produce.filter(Boolean).length;
       if (needed > space) {
-        return G.saySafe(sayFn, `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`);
+        return G.saySafe(
+          sayFn,
+          `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
+        );
+      }
+    }
+
+    // ✅ If recipe says keepCoord, and it's a simple swap, do it in-place:
+    if (recipe.keepCoord && Array.isArray(recipe.consume) && Array.isArray(recipe.produce)) {
+      if (recipe.consume.length === 1 && recipe.produce.length === 1) {
+        const room = G.getRoom(G.state.currentRoom);
+
+        // Only makes sense if the consumed thing is in the room
+        if (G.isInRoom(recipe.consume[0])) {
+          const ok = replaceRoomItemKeepingCoord(room, recipe.consume[0], recipe.produce[0]);
+          if (ok) {
+            sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
+            return;
+          }
+        }
       }
     }
 
@@ -150,8 +238,7 @@
       else G.addToRoom(outId);
     }
 
-    const suffix = formatProducedList(produce);
-    G.saySafe(sayFn, (recipe.text || "Done.") + suffix);
+    sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
   }
 
   // ---------------- MAKE system (unchanged) ----------------
@@ -267,6 +354,16 @@
     if (verb === "PULL") {
       if (!a) return G.saySafe(sayFn, "Pull what?");
       return doAction("PULL", a, sayFn);
+    }
+
+    if (verb === "OPEN") {
+      if (!a) return G.saySafe(sayFn, "Open what?");
+      return doAction("OPEN", a, sayFn);
+    }
+
+    if (verb === "CLOSE") {
+      if (!a) return G.saySafe(sayFn, "Close what?");
+      return doAction("CLOSE", a, sayFn);
     }
 
     if (verb === "HELP") {

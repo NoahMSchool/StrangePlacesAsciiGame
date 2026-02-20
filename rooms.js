@@ -345,7 +345,8 @@ function tryMoveRoom(currentRoomId, direction) {
   }
 
   // Step 1: any barrier blocks
-  if (barrier) {
+  // Step 1+: barriers block UNLESS it's an open door
+  if (barrier && barrier !== ITEM.DOOR_OPEN) {
     return { blocked: true, reason: "barrier", barrier };
   }
 
@@ -358,17 +359,23 @@ function moveRoom(currentRoomId, direction) {
   return r?.to ?? null;
 }
 
+
 function getMoveBlockedMessage(result) {
   if (!result || !result.blocked) return null;
 
   if (result.reason === "wall") {
-    return "You bump into the wall. Ouch.";
+    // return "You bump into the wall. Ouch.";
   }
 
-  // barrier
-  const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
-  const name = def?.name ?? "something";
-  return `The ${name.toLowerCase()} blocks your way.`;
+  if (result.reason === "barrier") {
+    if (result.barrier === ITEM.DOOR_CLOSED) return "The door is closed.";
+    const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
+    const name = def?.name ?? "something";
+    return `The ${name.toLowerCase()} blocks your way.`;
+  }
+
+  return "You can't go that way";
+
 }
 
 // List visible items in a room using ITEM_DEFS
