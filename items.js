@@ -7,6 +7,8 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   WALL: "WALL",
+  DOOR_CLOSED: "DOOR_CLOSED",
+
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   DINOSAUR: "DINOSAUR",
@@ -31,6 +33,9 @@ const ITEM = Object.freeze({
   // ✅ New items
   MICROWAVE: "MICROWAVE",
   TIME_LEVER: "TIME_LEVER",
+
+  MAGNET_STRING: "MAGNET_STRING",
+  STRING_STICK: "STRING_STICK",
 });
 
 // -----------------------------------------------------------------------------
@@ -57,7 +62,7 @@ const ITEM_DEFS = Object.freeze({
     emoji: "🧱",
     synonyms: ["wall"],
     examine: "A boring wall.",
-    visible: true,
+    visible: false,
     portable: false,
     eatText: "WTF?",
     asciiTile: [
@@ -66,6 +71,24 @@ const ITEM_DEFS = Object.freeze({
       "#########",
       "#########",
       "#########",
+    ],
+  },
+
+  [ITEM.DOOR_CLOSED]: {
+    id: ITEM.DOOR_CLOSED,
+    name: "Closed Door",
+    emoji: "🚪",
+    synonyms: ["door", "closed door"],
+    examine: "A closed door set into the wall. It blocks the way.",
+    visible: true,
+    portable: false,
+    eatText: "Please do not eat the door.",
+    asciiTile: [
+      " ___||___",
+      "|  __   |",
+      "| |  |  |",
+      "| |__| o|",
+      "|________",
     ],
   },
 
@@ -364,6 +387,66 @@ const ITEM_DEFS = Object.freeze({
    ]
 
   },
+
+// ✅ Add these 2 defs into ITEM_DEFS (anywhere sensible)
+
+  // ---------------- ✅ INTERMEDIATE: MAGNET ON STRING ----------------
+  [ITEM.MAGNET_STRING]: {
+    id: ITEM.MAGNET_STRING,
+    name: "Magnet on a String",
+    emoji: "🧲",
+    synonyms: [
+      "string",
+      "magnet",
+      "magnet string",
+      "magnet on string",
+      "magnet-on-a-string",
+      "magnet tied to string",
+      "string with magnet",
+      "magnet rope",
+      "magnet line",
+    ],
+    examine: "A magnet tied securely to a length of string. It dangles ominously.",
+    visible: true,
+    portable: true,
+    eatText: "That seems like a very bad idea.",
+    asciiTile: [
+      "   ____  ",
+      "  // \\\\  ",
+      "  (( ))  ",
+      "   ||    ",
+      "   {}    ",
+    ],
+  },
+
+  // ---------------- ✅ INTERMEDIATE: STRING ON STICK ----------------
+  [ITEM.STRING_STICK]: {
+    id: ITEM.STRING_STICK,
+    name: "String on a Stick",
+    emoji: "🪵",
+    synonyms: [
+      "stick",
+      "string stick",
+      "string on stick",
+      "string-on-a-stick",
+      "stick with string",
+      "stick tied to string",
+      "rod base",
+      "unfinished rod",
+    ],
+    examine: "A stick with string tied to it. It feels like it’s missing something important on the end.",
+    visible: true,
+    portable: true,
+    eatText: "It's mostly wood and regret.",
+    asciiTile: [
+      "    (|   ",
+      "   -{|   ",
+      "    |}   ",
+      "    |    ",
+      "   /     ",
+    ],
+  },
+
 
   // ---------------- ✅ NEW: MICROWAVE ----------------
   [ITEM.MICROWAVE]: {
