@@ -7,6 +7,8 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   WALL: "WALL",
+  DOOR_CLOSED: "DOOR_CLOSED",
+
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   DINOSAUR: "DINOSAUR",
@@ -60,7 +62,7 @@ const ITEM_DEFS = Object.freeze({
     emoji: "🧱",
     synonyms: ["wall"],
     examine: "A boring wall.",
-    visible: true,
+    visible: false,
     portable: false,
     eatText: "WTF?",
     asciiTile: [
@@ -69,6 +71,24 @@ const ITEM_DEFS = Object.freeze({
       "#########",
       "#########",
       "#########",
+    ],
+  },
+
+  [ITEM.DOOR_CLOSED]: {
+    id: ITEM.DOOR_CLOSED,
+    name: "Closed Door",
+    emoji: "🚪",
+    synonyms: ["door", "closed door"],
+    examine: "A closed door set into the wall. It blocks the way.",
+    visible: true,
+    portable: false,
+    eatText: "Please do not eat the door.",
+    asciiTile: [
+      " ___||___",
+      "|  __   |",
+      "| |  |  |",
+      "| |__| o|",
+      "|________",
     ],
   },
 

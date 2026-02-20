@@ -232,12 +232,33 @@
   }
 
   function goDir(direction, sayFn) {
+    // Use the richer move result if rooms.js exposes it
+    const tryMove = window.tryMoveRoom;
+    const getMsg = window.getMoveBlockedMessage;
+
+    if (typeof tryMove === "function") {
+      const res = tryMove(state.currentRoom, direction);
+
+      if (res?.to) {
+        state.currentRoom = res.to;
+        renderRoom(sayFn);
+        return;
+      }
+
+      const msg = (typeof getMsg === "function")
+        ? getMsg(res)
+        : "You can't go that way.";
+
+      return saySafe(sayFn, msg);
+    }
+
+    // Fallback: old behaviour
     const next = window.moveRoom ? window.moveRoom(state.currentRoom, direction) : null;
     if (!next) return saySafe(sayFn, "You can't go that way.");
-
     state.currentRoom = next;
     renderRoom(sayFn);
   }
+
 
   function takeItem(itemId, sayFn) {
     const room = ensureRoomItemsArray();

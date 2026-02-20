@@ -25,7 +25,7 @@ const ROOM_DEFS = {
     ],
     exits: {
       NORTH: ROOM.ENTRANCE_HALL,
-      EAST: ROOM.BANK,
+      EAST: { to: ROOM.BANK, barrier: ITEM.DOOR_CLOSED },
     },
   },
 
@@ -67,25 +67,13 @@ const ROOM_DEFS = {
   },
 
   [ROOM.BANK]: {
-    id: ROOM.PLAYROOM,
+    id: ROOM.BANK,
     name: "Bank",
     desc: "Loads of coins.",
     items: [
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
-      ITEM.COIN,
+      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
+      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
+      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
     ],
     exits: {
       WEST: ROOM.CLEARING,
@@ -97,7 +85,6 @@ const ROOM_DEFS = {
     name: "Kitchen",
     desc: "Pots and pans hang from the ceiling. Something smells faintly of soup.",
     items: [
-      // You can still pin specific items if you want:
       [ITEM.ROPE, [2, 1]],
       [ITEM.MICROWAVE, [4, 4]],
     ],
@@ -131,6 +118,121 @@ const ROOM_SIZE = 7; // 0..6
 const MIN_INTERIOR = 1;
 const MAX_INTERIOR = ROOM_SIZE - 2; // 5
 
+const MID = Math.floor(ROOM_SIZE / 2); // 3
+
+function edgeCoordForDir(dir) {
+  const d = String(dir || "").toUpperCase();
+  if (d === "NORTH") return [MID, 0];
+  if (d === "SOUTH") return [MID, ROOM_SIZE - 1];
+  if (d === "WEST") return [0, MID];
+  if (d === "EAST") return [ROOM_SIZE - 1, MID];
+  return [MID, MID];
+}
+
+function entryToId(entry) {
+  return Array.isArray(entry) ? entry[0] : entry;
+}
+
+function roomHasItemAt(room, itemId, coord) {
+  return (room?.items || []).some(
+    (e) => Array.isArray(e) && e[0] === itemId && e[1]?.[0] === coord[0] && e[1]?.[1] === coord[1]
+  );
+}
+
+function isExitObject(exit) {
+  return exit && typeof exit === "object" && !Array.isArray(exit);
+}
+
+function exitToRoomId(exit) {
+  if (typeof exit === "string") return exit;
+  if (isExitObject(exit)) return exit.to ?? null;
+  return null;
+}
+
+function exitBarrier(exit) {
+  if (isExitObject(exit)) return exit.barrier ?? null;
+  return null;
+}
+
+function isDoorBarrier(barrierId) {
+  // Step 1: only closed doors are barriers, but keep it flexible
+  return barrierId === ITEM.DOOR_CLOSED;
+}
+
+// Put door items into room.items based on exits[].barrier
+function normaliseExitBarriers(room) {
+  if (!room) return;
+  if (!Array.isArray(room.items)) room.items = [];
+
+  const exits = room.exits || {};
+  for (const [dir, exit] of Object.entries(exits)) {
+    if (!isExitObject(exit)) continue;
+
+    const barrier = exit.barrier ?? null;
+    if (!barrier) continue;
+
+    const coord = edgeCoordForDir(dir);
+    if (!roomHasItemAt(room, barrier, coord)) {
+      room.items.push([barrier, coord]);
+    }
+  }
+}
+
+// Put WALL items around borders except where there is an exit opening OR a door.
+// This is for ASCII rendering (so borders are correct per-room).
+function normaliseBorderWalls(room) {
+  if (!room) return;
+  if (!Array.isArray(room.items)) room.items = [];
+
+  // Determine which directions should NOT get walls at the edge midpoint
+  // - if there is an exit (string or object) => opening
+  // - if there is a door barrier item => door (also not wall)
+  const blockWallAt = new Set(); // of "x,y"
+
+  const exits = room.exits || {};
+  for (const [dir, exit] of Object.entries(exits)) {
+    const to = exitToRoomId(exit);
+    if (!to) continue; // not an exit
+    const coord = edgeCoordForDir(dir);
+
+    // openings and doors both mean: don't place a wall tile here
+    blockWallAt.add(`${coord[0]},${coord[1]}`);
+  }
+
+  // Also: if a door barrier item exists at an edge coordinate, it should override wall
+  // (we still ensure no wall gets placed there)
+  for (const entry of room.items) {
+    if (!Array.isArray(entry)) continue;
+    const id = entry[0];
+    const c = entry[1];
+    if (!c) continue;
+    if (isDoorBarrier(id)) blockWallAt.add(`${c[0]},${c[1]}`);
+  }
+
+  // Helper: place a wall if nothing else already occupies that coordinate
+  function placeWallAt(x, y) {
+    const key = `${x},${y}`;
+    if (blockWallAt.has(key)) return;
+
+    const occupied = (room.items || []).some(
+      (e) => Array.isArray(e) && e[1]?.[0] === x && e[1]?.[1] === y
+    );
+    if (occupied) return;
+
+    room.items.push([ITEM.WALL, [x, y]]);
+  }
+
+  // Fill the entire border with walls (except openings/doors)
+  for (let x = 0; x < ROOM_SIZE; x++) {
+    placeWallAt(x, 0);                 // top
+    placeWallAt(x, ROOM_SIZE - 1);     // bottom
+  }
+  for (let y = 0; y < ROOM_SIZE; y++) {
+    placeWallAt(0, y);                 // left
+    placeWallAt(ROOM_SIZE - 1, y);     // right
+  }
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -140,7 +242,6 @@ function coordKey(x, y) {
 }
 
 function randomInteriorCoord(used) {
-  // Try a bunch of times to find an unused interior square
   for (let attempts = 0; attempts < 200; attempts++) {
     const x = randInt(MIN_INTERIOR, MAX_INTERIOR);
     const y = randInt(MIN_INTERIOR, MAX_INTERIOR);
@@ -151,7 +252,6 @@ function randomInteriorCoord(used) {
     }
   }
 
-  // Fallback: scan for any free interior square (guaranteed if not overfull)
   for (let x = MIN_INTERIOR; x <= MAX_INTERIOR; x++) {
     for (let y = MIN_INTERIOR; y <= MAX_INTERIOR; y++) {
       const key = coordKey(x, y);
@@ -162,8 +262,6 @@ function randomInteriorCoord(used) {
     }
   }
 
-  // If you ever get here, there are more items than interior squares (25)
-  // Put it somewhere interior anyway (will overlap)
   return [MIN_INTERIOR, MIN_INTERIOR];
 }
 
@@ -186,7 +284,7 @@ function normalizeRoomItems() {
 
     const used = new Set();
 
-    // Reserve all explicitly-defined coordinates first
+    // Reserve explicitly-defined coordinates first
     for (const entry of room.items) {
       const c = getItemCoord(entry);
       if (c) used.add(coordKey(c[0], c[1]));
@@ -203,7 +301,12 @@ function normalizeRoomItems() {
   }
 }
 
-// Run once at load so every item ends up as [ITEM, [x,y]]
+// Run once at load:
+// 1) add door items from exit barriers
+// 2) add border walls except openings/doors
+// 3) randomise interior coords for items without coords
+for (const r of Object.values(ROOM_DEFS)) normaliseExitBarriers(r);
+for (const r of Object.values(ROOM_DEFS)) normaliseBorderWalls(r);
 normalizeRoomItems();
 
 // -----------------------------------------------------------------------------
@@ -214,9 +317,58 @@ function getRoom(id) {
   return ROOM_DEFS[id];
 }
 
-function moveRoom(currentRoomId, direction) {
+// Returns:
+//   { to: ROOM_ID } on success
+//   { blocked: true, reason: "door"|"wall", barrier: ITEM_ID|null } if blocked
+//   null if invalid / no exit
+function tryMoveRoom(currentRoomId, direction) {
   const room = ROOM_DEFS[currentRoomId];
-  return room?.exits?.[direction] ?? null;
+  const dir = String(direction || "").toUpperCase();
+  const exit = room?.exits?.[dir];
+
+  // No exit at all => wall
+  if (!exit) {
+    return { blocked: true, reason: "wall", barrier: null };
+  }
+
+  // Old format: exits: { NORTH: "KITCHEN" }
+  if (typeof exit === "string") {
+    return { to: exit };
+  }
+
+  // New format
+  const to = exit.to ?? null;
+  const barrier = exit.barrier ?? null;
+
+  if (!to) {
+    return { blocked: true, reason: "wall", barrier: null };
+  }
+
+  // Step 1: any barrier blocks
+  if (barrier) {
+    return { blocked: true, reason: "barrier", barrier };
+  }
+
+  return { to };
+}
+
+// Keep backwards compatibility: old callers can still use moveRoom() and get null / roomId
+function moveRoom(currentRoomId, direction) {
+  const r = tryMoveRoom(currentRoomId, direction);
+  return r?.to ?? null;
+}
+
+function getMoveBlockedMessage(result) {
+  if (!result || !result.blocked) return null;
+
+  if (result.reason === "wall") {
+    return "You bump into the wall. Ouch.";
+  }
+
+  // barrier
+  const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
+  const name = def?.name ?? "something";
+  return `The ${name.toLowerCase()} blocks your way.`;
 }
 
 // List visible items in a room using ITEM_DEFS
@@ -225,7 +377,7 @@ function getVisibleItems(roomId) {
   if (!room) return [];
 
   return room.items
-    .map(entry => getItemId(entry))        // <-- NEW: works with [id,[x,y]]
+    .map(entry => getItemId(entry))
     .map(id => ITEM_DEFS[id])
     .filter(def => def?.visible !== false)
     .map(def => `${def.emoji} ${def.name}`);
@@ -239,5 +391,7 @@ window.ROOM = ROOM;
 window.ROOM_DEFS = ROOM_DEFS;
 window.getRoom = getRoom;
 window.moveRoom = moveRoom;
+window.tryMoveRoom = tryMoveRoom;                 // ✅ NEW
+window.getMoveBlockedMessage = getMoveBlockedMessage; // ✅ NEW
 window.getVisibleItems = getVisibleItems;
 */
