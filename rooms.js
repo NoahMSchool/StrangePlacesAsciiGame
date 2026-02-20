@@ -40,7 +40,7 @@ const ROOM_DEFS = {
       SOUTH: ROOM.CLEARING,
       WEST: ROOM.DINING_ROOM,
       EAST: ROOM.PLAYROOM,
-      NORTH: ROOM.KITCHEN,
+      NORTH: { to: ROOM.KITCHEN, barrier: ITEM.DOOR_CLOSED },
     },
   },
 
@@ -76,7 +76,7 @@ const ROOM_DEFS = {
       ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
     ],
     exits: {
-      WEST: ROOM.CLEARING,
+      WEST: { to: ROOM.CLEARING, barrier: ITEM.DOOR_OPEN },
     },
   },
 
