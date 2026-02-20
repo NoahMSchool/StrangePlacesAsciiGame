@@ -240,9 +240,9 @@ function get_grid_display(gridtiles){
     else if (string[i] == "&") {
       newstring += alphabet[Math.floor(Math.random()*alphabet.length)];
     }
-    else if (string[i] == "#") {
-      newstring += wall_characters[Math.floor(Math.random()*wall_characters.length)];
-    }
+    // else if (string[i] == "#") {
+    //  newstring += wall_characters[Math.floor(Math.random()*wall_characters.length)];
+    // }
     else{
       newstring += string[i]
     }
