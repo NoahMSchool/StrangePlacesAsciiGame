@@ -1,19 +1,8 @@
 
-  h1{
-    color: darkolivegreen;
-  }
-  h2{
-    color: darkgoldenrod;
-  }
   body{
     background: #2e3d2f;
     color: #292720;
     font-family: "simpleMonoFont";
-  }
-  #asciiOutput{
-    background: #bec7af;
-    color: #292720;
-    
   }
 
   #asciiOutput{
@@ -32,7 +21,155 @@
 }
 
 @font-face{
-  font-family: "headerMonoFont";
+  font-family: "headerMononont";
   src: url("Fonts/MajorMonoDisplay-Regular.ttf");
 }
 
+/* 
+
+:root {
+
+  --retrogreen: 33ff33;
+
+  --fg: #33ff33;
+  --bg: #000;
+  --panel-bg: #2e3d2f;
+  --border: 1px solid #33ff33;
+  --radius: 10px;
+
+  --ascii-w: 63ch;
+  --ascii-lines: 35;
+  --ascii-lh: 1.1em;
+}
+*/
+
+/* Removes border margins space */
+html, body { height: 100%; margin: 0; }
+
+h1{
+  margin: 0px;
+  background: #bfc8af;
+}
+h2{
+  margin: 0px;
+  background: #bfc8af;
+}
+
+body {
+  font-family: "simpleMonoFont"
+  background: #bec7af;
+  color: #ff1011;
+  padding: 10px; 
+  box-sizing: border-box;*/
+}
+
+.asciiWrap {
+
+  /*
+  grid-area: ascii;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--panel-bg);
+  padding: 10px;
+  overflow: hidden;
+  align-self: start;
+  */
+}
+
+#asciiOutput {
+  background: #bfc8af;
+  border: 5px solid #2d7aa1;
+  border-radius: 100;
+  margin: 0px;
+  /*
+  margin: 0;
+  width: var(--ascii-w);
+  line-height: var(--ascii-lh);
+  height: calc(var(--ascii-lines) * var(--ascii-lh));
+  overflow: hidden;
+  white-space: pre;
+  user-select: none;
+  font-size: 0.5em;
+  */
+}
+
+
+#inputBox {
+  background: #000000;
+  color: #33ff33;
+  border: 5px #33ff33;
+  border-radius: 10;
+  margin: 0px;
+  height: 100%;
+
+  
+  /*
+  white-space: pre-wrap;
+
+  overflow-y: auto;
+  min-height: 0;
+  */
+  
+}
+
+/* Input row contains input + Send + Test (same line) */
+.row {
+  grid-area: input;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+input, button { font: inherit; padding: 8px; }
+input { flex: 1 1 320px; min-width: 220px; } /* grows but doesn't force overlap */
+button { cursor: pointer; }
+
+
+/* Mobile first: header, map, asciioutput, input */
+.app {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto minmax(0, 1fr) auto; /* no extra bottom box row */
+  grid-template-areas:
+    "header"
+    "ascii"
+    "asciiOutput"
+    "input";
+}
+
+/* Desktop: 2 columns (left: header/asciiOutput/input, right: map)
+   Header aligns with top of map. */
+@media (min-width: 900px) {
+  .app {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "header ascii"
+      "asciiOutput    ascii"
+      "input  ascii";
+    align-items: start;
+  }
+}
+
+.header { grid-area: header; }
+.status { opacity: 0.95; margin: 0; min-height: 1.2em; }
+
+/* Make header and map top edges line up nicely */
+@media (min-width: 900px) {
+  .header { padding-top: 2px; }
+  .asciiWrap { margin-top: 0; }
+}
+
+
+
+
+
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+}
