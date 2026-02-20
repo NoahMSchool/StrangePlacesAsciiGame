@@ -8,7 +8,7 @@
 const ITEM = Object.freeze({
   WALL: "WALL",
   DOOR_CLOSED: "DOOR_CLOSED",
-
+  DOOR_OPEN: "DOOR_OPEN",
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   DINOSAUR: "DINOSAUR",
@@ -27,10 +27,8 @@ const ITEM = Object.freeze({
   FISHING_ROD: "FISHING_ROD",
   COIN: "COIN",
 
-  // ✅ Fix: this was referenced in ITEM_DEFS but missing from ITEM
   ALPHAPARTICLE: "ALPHAPARTICLE",
 
-  // ✅ New items
   MICROWAVE: "MICROWAVE",
   TIME_LEVER: "TIME_LEVER",
 
@@ -82,13 +80,29 @@ const ITEM_DEFS = Object.freeze({
     examine: "A closed door set into the wall. It blocks the way.",
     visible: true,
     portable: false,
-    eatText: "Please do not eat the door.",
     asciiTile: [
-      " ___||___",
-      "|  __   |",
-      "| |  |  |",
-      "| |__| o|",
-      "|________",
+   "|=======|",
+   "||     ||",
+   "||  _ O||",
+   "|| |_| ||",
+   "||_ _ _||",
+    ],
+  },
+
+ [ITEM.DOOR_OPEN]: {
+    id: ITEM.DOOR_OPEN,
+    name: "Open Door",
+    emoji: "🚪",
+    synonyms: ["door", "open door"],
+    examine: "A open door set into the wall.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+   "|=======|",
+   "||     ||",
+   "||     ||",
+   "||     ||",
+   "||     ||",
     ],
   },
 
