@@ -158,7 +158,7 @@
   // ---------------- RECIPES / CRAFTING ----------------
 
   function combineItems(itemIds, sayFn) {
-    const inputs = itemIds.filter(Boolean);
+    const inputs = Array.isArray(itemIds) ? itemIds.filter(Boolean) : [];
     if (inputs.length < 2 || inputs.length > 3) {
       G.saySafe(sayFn, "That command needs 2 or 3 things.");
       return;
@@ -483,7 +483,9 @@
     const targetDef = G.getItemDef(targetId);
     const targetName = targetDef ? targetDef.name : targetId;
 
-    const candidates = listAllRecipes().filter((r) => recipeProduces(r, targetId));
+    const candidates = listAllRecipes().filter(
+      (r) => recipeProduces(r, targetId) && Array.isArray(r?.inputs) && r.inputs.length >= 2
+    );
     if (candidates.length === 0)
       return G.saySafe(sayFn, `You don't know how to make ${targetName}.`);
 
