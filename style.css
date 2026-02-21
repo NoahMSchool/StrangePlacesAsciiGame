@@ -1,10 +1,4 @@
 
-  body{
-    background: #2e3d2f;
-    color: #292720;
-    font-family: "simpleMonoFont";
-  }
-
   #asciiOutput{
     background: #bec7af;
     color: #292720;
@@ -21,7 +15,7 @@
 }
 
 @font-face{
-  font-family: "headerMononont";
+  font-family: "headerMono";
   src: url("Fonts/MajorMonoDisplay-Regular.ttf");
 }
 
@@ -48,20 +42,27 @@ html, body { height: 100%; margin: 0; }
 
 h1{
   margin: 0px;
-  background: #bfc8af;
+  background: #a9d5db;
+  color: #e33d6f;
+  font-family: headerMono;
+  
 }
 h2{
   margin: 0px;
-  background: #bfc8af;
+  background: #a9d5db;
+  color: #e33d6f;
+
 }
 
-body {
-  font-family: "simpleMonoFont"
-  background: #bec7af;
-  color: #ff1011;
-  padding: 10px; 
-  box-sizing: border-box;*/
-}
+
+  body{
+    
+    font-family: "simpleMonoFont";
+    background: #2e3d2f;
+    padding: 10px; 
+    box-sizing: border-box;*/
+  }
+
 
 .asciiWrap {
 
@@ -77,7 +78,7 @@ body {
 }
 
 #asciiOutput {
-  background: #bfc8af;
+  background: #d1ceb8;
   border: 5px solid #2d7aa1;
   border-radius: 100;
   margin: 0px;
