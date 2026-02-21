@@ -53,6 +53,71 @@
     Sound.playSfx(url);
   }
 
+  function recipeSfxEntries() {
+    const entries = [];
+    if (!window.RECIPES) return entries;
+    for (const [id, recipe] of Object.entries(window.RECIPES)) {
+      if (recipe?.successSfx) entries.push({ id, url: recipe.successSfx });
+    }
+    return entries;
+  }
+
+  function fileBaseName(path) {
+    const p = String(path || "");
+    const tail = p.split("/").pop() || p;
+    return tail.replace(/\.[^.]+$/, "");
+  }
+
+  function runFxTest(arg, sayFn) {
+    const entries = recipeSfxEntries();
+    if (!entries.length) {
+      G.saySafe(sayFn, "FXTEST: no recipe SFX configured.");
+      return;
+    }
+
+    const q = String(arg || "").trim().toLowerCase();
+    if (!q) {
+      G.saySafe(sayFn, "FXTEST available effects:");
+      for (const e of entries) {
+        G.saySafe(sayFn, `- ${e.id} (${fileBaseName(e.url)})`);
+      }
+      return;
+    }
+
+    const exact = entries.find(
+      (e) =>
+        e.id.toLowerCase() === q ||
+        fileBaseName(e.url).toLowerCase() === q ||
+        e.url.toLowerCase() === q
+    );
+    if (exact) {
+      Sound.playSfx(exact.url);
+      G.saySafe(sayFn, `FXTEST: played ${exact.id}.`);
+      return;
+    }
+
+    const partial = entries.filter(
+      (e) =>
+        e.id.toLowerCase().includes(q) ||
+        fileBaseName(e.url).toLowerCase().includes(q) ||
+        e.url.toLowerCase().includes(q)
+    );
+
+    if (partial.length === 1) {
+      Sound.playSfx(partial[0].url);
+      G.saySafe(sayFn, `FXTEST: played ${partial[0].id}.`);
+      return;
+    }
+
+    if (partial.length > 1) {
+      G.saySafe(sayFn, "FXTEST: multiple matches:");
+      for (const e of partial) G.saySafe(sayFn, `- ${e.id} (${fileBaseName(e.url)})`);
+      return;
+    }
+
+    G.saySafe(sayFn, `FXTEST: no effect matched "${arg}".`);
+  }
+
   function formatProducedList(produceIds) {
     const ids = (produceIds || []).filter(Boolean);
     if (ids.length === 0) return "";
@@ -513,6 +578,7 @@
     const a = parts[1] || null;
     const b = parts[2] || null;
     const c = parts[3] || null;
+    const argText = parts.slice(1).join(" ");
 
     if (verb === "L") return G.renderRoom(sayFn);
     if (verb === "I") return G.showInventory(sayFn);
@@ -587,6 +653,11 @@
       if (!G.getItemDef(a)) return G.saySafe(sayFn, "That item doesn't exist.");
       G.addToRoom(a);
       return G.saySafe(sayFn, `MCBOOF: spawned ${G.formatItem(a)}.`);
+    }
+
+    if (verb === "FXTEST") {
+      runFxTest(argText, sayFn);
+      return;
     }
 
     if (verb === "INVENTORY" || verb === "INV") {

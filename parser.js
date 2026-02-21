@@ -20,6 +20,7 @@ const VERB_SYNONYMS = {
   GO:      ["go", "walk", "run", "head"],
   INV:     ["inventory", "i"],
   SOUND:   ["sound", "audio"],
+  FXTEST:  ["fxtest"],
   MCBOOF:  ["mcboof"],
   READ:    ["read"],
   TALK:    ["talk", "speak", "chat", "talk to", "speak to"],
@@ -51,6 +52,7 @@ const VERB_NOUN_COUNTS = {
   INV: [0],
   HELP: [0],
   SOUND: [0, 1],
+  FXTEST: [0, 1],
   MCBOOF: [1],
   READ: [1],
   TALK: [1],
@@ -316,6 +318,16 @@ function parseCommands(input) {
           reason: "bad_sound_arg",
           error: 'Use "SOUND ON" or "SOUND OFF".',
         });
+      }
+      continue;
+    }
+
+    // FXTEST: optional free-text effect id/name
+    if (vm.canon === "FXTEST") {
+      if (!restClean) {
+        result.known.push("FXTEST");
+      } else {
+        result.known.push(`FXTEST ${normalizeSpaces(vm.rest)}`);
       }
       continue;
     }
