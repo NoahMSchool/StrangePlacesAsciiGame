@@ -527,6 +527,23 @@
       return;
     }
 
+    if (verb === "TALK") {
+      if (!a) return G.saySafe(sayFn, "Talk to who?");
+      if (typeof ITEM !== "undefined" && a === ITEM.HEALTH_INSPECTOR) {
+        if (!G.isInRoom(ITEM.HEALTH_INSPECTOR)) {
+          return G.saySafe(sayFn, "They're not here.");
+        }
+        if (!G.state.flags?.fireOut) {
+          return G.saySafe(
+            sayFn,
+            "The inspector says, \"There's still a fire outside. Put it out first.\""
+          );
+        }
+        return G.saySafe(sayFn, "The inspector says, \"All clear now. Proceed safely.\"");
+      }
+      return G.saySafe(sayFn, "They have nothing to say.");
+    }
+
     if (verb === "SLEEP") {
       if (typeof ITEM === "undefined") return G.saySafe(sayFn, "You can't sleep here.");
       if (!a) {

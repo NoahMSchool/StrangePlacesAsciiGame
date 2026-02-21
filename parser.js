@@ -1,6 +1,6 @@
 // ---------------- CONFIG (declare once) ----------------
 
-const STOPWORDS = new Set(["the", "a", "an", "at", "up"]);
+const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to"]);
 
 // ✅ Noun connectors used to split "X with Y", "X in Y", etc.
 const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
@@ -22,6 +22,7 @@ const VERB_SYNONYMS = {
   SOUND:   ["sound", "audio"],
   MCBOOF:  ["mcboof"],
   READ:    ["read"],
+  TALK:    ["talk", "speak", "chat", "talk to", "speak to"],
   SLEEP:   ["sleep", "rest", "nap", "lie down"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
@@ -52,6 +53,7 @@ const VERB_NOUN_COUNTS = {
   SOUND: [0, 1],
   MCBOOF: [1],
   READ: [1],
+  TALK: [1],
   SLEEP: [0, 1],
   LOOK: [0, 1],
   OPEN: [1, 2],
