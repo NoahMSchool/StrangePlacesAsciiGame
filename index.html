@@ -235,8 +235,36 @@
 
     }
 
+    async function runRawCommand(text) {
+      if (!text) return;
+      setStatus("");
+      const reply = parseCommands(text);
+      GameRuntime.executeParseResult(reply, say);
+      say("");
+      updateRoomTile();
+    }
+
     sendBtn.addEventListener("click", run);
     cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+    window.addEventListener("keydown", (e) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+
+      // If typing in input with content, keep normal arrow behavior for editing.
+      if (document.activeElement === cmd && cmd.value.trim().length > 0) return;
+
+      const dirByKey = {
+        ArrowUp: "NORTH",
+        ArrowDown: "SOUTH",
+        ArrowLeft: "WEST",
+        ArrowRight: "EAST",
+      };
+
+      const dir = dirByKey[e.key];
+      if (!dir) return;
+
+      e.preventDefault();
+      runRawCommand(`GO ${dir}`);
+    });
 
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
