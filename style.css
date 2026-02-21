@@ -45,7 +45,7 @@ h1{
   background: #a9d5db;
   color: #e33d6f;
   font-family: headerMono;
-  
+
 }
 h2{
   margin: 0px;
@@ -152,8 +152,8 @@ button { cursor: pointer; }
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       "header ascii"
-      "asciiOutput    ascii"
-      "input  ascii";
+      "input  ascii"
+      "asciiOutput    ascii";
     align-items: start;
   }
 }
