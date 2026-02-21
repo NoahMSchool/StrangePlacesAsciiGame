@@ -17,27 +17,24 @@ const ROOM = Object.freeze({
 });
 
 const ROOM_DEFS = {
+
   [ROOM.DARKFOREST]: {
     id: ROOM.DARKFOREST,
     name: "Dark Forest",
-    desc: "A dark an spooky forest with trees everywhere except a small gap to the east",
+    desc: "The trees stand too close together. It’s quiet in a way that feels deliberate. There’s a narrow gap to the east.",
     items: [
       [ITEM.TREE, [3, 3]],
       [ITEM.TREE, [5, 5]],
       ITEM.KEY,
-    ],    
-    exits: {
-      EAST: ROOM.DARKCLEARING,
-    },
+    ],
+    exits: { EAST: ROOM.DARKCLEARING },
   },
 
   [ROOM.DARKCLEARING]: {
     id: ROOM.DARKCLEARING,
     name: "Dark Clearing",
-    desc: "A clearing. A shed to the north, and path to the south. A door to the east",
-    items: [
-      [ITEM.LEAVES, [5, 4]],
-    ],
+    desc: "A bare clearing with flattened leaves. A shed waits to the north. A path slopes down to the south. A locked door stands to the east for no obvious reason.",
+    items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
       NORTH: ROOM.SHED,
       SOUTH: ROOM.RIVER,
@@ -49,23 +46,16 @@ const ROOM_DEFS = {
   [ROOM.SHED]: {
     id: ROOM.SHED,
     name: "Shed",
-    desc: "A shed with a beer fridge. Worth a closer look ... ",
-    items: [
-      ITEM.MAGNET,
-      ITEM.LAMP,
-    ],
-    exits: {
-      SOUTH: ROOM.DARKCLEARING,
-    },
+    desc: "A small wooden shed. It smells of cold metal and something electrical that isn’t plugged in.",
+    items: [ITEM.MAGNET, ITEM.LAMP],
+    exits: { SOUTH: ROOM.DARKCLEARING },
   },
 
   [ROOM.RIVER]: {
     id: ROOM.RIVER,
-    name: "River",
-    desc: "The bank of a running river",
-    items: [
-      ITEM.STICK,
-    ],
+    name: "River Bank",
+    desc: "A fast river moves past without making much sound. The surface reflects the sky, but the colours are wrong.",
+    items: [ITEM.STICK],
     exits: {
       NORTH: ROOM.DARKCLEARING,
       EAST: ROOM.SPIDERFOREST,
@@ -75,26 +65,22 @@ const ROOM_DEFS = {
   [ROOM.SPIDERFOREST]: {
     id: ROOM.SPIDERFOREST,
     name: "Spider Forest",
-    desc: "Spider webs everywhere!",
-    items: [
-      ITEM.CHICKEN_IN_WEB,
-    ],
-    exits: {
-      WEST: ROOM.RIVER,
-    },
+    desc: "Webs hang between the trees at head height. Some are old. Some are not. The only clear way back is west.",
+    items: [ITEM.CHICKEN_IN_WEB],
+    exits: { WEST: ROOM.RIVER },
   },
 
   [ROOM.CLEARING]: {
     id: ROOM.CLEARING,
     name: "Forest Clearing",
-    desc: "You are standing in a quiet forest clearing. A large, slightly spooky house lies to the north.",
+    desc: "A neat circle of grass in the forest. The house to the north looks closer than it should.",
     items: [
       [ITEM.CHICKEN, [5, 3]],
       ITEM.STICK,
       ITEM.LEAVES,
       ITEM.CORN,
       ITEM.MAGNET,
-      ITEM.ROPE, // your "string"
+      ITEM.ROPE,
     ],
     exits: {
       NORTH: ROOM.ENTRANCE_HALL,
@@ -105,10 +91,8 @@ const ROOM_DEFS = {
   [ROOM.ENTRANCE_HALL]: {
     id: ROOM.ENTRANCE_HALL,
     name: "Entrance Hall",
-    desc: "A tall, dusty hall with a chandelier overhead. Footsteps echo on the wooden floor.",
-    items: [
-      ITEM.DINOSAUR,
-    ],
+    desc: "A tall hall with a chandelier that isn’t quite still. Your footsteps sound a fraction late.",
+    items: [ITEM.DINOSAUR],
     exits: {
       SOUTH: ROOM.CLEARING,
       WEST: ROOM.DINING_ROOM,
@@ -120,29 +104,23 @@ const ROOM_DEFS = {
   [ROOM.DINING_ROOM]: {
     id: ROOM.DINING_ROOM,
     name: "Dining Room",
-    desc: "A long table dominates the room, laid for a meal that never came.",
+    desc: "A long table laid for a meal that never started. The chairs are all slightly misaligned.",
     items: [],
-    exits: {
-      EAST: ROOM.ENTRANCE_HALL,
-    },
+    exits: { EAST: ROOM.ENTRANCE_HALL },
   },
 
   [ROOM.PLAYROOM]: {
     id: ROOM.PLAYROOM,
     name: "Playroom",
-    desc: "Shelves of old toys line the walls. One of them seems to have moved.",
-    items: [
-      ITEM.MAGNET,
-    ],
-    exits: {
-      WEST: ROOM.ENTRANCE_HALL,
-    },
+    desc: "Rows of toys watch from the shelves. One space is empty, recently.",
+    items: [ITEM.MAGNET],
+    exits: { WEST: ROOM.ENTRANCE_HALL },
   },
 
   [ROOM.BANK]: {
     id: ROOM.BANK,
     name: "Bank",
-    desc: "Loads of coins.",
+    desc: "Coins are piled everywhere, but the room still feels empty. The air smells faintly of paper and dust.",
     items: [
       ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
       ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
@@ -156,7 +134,7 @@ const ROOM_DEFS = {
   [ROOM.KITCHEN]: {
     id: ROOM.KITCHEN,
     name: "Kitchen",
-    desc: "Pots and pans hang from the ceiling. Something smells faintly of soup.",
+    desc: "Hanging pans sway slightly, though the air is still. Something here was used not long ago.",
     items: [
       [ITEM.ROPE, [2, 1]],
       [ITEM.MICROWAVE, [4, 4]],
@@ -170,16 +148,14 @@ const ROOM_DEFS = {
   [ROOM.NOAHROOM]: {
     id: ROOM.NOAHROOM,
     name: "Noahs Room",
-    desc: "Where Noah tests stuff",
+    desc: "A test room. Things are placed carefully, as if waiting to see what you’ll do.",
     items: [
       [ITEM.TEDDYBEAR, [2, 1]],
       [ITEM.TEDDYBEAR, [3, 5]],
       [ITEM.TEDDYBEAR, [4, 3]],
       [ITEM.CHICKEN, [5, 3]],
     ],
-    exits: {
-      SOUTH: ROOM.KITCHEN,
-    },
+    exits: { SOUTH: ROOM.KITCHEN },
   },
 };
 
