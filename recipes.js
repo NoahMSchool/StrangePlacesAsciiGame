@@ -118,6 +118,14 @@ const RECIPES = Object.freeze({
     text: "You dangle the magnet into the grate, but the string has no reach. You need something rigid to guide it.",
   },
 
+  // 🧴 Empty bottle + river = bottle of water
+  [keyOf([ITEM.EMPTY_BOTTLE, ITEM.RIVER])]: {
+    inputs: [ITEM.EMPTY_BOTTLE, ITEM.RIVER],
+    consume: [ITEM.EMPTY_BOTTLE],
+    produce: [ITEM.WATER_BOTTLE],
+    text: "You dip the bottle into the river and fill it with water.",
+  },
+
 
   // ---------------- ACTION RECIPE: PUSH LEAVES reveals GRATE ----------------
   // This makes PUSH LEAVES work, and it will NOT make EAT LEAVES work.
@@ -134,10 +142,12 @@ const RECIPES = Object.freeze({
   FREE_CHICKEN: {
     action: "PUSH",
     target: ITEM.CHICKEN_IN_WEB,
+    requires: [ITEM.STICK],
     consume: [ITEM.CHICKEN_IN_WEB],
     produce: [ITEM.CHICKEN, ITEM.ROPE],
     placeResult: "room",
     successSfx: "Audio/alex_jauk-chicken-noise-228106.mp3",
+    missingRequiresText: "The webbing is too tough to tear by hand. You need something sturdy, like a stick.",
     text: "Squaaawk! You free the chicken from the web. It eyes you suspicisouly. Strings of web are all over the floor",
   },
 

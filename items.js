@@ -8,6 +8,7 @@
 const ITEM = Object.freeze({
   WALL: "WALL",
   TREE: "TREE",
+  CAMPFIRE: "CAMPFIRE",
   DOOR_CLOSED: "DOOR_CLOSED",
   DOOR_OPEN: "DOOR_OPEN",
   DOOR_LOCKED: "DOOR_LOCKED",
@@ -27,6 +28,10 @@ const ITEM = Object.freeze({
   MAGNET: "MAGNET",
   LEAVES: "LEAVES",
   STICK: "STICK",
+  RIVER: "RIVER",
+  RIVER_TILE: "RIVER_TILE",
+  EMPTY_BOTTLE: "EMPTY_BOTTLE",
+  WATER_BOTTLE: "WATER_BOTTLE",
   FISHING_ROD: "FISHING_ROD",
   COIN: "COIN",
 
@@ -144,6 +149,24 @@ const ITEM_DEFS = Object.freeze({
     ],
   },
 
+ [ITEM.CAMPFIRE]: {
+    id: ITEM.CAMPFIRE,
+    name: "Campfire",
+    emoji: "🔥",
+    synonyms: ["campfire", "fire", "bonfire", "flames"],
+    examine: "A roaring campfire crackles in the middle of the clearing, throwing orange light across the trees.",
+    visible: true,
+    portable: false,
+    takeText: "It's far too hot to pick up.",
+    asciiTile: [
+      "   ( )   ",
+      "  (   )  ",
+      " (  ^  ) ",
+      "  \\|||/  ",
+      "   /_\\   ",
+    ],
+  },
+
   [ITEM.TEDDYBEAR]: {
     id: ITEM.TEDDYBEAR,
     name: "Teddybear",
@@ -172,7 +195,6 @@ const ITEM_DEFS = Object.freeze({
       "chiccie",
       "hen",
       "bird",
-      "simon",
       "chicken in web",
       "chicken_in_web",
       "web chicken",
@@ -303,7 +325,7 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.ROPE,
     name: "String",
     emoji: "🧵",
-    synonyms: ["rope", "cord", "line", "string", "twine","web"],
+    synonyms: ["rope", "cord", "line", "string", "twine","web","webs"],
     examine: "A length of string. Useful for tying things together.",
     visible: true,
     portable: true,
@@ -435,6 +457,75 @@ const ITEM_DEFS = Object.freeze({
      "    {]   ",
      "    /`   "
    ]
+  },
+
+  [ITEM.RIVER]: {
+    id: ITEM.RIVER,
+    name: "River",
+    emoji: "🌊",
+    synonyms: ["river", "water", "stream"],
+    examine: "Cold, fast water rushes past the bank.",
+    visible: true,
+    portable: false,
+    takeText: "You can't carry an entire river.",
+    asciiTile: [
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+    ],
+  },
+
+  [ITEM.RIVER_TILE]: {
+    id: ITEM.RIVER_TILE,
+    name: "River Water",
+    emoji: "🌊",
+    synonyms: [],
+    examine: "Fast, cold water.",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+    ],
+  },
+
+  [ITEM.EMPTY_BOTTLE]: {
+    id: ITEM.EMPTY_BOTTLE,
+    name: "Empty Bottle",
+    emoji: "🧴",
+    synonyms: ["empty bottle", "bottle", "glass bottle", "flask"],
+    examine: "An empty bottle. Good for collecting liquids.",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      "   ___   ",
+      "  /   \\  ",
+      "  |   |  ",
+      "  |   |  ",
+      "  \\___/  ",
+    ],
+  },
+
+  [ITEM.WATER_BOTTLE]: {
+    id: ITEM.WATER_BOTTLE,
+    name: "Bottle of Water",
+    emoji: "💧",
+    synonyms: ["water bottle", "bottle of water", "full bottle"],
+    examine: "A bottle filled with river water.",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      "   ___   ",
+      "  /~~~\\  ",
+      "  |~~~|  ",
+      "  |~~~|  ",
+      "  \\___/  ",
+    ],
   },
 
   [ITEM.COIN]: {

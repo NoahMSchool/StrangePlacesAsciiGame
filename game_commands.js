@@ -290,6 +290,9 @@
     if (!hasAllRequired(recipe.requires)) {
       const have = G.allAvailableItemsSet();
       const missing = (recipe.requires || []).filter((id) => !have.has(id));
+      if (recipe.missingRequiresText) {
+        return G.saySafe(sayFn, recipe.missingRequiresText);
+      }
       return G.saySafe(
         sayFn,
         `You can't do that yet. You need: ${missing.map(G.formatItem).join(", ")}.`
@@ -467,7 +470,33 @@
       return;
     }
 
-    if (verb === "COMBINE") return combineItems([a, b, c].filter(Boolean), sayFn);
+    function tryImpliedSecondNoun(firstId) {
+      if (!firstId || typeof ITEM === "undefined") return false;
+
+      const impliedRules = [
+        // River-bank convenience: bottle + river
+        { a: ITEM.EMPTY_BOTTLE, b: ITEM.RIVER },
+        // Grate interactions
+        { a: ITEM.FISHING_ROD, b: ITEM.GRATE },
+        { a: ITEM.STRING_STICK, b: ITEM.GRATE },
+        { a: ITEM.MAGNET_STRING, b: ITEM.GRATE },
+        // Kitchen convenience
+        { a: ITEM.EGG, b: ITEM.MICROWAVE },
+      ];
+
+      for (const rule of impliedRules) {
+        if (firstId === rule.a && G.isInRoom(rule.b)) {
+          combineItems([rule.a, rule.b], sayFn);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (verb === "COMBINE") {
+      if (a && !b && tryImpliedSecondNoun(a)) return;
+      return combineItems([a, b, c].filter(Boolean), sayFn);
+    }
     if (verb === "MAKE") {
       if (!a) return G.saySafe(sayFn, "Make what?");
       return makeTarget(a, sayFn);
@@ -530,7 +559,22 @@
     if (verb === "USE") {
       if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
       if (!a) return G.saySafe(sayFn, "Use what?");
+      if (tryImpliedSecondNoun(a)) return;
       return G.saySafe(sayFn, `You can't figure out how to use ${G.formatItem(a)} here.`);
+    }
+
+    if (verb === "FILL") {
+      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+      if (!a) return G.saySafe(sayFn, "Fill what?");
+      if (tryImpliedSecondNoun(a)) return;
+      return G.saySafe(sayFn, "Fill it with what?");
+    }
+
+    if (verb === "COOK") {
+      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+      if (!a) return G.saySafe(sayFn, "Cook what?");
+      if (tryImpliedSecondNoun(a)) return;
+      return G.saySafe(sayFn, "Cook it with what?");
     }
 
     G.saySafe(sayFn, `(No handler yet for ${cmdStr})`);

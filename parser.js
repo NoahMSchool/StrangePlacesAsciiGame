@@ -23,6 +23,8 @@ const VERB_SYNONYMS = {
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
   USE:     ["use", "apply", "fish"],
+  FILL:    ["fill"],
+  COOK:    ["cook", "heat", "microwave"],
   FREE:    ["free", "rescue", "release", "save"],
   UNLOCK:  ["unlock"],
   OPEN:    ["open"],
@@ -46,6 +48,8 @@ const VERB_NOUN_COUNTS = {
   LOOK: [0, 1],
   FREE: [1],
   SEARCH: [1],
+  FILL: [1, 2],
+  COOK: [1, 2],
   USE: [1, 2],
   COMBINE: [2, 3],
 };
@@ -331,12 +335,24 @@ function parseCommands(input) {
       continue;
     }
 
-    // COMBINE: 2 OR 3 nouns: [2,3]
+    // COMBINE: allow 1 noun for implied-target commands, otherwise 2 or 3 nouns.
     if (vm.canon === "COMBINE" && allowedCounts.includes(2) && allowedCounts.includes(3)) {
       const got = parseNounList(vm.rest, { min: 2, max: 3 });
 
       if (got.nouns) {
         result.known.push(`${vm.canon} ${got.nouns.join(" ")}`);
+      } else if (got.parts && got.parts.length === 1) {
+        const rn = resolveNoun(got.parts[0]);
+        if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
+        else {
+          result.unknown.push({
+            raw,
+            verb: vm.verbToken,
+            object: restClean || null,
+            reason: "unknown_noun",
+            error: rn.error,
+          });
+        }
       } else if (got.error) {
         result.unknown.push({
           raw,
