@@ -193,7 +193,14 @@
     }
 
     const allInputsInInventory = inputs.every(G.isInInventory);
-    const placeResult = allInputsInInventory ? "inventory" : "room";
+    const placeResult =
+      recipe.placeResult === "inventory"
+        ? "inventory"
+        : recipe.placeResult === "room"
+        ? "room"
+        : allInputsInInventory
+        ? "inventory"
+        : "room";
 
     if (placeResult === "inventory") {
       const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;

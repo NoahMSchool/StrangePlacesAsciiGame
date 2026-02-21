@@ -124,6 +124,7 @@ const RECIPES = Object.freeze({
     inputs: [ITEM.EMPTY_BOTTLE, ITEM.RIVER],
     consume: [ITEM.EMPTY_BOTTLE],
     produce: [ITEM.WATER_BOTTLE],
+    placeResult: "inventory",
     text: "You dip the bottle into the river and fill it with water.",
   },
 
