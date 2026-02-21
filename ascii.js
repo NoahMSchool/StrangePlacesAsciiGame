@@ -183,10 +183,28 @@ function intialise_tilegrid(){
   return tiles
 }
 
+function intialise_stylegrid() {
+  let styles = [];
+  for (var i = gridsize - 1; i >= 0; i--) {
+    var current_row = [];
+    for (var j = gridsize - 1; j >= 0; j--) {
+      current_row.push(null);
+    }
+    styles.push(current_row);
+  }
+  return styles;
+}
+
+function colorForItem(itemId) {
+  const def = typeof ITEM_DEFS !== "undefined" ? ITEM_DEFS[itemId] : null;
+  return def?.mapColor || null;
+}
+
 function grid_to_room(room){
   console.log("%cExits", "color: green; font-weight: bold;", room.exits);
 
-  let newtiles = intialise_tilegrid()
+  let newtiles = intialise_tilegrid();
+  let newstyles = intialise_stylegrid();
 
 
   for (var i = 0; i < (room.items?.length || 0); i++) {
@@ -212,10 +230,30 @@ function grid_to_room(room){
     let itemId = item_coord[0]
     let item = ITEM_DEFS[itemId]
     let item_ascii = safeAsciiTileForItem(itemId, item)
+    let itemStyle = colorForItem(itemId);
 
     newtiles[roomrow][roomcolumn] = item_ascii
+    newstyles[roomrow][roomcolumn] = itemStyle
   }
-  return newtiles 
+  return { tiles: newtiles, styles: newstyles };
+}
+
+function materializeSegment(raw) {
+  let out = "";
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (ch === "?") out += filler_characters[Math.floor(Math.random() * filler_characters.length)];
+    else if (ch === "&") out += alphabet[Math.floor(Math.random() * alphabet.length)];
+    else out += ch;
+  }
+  return out;
+}
+
+function escapeHtml(s) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 
@@ -251,6 +289,29 @@ function get_grid_display(gridtiles){
 }
 
 function getRoomTile(room = ROOM_DEFS.NOAHROOM) {
-  gridtiles = grid_to_room(room)
-  return get_grid_display(gridtiles)
-};
+  const grid = grid_to_room(room);
+  return get_grid_display(grid.tiles);
+}
+
+function getRoomTileHtml(room = ROOM_DEFS.NOAHROOM) {
+  const grid = grid_to_room(room);
+  const gridtiles = grid.tiles;
+  const gridstyles = grid.styles;
+  let html = "";
+
+  for (let rownum = 0; rownum < gridtiles.length; rownum++) {
+    for (let i = 0; i < tileheight; i++) {
+      for (let columnnum = 0; columnnum < gridtiles[rownum].length; columnnum++) {
+        const tile = gridtiles[rownum][columnnum];
+        const safeTile = isValidAsciiTile(tile, "UNKNOWN_TILE") ? tile : default_tiles["randomchar"];
+        const color = gridstyles[rownum][columnnum];
+        const segment = materializeSegment(safeTile[i].slice(0, tilewidth));
+        const styleAttr = color ? ` style="color:${color}"` : "";
+        html += `<span class="tile-seg"${styleAttr}>${escapeHtml(segment)}</span>`;
+      }
+      html += "\n";
+    }
+  }
+
+  return html;
+}

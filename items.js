@@ -53,6 +53,50 @@ const ITEM = Object.freeze({
   STRING_STICK: "STRING_STICK",
 });
 
+const ITEM_DEF_MAP_COLORS = Object.freeze({
+  WALL: "#6b7280",
+  WOOD_WALL: "#8b5a2b",
+  TREE: "#1f6f3f",
+  CAMPFIRE: "#ff8a00",
+  CAMPFIRE_OUT: "#7c7f87",
+  DOOR_CLOSED: "#c07a2f",
+  DOOR_OPEN: "#d9a066",
+  DOOR_LOCKED: "#b6b6c2",
+  NOTE: "#f5f1c8",
+  BED: "#8ea5b8",
+  STRANGE_PLACES_BOOK: "#b3364a",
+  SIGN: "#d9c27a",
+  OIL_DRUM: "#3b3f46",
+  FRIDGE: "#a7d8ff",
+  HEALTH_INSPECTOR: "#ffd54d",
+  TEDDYBEAR: "#c58b6f",
+  CHICKEN: "#f2d479",
+  CHICKEN_IN_WEB: "#d9d9d9",
+  DINOSAUR: "#7bc96f",
+  GRATE: "#9ca3af",
+  CORN: "#ffd166",
+  LAMP: "#f4b860",
+  ROPE: "#d2b48c",
+  HOOK: "#b0bec5",
+  KEY: "#f2cc4d",
+  EGG: "#f8f4e8",
+  DINOSAUR_EGG: "#d9f2c2",
+  MAGNET: "#ef4444",
+  LEAVES: "#7aa35a",
+  STICK: "#b17a50",
+  RIVER: "#4da3ff",
+  RIVER_TILE: "#4da3ff",
+  EMPTY_BOTTLE: "#e5f3ff",
+  WATER_BOTTLE: "#60a5fa",
+  FISHING_ROD: "#c98c58",
+  COIN: "#f2c94c",
+  ALPHAPARTICLE: "#b388ff",
+  MICROWAVE: "#a0a0a0",
+  TIME_LEVER: "#f472b6",
+  MAGNET_STRING: "#e57373",
+  STRING_STICK: "#c08a5a",
+});
+
 // -----------------------------------------------------------------------------
 // Item definitions
 // -----------------------------------------------------------------------------
@@ -70,7 +114,7 @@ const ITEM = Object.freeze({
  * }
  */
 
-const ITEM_DEFS = Object.freeze({
+const ITEM_DEFS_BASE = {
   [ITEM.WALL]: {
     id: ITEM.WALL,
     name: "Wall",
@@ -825,7 +869,20 @@ const ITEM_DEFS = Object.freeze({
     portable: false,
     eatText: "Probably not edible. Also, what?",
   },
-});
+};
+
+for (const [id, def] of Object.entries(ITEM_DEFS_BASE)) {
+  if (!def || typeof def !== "object") continue;
+  if (!def.mapColor && ITEM_DEF_MAP_COLORS[id]) {
+    def.mapColor = ITEM_DEF_MAP_COLORS[id];
+  }
+}
+
+const ITEM_DEFS = Object.freeze(
+  Object.fromEntries(
+    Object.entries(ITEM_DEFS_BASE).map(([id, def]) => [id, Object.freeze(def)])
+  )
+);
 
 // -----------------------------------------------------------------------------
 // Helper: build NOUN_SYNONYMS for your parser from ITEM_DEFS

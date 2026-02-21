@@ -120,6 +120,7 @@
       user-select: none;
       font-size: 0.5em;
     }
+    #asciiOutput .tile-seg { color: inherit; }
 
     #roomName {
       margin-top: 6px;
@@ -231,8 +232,13 @@
 
     async function updateRoomTile() {
         const room = GameRuntime.getCurrentRoom();
-        gridstring = getRoomTile(room);
-        document.getElementById("asciiOutput").textContent = gridstring;
+        const asciiOutput = document.getElementById("asciiOutput");
+        if (typeof getRoomTileHtml === "function") {
+          asciiOutput.innerHTML = getRoomTileHtml(room);
+        } else {
+          gridstring = getRoomTile(room);
+          asciiOutput.textContent = gridstring;
+        }
         roomNameEl.textContent = room?.name || "";
     }
 

@@ -128,7 +128,7 @@ const ROOM_DEFS = {
     id: ROOM.MINE_CAVERN,
     name: "Mine Cavern",
     desc: "A vast cavern opens ahead, dripping and echoing.",
-    items: [],
+    items: [[ITEM.CORN, [3, 3]]],
     exits: {
       WEST: ROOM.MINE_ENTRANCE,
     },
