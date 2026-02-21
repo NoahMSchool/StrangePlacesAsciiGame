@@ -375,6 +375,7 @@ const ITEM_DEFS = Object.freeze({
       "trapped chicken",
       "stuck chicken",
       "chicken in spider web",
+      "web"
     ],
     examine: "A poor chicken trapped by spider webs. The spiders next meal?",
     visible: true,

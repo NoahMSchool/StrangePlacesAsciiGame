@@ -34,8 +34,13 @@ const ROOM_DEFS = {
       return `The trees stand too close together. ${fireText} There’s a narrow gap to the east.`;
     },
     items: [
-      [ITEM.TREE, [2, 2]],
+      [ITEM.TREE, [1, 1]],
+      [ITEM.TREE, [3, 1]],
+      [ITEM.TREE, [5, 1]],
+      [ITEM.TREE, [1, 3]],
       [ITEM.CAMPFIRE, [3, 3]],
+      [ITEM.TREE, [3, 5]],
+      [ITEM.TREE, [1, 5]],
       [ITEM.TREE, [5, 5]],
     ],
     exits: { EAST: ROOM.DARKCLEARING },
@@ -134,6 +139,8 @@ const ROOM_DEFS = {
     name: "River Bank",
     desc: "A fast river moves past without making much sound. The surface reflects the sky, but the colours are wrong.",
     items: [
+      [ITEM.TREE, [1, 1]],
+      [ITEM.TREE, [5, 1]],
       [ITEM.STICK, [2, 2]],
       [ITEM.SIGN, [4, 2]],
       [ITEM.RIVER, [3, 4]],
@@ -157,7 +164,13 @@ const ROOM_DEFS = {
     id: ROOM.SPIDERFOREST,
     name: "Spider Forest",
     desc: "Webs hang between the trees at head height. Some are old. Some are not. The only clear way back is west.",
-    items: [ITEM.CHICKEN_IN_WEB],
+    items: [
+      [ITEM.TREE, [2, 2]],
+      [ITEM.TREE, [4, 2]],
+      [ITEM.TREE, [2, 4]],
+      [ITEM.TREE, [4, 4]],
+      ITEM.CHICKEN_IN_WEB,
+    ],
     exits: { WEST: ROOM.RIVER },
   },
 
