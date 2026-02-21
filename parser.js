@@ -19,6 +19,7 @@ const VERB_SYNONYMS = {
   HELP:    ["help", "?", "??", "???", "wtf"],
   GO:      ["go", "walk", "run", "head"],
   INV:     ["inventory", "i"],
+  SOUND:   ["sound", "audio"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
   USE:     ["use", "apply", "fish"],
@@ -40,6 +41,7 @@ const VERB_NOUN_COUNTS = {
   GO: [0],
   INV: [0],
   HELP: [0],
+  SOUND: [0, 1],
   LOOK: [0, 1],
   FREE: [1],
   USE: [1, 2],
@@ -276,6 +278,28 @@ function parseCommands(input) {
 
     const allowedCounts = allowedNounCountsForVerb(vm.canon);
     const restClean = stripStopwords(vm.rest);
+
+    // SOUND: optional ON/OFF arg, otherwise toggle
+    if (vm.canon === "SOUND") {
+      if (!restClean) {
+        result.known.push("SOUND");
+        continue;
+      }
+
+      const arg = restClean.toUpperCase();
+      if (arg === "ON" || arg === "OFF") {
+        result.known.push(`SOUND ${arg}`);
+      } else {
+        result.unknown.push({
+          raw,
+          verb: vm.verbToken,
+          object: restClean,
+          reason: "bad_sound_arg",
+          error: 'Use "SOUND ON" or "SOUND OFF".',
+        });
+      }
+      continue;
+    }
 
     // 0 nouns only: [0]
     if (allowedCounts.length === 1 && allowedCounts[0] === 0) {
