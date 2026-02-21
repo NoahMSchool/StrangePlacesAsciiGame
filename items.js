@@ -7,6 +7,7 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   WALL: "WALL",
+  WOOD_WALL: "WOOD_WALL",
   TREE: "TREE",
   CAMPFIRE: "CAMPFIRE",
   DOOR_CLOSED: "DOOR_CLOSED",
@@ -80,6 +81,23 @@ const ITEM_DEFS = Object.freeze({
     ],
   },
 
+  [ITEM.WOOD_WALL]: {
+    id: ITEM.WOOD_WALL,
+    name: "Wooden Wall",
+    emoji: "🪵",
+    synonyms: ["wood wall", "wooden wall", "planks", "timber wall"],
+    examine: "Rough wooden planks lashed together into a sturdy wall.",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "||=|=|=||",
+      "||=|=|=||",
+      "||=|=|=||",
+      "||=|=|=||",
+      "||=|=|=||",
+    ],
+  },
+
   [ITEM.DOOR_LOCKED]: {
     id: ITEM.DOOR_LOCKED,
     name: "Locked Door",
@@ -141,11 +159,11 @@ const ITEM_DEFS = Object.freeze({
     visible: false,
     portable: false,
     asciiTile: [
-      "  TREE   ",
-      "  TREE   ",
-      "  TREE   ",
-      "  TREE   ",
-      "  TREE   "
+      "  /^^^\\  ",
+      " /^^^^^\\ ",
+      "/^^^|^^^\\",
+      "   |||   ",
+      "   |||   "
     ],
   },
 

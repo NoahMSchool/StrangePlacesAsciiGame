@@ -11,11 +11,13 @@ const RECIPES = Object.freeze({
   UNLOCK_LOCKED_DOOR: {
     action: "UNLOCK",
     target: ITEM.DOOR_LOCKED,
+    requires: [ITEM.KEY],
     consume: [ITEM.DOOR_LOCKED, ITEM.KEY],
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          
     placeResult: "room",
     successSfx: "Audio/freesound_community-unlock_door-90282.mp3",
+    missingRequiresText: "The lock won't budge. You need a key.",
     text: "You unlock the door. The key breaks.",
   },
 

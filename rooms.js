@@ -206,6 +206,14 @@ function edgeCoordForDir(dir) {
   return [MID, MID];
 }
 
+function borderItemAtDirection(room, dir) {
+  const [x, y] = edgeCoordForDir(dir);
+  const hit = (room?.items || []).find(
+    (e) => Array.isArray(e) && e[1]?.[0] === x && e[1]?.[1] === y
+  );
+  return hit ? hit[0] : null;
+}
+
 function entryToId(entry) {
   return Array.isArray(entry) ? entry[0] : entry;
 }
@@ -309,6 +317,75 @@ function normaliseBorderWalls(room) {
   }
 }
 
+const BORDER_THEMES = Object.freeze({
+  [ROOM.DARKFOREST]: {
+    NORTH: ITEM.TREE,
+    SOUTH: ITEM.TREE,
+    EAST: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.SPIDERFOREST]: {
+    NORTH: ITEM.TREE,
+    SOUTH: ITEM.TREE,
+    EAST: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.CLEARING]: {
+    SOUTH: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.DARKCLEARING]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.RIVER]: {
+    NORTH: ITEM.TREE,
+    EAST: ITEM.TREE,
+    WEST: ITEM.TREE,
+    SOUTH: ITEM.RIVER_TILE,
+  },
+  [ROOM.SHED]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+});
+
+function coordIsOnSide(coord, side) {
+  const x = coord?.[0];
+  const y = coord?.[1];
+  if (x == null || y == null) return false;
+  if (side === "NORTH") return y === 0;
+  if (side === "SOUTH") return y === ROOM_SIZE - 1;
+  if (side === "WEST") return x === 0;
+  if (side === "EAST") return x === ROOM_SIZE - 1;
+  return false;
+}
+
+function applyBorderTheme(room) {
+  if (!room || !Array.isArray(room.items)) return;
+  const theme = BORDER_THEMES[room.id];
+  if (!theme) return;
+
+  room.items = room.items.map((entry) => {
+    if (!Array.isArray(entry)) return entry;
+    const id = entry[0];
+    const coord = entry[1];
+
+    // Only swap generated border WALL tiles. Exits and doors are preserved.
+    if (id !== ITEM.WALL) return entry;
+
+    for (const [side, borderItem] of Object.entries(theme)) {
+      if (coordIsOnSide(coord, side)) {
+        return [borderItem, coord];
+      }
+    }
+    return entry;
+  });
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -380,9 +457,11 @@ function normalizeRoomItems() {
 // Run once at load:
 // 1) add door items from exit barriers
 // 2) add border walls except openings/doors
-// 3) randomise interior coords for items without coords
+// 3) apply room-specific border themes
+// 4) randomise interior coords for items without coords
 for (const r of Object.values(ROOM_DEFS)) normaliseExitBarriers(r);
 for (const r of Object.values(ROOM_DEFS)) normaliseBorderWalls(r);
+for (const r of Object.values(ROOM_DEFS)) applyBorderTheme(r);
 normalizeRoomItems();
 
 // -----------------------------------------------------------------------------
@@ -404,7 +483,11 @@ function tryMoveRoom(currentRoomId, direction) {
 
   // No exit at all => wall
   if (!exit) {
-    return { blocked: true, reason: "wall", barrier: null };
+    return {
+      blocked: true,
+      reason: "wall",
+      barrier: borderItemAtDirection(room, dir) ?? null,
+    };
   }
 
   // Old format: exits: { NORTH: "KITCHEN" }
@@ -439,18 +522,24 @@ function moveRoom(currentRoomId, direction) {
 function getMoveBlockedMessage(result) {
   if (!result || !result.blocked) return null;
 
-  if (result.reason === "wall") {
-    // return "You bump into the wall. Ouch.";
-  }
-
   if (result.reason === "barrier") {
     if (result.barrier === ITEM.DOOR_CLOSED) return "The door is closed.";
+    if (result.barrier === ITEM.DOOR_LOCKED) return "It's locked.";
     const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
     const name = def?.name ?? "something";
     return `The ${name.toLowerCase()} blocks your way.`;
   }
 
-  return "You can't go that way";
+  if (result.reason === "wall") {
+    if (result.barrier === ITEM.TREE) return "Trees block your way.";
+    if (result.barrier === ITEM.RIVER || result.barrier === ITEM.RIVER_TILE) {
+      return "A river blocks your way.";
+    }
+    if (result.barrier === ITEM.WOOD_WALL) return "A wooden wall blocks your way.";
+    if (result.barrier === ITEM.WALL) return "A wall blocks your way.";
+  }
+
+  return "You can't go that way.";
 
 }
 
