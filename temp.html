@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>A Strange Character It Is (ASCII)</title>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>A Strange Character It Is (ASCII)</h1>
+      <div class="status" id="status"></div>
+    </div>
+    <h2> A Submission for Brackeys GameJam 2026.2</h2>
+
+    <div class="asciiWrap" aria-label="ASCII panel">
+      <pre id="asciiOutput"></pre>
+    </div>
+
+
+    <div id="inputBox"></div>
+
+    <!-- Send + Test on the same row -->
+    <div class="row">
+      <input id="cmd" placeholder="Type anything…" disabled />
+      <button id="send" disabled>Send</button>
+    </div>
+  </div>
+
+  <script>
+    window.START_ROOM = "CLEARING";
+  </script>
+
+  <script src="items.js"></script>
+  <script src="recipes.js"></script>
+  <script src="rooms.js"></script>
+  <script src="parser.js"></script>
+
+  <script src="sounds.js"></script>
+  <script src="game_core.js"></script>
+  <script src="game_commands.js"></script>
+
+
+  <script src="ascii.js"></script>
+
+  <script>
+    const inputBox = document.getElementById("inputBox");
+    const status = document.getElementById("status");
+    const cmd = document.getElementById("cmd");
+    const sendBtn = document.getElementById("send");
+    const testBtn = document.getElementById("test");
+    const testTile = document.getElementById("testTile");
+
+    function say(t) {
+      inputBox.textContent += t + "\n";
+      inputBox.scrollTop = inputBox.scrollHeight;
+    }
+
+    function setStatus(t) {
+      status.textContent = t || "";
+    }
+
+    cmd.disabled = false;
+    sendBtn.disabled = false;
+    cmd.focus();
+
+    async function updateRoomTile() {
+        gridstring = getRoomTile(GameRuntime.getCurrentRoom());
+        document.getElementById("asciiOutput").textContent = gridstring;
+    }
+
+    async function run() {
+      const text = cmd.value.trim();
+      if (!text) return;
+
+      setStatus("");
+      const reply = parseCommands(text);
+      GameRuntime.executeParseResult(reply, say);
+
+      cmd.value = "";
+      say("");
+      cmd.focus();
+
+      updateRoomTile();
+
+    }
+
+    sendBtn.addEventListener("click", run);
+    cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+
+    if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
+      GameRuntime.renderRoom(say);
+      updateRoomTile();
+
+      say("");
+
+    } else {
+      say("GameRuntime not loaded. Check that game.js is included and error-free.");
+    }
+  </script>
+</body>
+</html>
