@@ -309,8 +309,8 @@
           else G.addToRoom(outId);
         }
 
-        applyRecipePostEffects(recipe, sayFn);
         sayRecipeResult(sayFn, recipe, consume, produce);
+        applyRecipePostEffects(recipe, sayFn);
         return;
       }
     }
@@ -329,8 +329,8 @@
       else G.addToRoom(outId);
     }
 
-    applyRecipePostEffects(recipe, sayFn);
     sayRecipeResult(sayFn, recipe, consume, produce);
+    applyRecipePostEffects(recipe, sayFn);
   }
 
   // ---------------- ACTION RECIPES ----------------
@@ -487,8 +487,8 @@
           else G.addToRoom(outId);
         }
 
-        applyRecipePostEffects(recipe, sayFn);
         sayRecipeResult(sayFn, recipe, consume, produce);
+        applyRecipePostEffects(recipe, sayFn);
         return;
       }
     }
@@ -510,8 +510,8 @@
       else G.addToRoom(outId);
     }
 
-    applyRecipePostEffects(recipe, sayFn);
     sayRecipeResult(sayFn, recipe, consume, produce);
+    applyRecipePostEffects(recipe, sayFn);
   }
 
   // ---------------- MAKE system ----------------
