@@ -10,6 +10,7 @@ const ITEM = Object.freeze({
   WOOD_WALL: "WOOD_WALL",
   TREE: "TREE",
   CAMPFIRE: "CAMPFIRE",
+  CAMPFIRE_OUT: "CAMPFIRE_OUT",
   DOOR_CLOSED: "DOOR_CLOSED",
   DOOR_OPEN: "DOOR_OPEN",
   DOOR_LOCKED: "DOOR_LOCKED",
@@ -19,6 +20,7 @@ const ITEM = Object.freeze({
   SIGN: "SIGN",
   OIL_DRUM: "OIL_DRUM",
   FRIDGE: "FRIDGE",
+  HEALTH_INSPECTOR: "HEALTH_INSPECTOR",
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   CHICKEN_IN_WEB: "CHICKEN_IN_WEB",
@@ -266,6 +268,26 @@ const ITEM_DEFS = Object.freeze({
     ],
   },
 
+ [ITEM.HEALTH_INSPECTOR]: {
+    id: ITEM.HEALTH_INSPECTOR,
+    name: "Health and Safety Inspector",
+    emoji: "🦺",
+    synonyms: ["inspector", "health inspector", "safety inspector", "health and safety inspector"],
+    examine: ({ state }) =>
+      state?.flags?.fireOut
+        ? "The inspector gives you an approving nod. \"Fire's out. You're good to proceed.\""
+        : "A stern inspector with a clipboard. He keeps pointing at your open fire.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "   ___   ",
+      "  (o o)  ",
+      "  /|_|\\  ",
+      "   / \\   ",
+      "  _| |_  ",
+    ],
+  },
+
 
  [ITEM.TREE]: {
     id: ITEM.TREE,
@@ -299,6 +321,23 @@ const ITEM_DEFS = Object.freeze({
       " (  ^  ) ",
       "  \\|||/  ",
       "   /_\\   ",
+    ],
+  },
+
+ [ITEM.CAMPFIRE_OUT]: {
+    id: ITEM.CAMPFIRE_OUT,
+    name: "Doused Campfire",
+    emoji: "🪵",
+    synonyms: ["doused fire", "out fire", "embers", "ashes"],
+    examine: "Wet ash and smoking wood. The fire is out.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "  .---.  ",
+      " (_____) ",
+      "  /___\\  ",
+      "  _|||_  ",
+      "   |||   ",
     ],
   },
 

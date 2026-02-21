@@ -153,7 +153,7 @@
 
     const visible = (window.getVisibleItems ? window.getVisibleItems(state.currentRoom) : null);
     if (Array.isArray(visible)) {
-      saySafe(sayFn, "You see: " + (visible.length ? visible.join(", ") : "(nothing)"));
+      if (visible.length) saySafe(sayFn, "You see: " + visible.join(", "));
     } else {
       const entries = room.items || [];
       const list = entries
@@ -161,7 +161,7 @@
         .map((id) => getItemDef(id))
         .filter((d) => d && d.visible !== false)
         .map((d) => `${d.emoji} ${d.name}`);
-      saySafe(sayFn, "You see: " + (list.length ? list.join(", ") : "(nothing)"));
+      if (list.length) saySafe(sayFn, "You see: " + list.join(", "));
     }
 
     const exits = Object.keys(room.exits || {});

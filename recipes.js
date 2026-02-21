@@ -127,6 +127,32 @@ const RECIPES = Object.freeze({
     text: "You dip the bottle into the river and fill it with water.",
   },
 
+  [keyOf([ITEM.WATER_BOTTLE, ITEM.CAMPFIRE])]: {
+    inputs: [ITEM.WATER_BOTTLE, ITEM.CAMPFIRE],
+    consume: [ITEM.CAMPFIRE, ITEM.WATER_BOTTLE],
+    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BOTTLE],
+    keepCoord: true,
+    placeResult: "inventory",
+    setFlag: "fireOut",
+    successSfx: "Audio/djartmusic-short-fire-whoosh_1-317280.mp3",
+    text: "You pour the water over the flames. The fire hisses and dies out.",
+  },
+
+  EXTINGUISH_CAMPFIRE: {
+    action: "EXTINGUISH",
+    target: ITEM.CAMPFIRE,
+    requires: [ITEM.WATER_BOTTLE],
+    consume: [ITEM.CAMPFIRE, ITEM.WATER_BOTTLE],
+    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BOTTLE],
+    keepCoord: true,
+    placeResult: "inventory",
+    setFlag: "fireOut",
+    successSfx: "Audio/djartmusic-short-fire-whoosh_1-317280.mp3",
+    missingRequiresText: "You need water to put out the fire.",
+    repeatText: "The fire is already out.",
+    text: "You pour the water over the flames. The fire hisses and dies out.",
+  },
+
   OPEN_FRIDGE_FIND_BOTTLE: {
     action: "OPEN",
     target: ITEM.FRIDGE,

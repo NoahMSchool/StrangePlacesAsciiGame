@@ -15,6 +15,8 @@ const ROOM = Object.freeze({
   COTTAGE_BEDROOM: "COTTAGE_BEDROOM",
   COTTAGE_STOREROOM: "COTTAGE_STOREROOM",
   COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
+  MINE_ENTRANCE: "MINE_ENTRANCE",
+  MINE_CAVERN: "MINE_CAVERN",
   RIVER: "RIVER",
   SPIDERFOREST: "SPIDERFOREST",
 });
@@ -24,7 +26,13 @@ const ROOM_DEFS = {
   [ROOM.DARKFOREST]: {
     id: ROOM.DARKFOREST,
     name: "Dark Forest",
-    desc: "The trees stand too close together. A roaring campfire burns in the middle, spitting sparks into the dark. There’s a narrow gap to the east.",
+    desc: ({ room }) => {
+      const ids = (room?.items || []).map((entry) => (Array.isArray(entry) ? entry[0] : entry));
+      const fireText = ids.includes(ITEM.CAMPFIRE_OUT)
+        ? "A doused campfire smolders in the middle, sending up thin smoke."
+        : "A roaring campfire burns in the middle, spitting sparks into the dark.";
+      return `The trees stand too close together. ${fireText} There’s a narrow gap to the east.`;
+    },
     items: [
       [ITEM.TREE, [2, 2]],
       [ITEM.CAMPFIRE, [3, 3]],
@@ -56,7 +64,7 @@ const ROOM_DEFS = {
       NORTH: ROOM.SHED,
       SOUTH: ROOM.RIVER,
       WEST: ROOM.DARKFOREST,
-      EAST: { to: ROOM.BANK, barrier: ITEM.DOOR_LOCKED },
+      EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED },
     },
   },
 
@@ -98,6 +106,27 @@ const ROOM_DEFS = {
       [ITEM.MAGNET, [4, 3]],
     ],
     exits: { WEST: ROOM.SHED },
+  },
+
+  [ROOM.MINE_ENTRANCE]: {
+    id: ROOM.MINE_ENTRANCE,
+    name: "Mine Entrance",
+    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails.",
+    items: [],
+    exits: {
+      WEST: ROOM.DARKCLEARING,
+      EAST: { to: ROOM.MINE_CAVERN, barrier: ITEM.HEALTH_INSPECTOR },
+    },
+  },
+
+  [ROOM.MINE_CAVERN]: {
+    id: ROOM.MINE_CAVERN,
+    name: "Mine Cavern",
+    desc: "A vast cavern opens ahead, dripping and echoing.",
+    items: [],
+    exits: {
+      WEST: ROOM.MINE_ENTRANCE,
+    },
   },
 
   [ROOM.RIVER]: {
@@ -551,6 +580,22 @@ function tryMoveRoom(currentRoomId, direction) {
   const to = exit.to ?? null;
   const barrier = exit.barrier ?? null;
 
+  // Dynamic gate: inspector only blocks until the campfire is put out.
+  if (
+    barrier === ITEM.HEALTH_INSPECTOR &&
+    window.GameCore?.state?.flags?.fireOut
+  ) {
+    // Once condition is met, clear the barrier permanently.
+    exit.barrier = null;
+    if (Array.isArray(room.items)) {
+      room.items = room.items.filter(
+        (e) =>
+          !(Array.isArray(e) && e[0] === ITEM.HEALTH_INSPECTOR && e[1]?.[0] === ROOM_SIZE - 1 && e[1]?.[1] === MID)
+      );
+    }
+    return { to };
+  }
+
   if (!to) {
     return { blocked: true, reason: "wall", barrier: null };
   }
@@ -577,6 +622,9 @@ function getMoveBlockedMessage(result) {
   if (result.reason === "barrier") {
     if (result.barrier === ITEM.DOOR_CLOSED) return "The door is closed.";
     if (result.barrier === ITEM.DOOR_LOCKED) return "It's locked.";
+    if (result.barrier === ITEM.HEALTH_INSPECTOR) {
+      return "The Health and Safety Inspector blocks your way. \"No entry while you've got an open fire.\"";
+    }
     const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
     const name = def?.name ?? "something";
     return `The ${name.toLowerCase()} blocks your way.`;

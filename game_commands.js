@@ -90,10 +90,30 @@
     playSuccessSound(recipe);
   }
 
-  function applyRecipePostEffects(recipe) {
+  function applyRecipePostEffects(recipe, sayFn) {
     if (!recipe || !recipe.setFlag) return;
     if (!G.state.flags) G.state.flags = {};
     G.state.flags[recipe.setFlag] = true;
+
+    if (recipe.setFlag === "fireOut" && !G.state.flags.inspectorRelocated) {
+      const mineEntrance = window.getRoom ? window.getRoom("MINE_ENTRANCE") : null;
+      if (mineEntrance?.exits?.EAST && typeof mineEntrance.exits.EAST === "object") {
+        mineEntrance.exits.EAST.barrier = null;
+      }
+      if (Array.isArray(mineEntrance?.items)) {
+        mineEntrance.items = mineEntrance.items.filter(
+          (e) => !(Array.isArray(e) ? e[0] === ITEM.HEALTH_INSPECTOR : e === ITEM.HEALTH_INSPECTOR)
+        );
+      }
+
+      const darkForest = window.getRoom ? window.getRoom("DARKFOREST") : null;
+      if (darkForest && !G.roomHasItem(darkForest, ITEM.HEALTH_INSPECTOR)) {
+        G.addToRoomAtRandomInterior(darkForest, ITEM.HEALTH_INSPECTOR);
+      }
+
+      G.state.flags.inspectorRelocated = true;
+      G.saySafe(sayFn, "The inspector arrives, checks his clipboard, and nods. \"Good work. That's much safer.\"");
+    }
   }
 
   // ---------------- availability helpers (prevent partial consume bugs) ----------------
@@ -187,6 +207,41 @@
       }
     }
 
+    if (recipe.keepCoord && consume.length >= 1 && produce.length >= 1) {
+      const fromId = consume[0];
+      const toId = produce[0];
+
+      if (G.isInRoom(fromId)) {
+        const room = G.getRoom(G.state.currentRoom);
+
+        for (let i = 1; i < consume.length; i++) {
+          const id = consume[i];
+          const removedFrom = G.removeOne(id);
+          if (!removedFrom) {
+            G.saySafe(sayFn, `You can't seem to use ${G.formatItem(id)} right now.`);
+            return;
+          }
+        }
+
+        const ok = replaceRoomItemKeepingCoord(room, fromId, toId);
+        if (!ok) {
+          G.saySafe(sayFn, "You can't do that right now.");
+          return;
+        }
+
+        for (let i = 1; i < produce.length; i++) {
+          const outId = produce[i];
+          if (!outId) continue;
+          if (placeResult === "inventory") G.addToInventory(outId);
+          else G.addToRoom(outId);
+        }
+
+        applyRecipePostEffects(recipe, sayFn);
+        sayRecipeResult(sayFn, recipe, consume, produce);
+        return;
+      }
+    }
+
     for (const id of consume) {
       const removedFrom = G.removeOne(id);
       if (!removedFrom) {
@@ -201,7 +256,7 @@
       else G.addToRoom(outId);
     }
 
-    applyRecipePostEffects(recipe);
+    applyRecipePostEffects(recipe, sayFn);
     sayRecipeResult(sayFn, recipe, consume, produce);
   }
 
@@ -359,7 +414,7 @@
           else G.addToRoom(outId);
         }
 
-        applyRecipePostEffects(recipe);
+        applyRecipePostEffects(recipe, sayFn);
         sayRecipeResult(sayFn, recipe, consume, produce);
         return;
       }
@@ -382,7 +437,7 @@
       else G.addToRoom(outId);
     }
 
-    applyRecipePostEffects(recipe);
+    applyRecipePostEffects(recipe, sayFn);
     sayRecipeResult(sayFn, recipe, consume, produce);
   }
 
@@ -500,6 +555,13 @@
       return G.dropItem(a, sayFn);
     }
 
+    if (verb === "MCBOOF") {
+      if (!a) return G.saySafe(sayFn, "Mcboof what?");
+      if (!G.getItemDef(a)) return G.saySafe(sayFn, "That item doesn't exist.");
+      G.addToRoom(a);
+      return G.saySafe(sayFn, `MCBOOF: spawned ${G.formatItem(a)}.`);
+    }
+
     if (verb === "INVENTORY" || verb === "INV") {
       G.showInventory(sayFn);
       return;
@@ -511,6 +573,7 @@
       const impliedRules = [
         // River convenience
         { a: ITEM.EMPTY_BOTTLE, b: ITEM.RIVER },
+        { a: ITEM.WATER_BOTTLE, b: ITEM.CAMPFIRE },
         // Grate interactions
         { a: ITEM.FISHING_ROD, b: ITEM.GRATE },
         { a: ITEM.STRING_STICK, b: ITEM.GRATE },
@@ -541,12 +604,25 @@
       if (!a) return G.saySafe(sayFn, "Eat what?");
       return doAction("EAT", a, sayFn);
     }
+
+    function inspectorViolenceWarning(targetId) {
+      return (
+        typeof ITEM !== "undefined" &&
+        targetId === ITEM.HEALTH_INSPECTOR &&
+        "Very bad idea. Assaulting a Health and Safety Inspector will not improve your situation."
+      );
+    }
+
     if (verb === "PUSH") {
       if (!a) return G.saySafe(sayFn, "Push what?");
+      const warning = inspectorViolenceWarning(a);
+      if (warning) return G.saySafe(sayFn, warning);
       return doAction("PUSH", a, sayFn);
     }
     if (verb === "HIT") {
       if (!a) return G.saySafe(sayFn, "Hit what?");
+      const warning = inspectorViolenceWarning(a);
+      if (warning) return G.saySafe(sayFn, warning);
       return doAction("PUSH", a, sayFn);
     }
     if (verb === "FREE") {
@@ -575,6 +651,10 @@
     if (verb === "CLOSE") {
       if (!a) return G.saySafe(sayFn, "Close what?");
       return doAction("CLOSE", a, sayFn);
+    }
+    if (verb === "EXTINGUISH") {
+      if (!a) return G.saySafe(sayFn, "Extinguish what?");
+      return doAction("EXTINGUISH", a, sayFn);
     }
 
     // ✅ Audio setting (optional commands)
