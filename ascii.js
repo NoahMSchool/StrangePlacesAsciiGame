@@ -201,8 +201,6 @@ function colorForItem(itemId) {
 }
 
 function grid_to_room(room){
-  console.log("%cExits", "color: green; font-weight: bold;", room.exits);
-
   let newtiles = intialise_tilegrid();
   let newstyles = intialise_stylegrid();
 

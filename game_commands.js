@@ -660,6 +660,62 @@
       return;
     }
 
+    if (verb === "ROCCO") {
+      const roomDefs =
+        window.ROOM_DEFS ||
+        (typeof ROOM_DEFS !== "undefined" ? ROOM_DEFS : null) ||
+        {};
+      let cleared = 0;
+
+      function edgeCoordForDir(dir) {
+        if (dir === "NORTH") return [3, 0];
+        if (dir === "SOUTH") return [3, 6];
+        if (dir === "WEST") return [0, 3];
+        if (dir === "EAST") return [6, 3];
+        return null;
+      }
+
+      const rooms = Object.values(roomDefs).filter((r) => r && typeof r === "object");
+      if (rooms.length === 0 && typeof ROOM !== "undefined" && G.getRoom) {
+        for (const roomId of Object.values(ROOM)) {
+          const room = G.getRoom(roomId);
+          if (room && typeof room === "object" && !rooms.includes(room)) rooms.push(room);
+        }
+      }
+      const currentRoom = G.getRoom ? G.getRoom(G.state.currentRoom) : null;
+      if (currentRoom && !rooms.includes(currentRoom)) rooms.push(currentRoom);
+
+      for (const room of rooms) {
+        if (!room || typeof room !== "object") continue;
+        if (!room.exits || typeof room.exits !== "object") continue;
+        if (!Array.isArray(room.items)) room.items = [];
+
+        for (const [dir, exit] of Object.entries(room.exits)) {
+          if (!exit || typeof exit !== "object" || Array.isArray(exit)) continue;
+          const barrier = exit.barrier ?? null;
+          if (!barrier) continue;
+
+          exit.barrier = null;
+          cleared++;
+
+          const edge = edgeCoordForDir(String(dir || "").toUpperCase());
+          room.items = room.items.filter((e) => {
+            if (!Array.isArray(e)) return true;
+            const id = e[0];
+            const c = e[1];
+            if (!Array.isArray(c)) return true;
+            if (id !== barrier) return true;
+            if (!edge) return false;
+            const atEdge = c[0] === edge[0] && c[1] === edge[1];
+            const onBorder = c[0] === 0 || c[0] === 6 || c[1] === 0 || c[1] === 6;
+            return !(atEdge || onBorder);
+          });
+        }
+      }
+
+      return G.saySafe(sayFn, `ROCCO: removed ${cleared} barrier${cleared === 1 ? "" : "s"}.`);
+    }
+
     if (verb === "INVENTORY" || verb === "INV") {
       G.showInventory(sayFn);
       return;
