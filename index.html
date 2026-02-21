@@ -4,169 +4,33 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>A Strange Character It Is (ASCII)</title>
-  <link rel="stylesheet" href="style.css">
-
-
-
-  <style>
-    :root {
-      --fg: #33ff33;
-      --bg: #000;
-      --panel-bg: #050505;
-      --border: 1px solid #33ff33;
-      --radius: 10px;
-
-      /* ASCII panel: 7x7 tiles, each tile 9x5 => 63x35 */
-      --ascii-w: 63ch;
-      --ascii-lines: 35;
-      --ascii-lh: 1.1em;
-    }
-
-    html, body { height: 100%; margin: 0; }
-
-    body {
-      font-family: ui-monospace, Menlo, Consolas, monospace;
-      background: var(--bg);
-      color: var(--fg);
-      padding: 16px;
-      box-sizing: border-box;
-    }
-
-    /* Mobile first: header, map, log, input */
-    .app {
-      height: 100%;
-      min-height: 0;
-      overflow: hidden;
-
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1fr;
-      grid-template-rows: auto auto minmax(0, 1fr) auto; /* no extra bottom box row */
-      grid-template-areas:
-        "header"
-        "ascii"
-        "log"
-        "input";
-    }
-
-    /* Desktop: 2 columns (left: header/log/input, right: map)
-       Header aligns with top of map. */
-    @media (min-width: 900px) {
-      .app {
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto minmax(0, 1fr) auto;
-        grid-template-areas:
-          "header ascii"
-          "log    ascii"
-          "input  ascii";
-        align-items: start;
-      }
-    }
-
-    .header { grid-area: header; }
-    h3 { margin: 0 0 6px 0; }
-    .status { opacity: 0.95; margin: 0; min-height: 1.2em; }
-
-    /* Make header and map top edges line up nicely */
-    @media (min-width: 900px) {
-      .header { padding-top: 2px; }
-      .asciiWrap { margin-top: 0; }
-    }
-
-    #log {
-      grid-area: log;
-      border: var(--border);
-      padding: 10px;
-      border-radius: var(--radius);
-      background: var(--panel-bg);
-      white-space: pre-wrap;
-
-      overflow-y: auto;
-      min-height: 0;
-      height: 100%;
-    }
-
-    /* Input row contains input + Send + Test (same line) */
-    .row {
-      grid-area: input;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    input, button { font: inherit; padding: 8px; }
-    input { flex: 1 1 320px; min-width: 220px; } /* grows but doesn't force overlap */
-    button { cursor: pointer; }
-
-    /* ASCII panel */
-    .asciiCol {
-      grid-area: ascii;
-      align-self: start;
-    }
-
-    .asciiWrap {
-      border: var(--border);
-      border-radius: var(--radius);
-      background: var(--panel-bg);
-      padding: 10px;
-      overflow: hidden;
-    }
-
-    #asciiOutput {
-      margin: 0;
-      width: var(--ascii-w);
-      line-height: var(--ascii-lh);
-      height: calc(var(--ascii-lines) * var(--ascii-lh));
-      overflow: hidden;
-      white-space: pre;
-      user-select: none;
-      font-size: 0.5em;
-    }
-    #asciiOutput .tile-seg { color: inherit; }
-
-    #roomName {
-      margin-top: 6px;
-      font-size: 0.72em;
-      opacity: 0.9;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    @supports (height: 100dvh) {
-      html, body { height: 100dvh; }
-    }
-  </style>
-
-
-
+  <link rel="stylesheet" href="neat_style.css">
 </head>
-
 <body>
-  <div class="app">
-    <div class="header">
+  <div class="neatApp">
+    <div class="neatHeader">
       <h1>A Strange Character Is In (ASCII)</h1>
-      <div class="status" id="status"></div>
+      <div id="status"></div>
     </div>
-    <h2> A Submission for Brackeys GameJam 2026.2</h2>
 
-    <div class="asciiCol">
-      <div class="asciiWrap" aria-label="ASCII panel">
-        <pre id="asciiOutput"></pre>
+    <div class="workspace">
+      <div class="leftPane">
+        <div id="inputBox"></div>
+        <div class="controls">
+          <input id="cmd" placeholder="Type anything..." disabled />
+          <button id="send" type="button" title="Send command" aria-label="Send command" disabled>Send</button>
+          <button id="helpBtn" type="button" title="Help" aria-label="Help">Help</button>
+          <button id="bgmToggle" type="button" title="Music" aria-label="Music">Music</button>
+          <button id="sfxToggle" type="button" title="Sound effects" aria-label="Sound effects">FX</button>
+        </div>
       </div>
-      <div id="roomName"></div>
-    </div>
 
-
-    <div id="inputBox"></div>
-
-    <!-- Send + Test on the same row -->
-    <div class="row">
-      <input id="cmd" placeholder="Type anything…" disabled />
-      <button id="send" disabled>Send</button>
-      <button id="helpBtn" type="button">Help</button>
-      <button id="bgmToggle" type="button">Music: On</button>
-      <button id="sfxToggle" type="button">FX: On</button>
+      <div class="rightPane" aria-label="ASCII panel">
+        <div id="mapSquare">
+          <pre id="asciiOutput"></pre>
+        </div>
+        <div id="roomName"></div>
+      </div>
     </div>
   </div>
 
@@ -178,12 +42,9 @@
   <script src="recipes.js"></script>
   <script src="rooms.js"></script>
   <script src="parser.js"></script>
-
   <script src="sounds.js"></script>
   <script src="game_core.js"></script>
   <script src="game_commands.js"></script>
-
-
   <script src="ascii.js"></script>
 
   <script>
@@ -196,6 +57,8 @@
     const sfxToggleBtn = document.getElementById("sfxToggle");
     const roomNameEl = document.getElementById("roomName");
     const asciiOutputEl = document.getElementById("asciiOutput");
+    const rightPaneEl = document.querySelector(".rightPane");
+    const mapSquareEl = document.getElementById("mapSquare");
 
     function say(t) {
       inputBox.textContent += t + "\n";
@@ -206,10 +69,6 @@
       status.textContent = t || "";
     }
 
-    cmd.disabled = false;
-    sendBtn.disabled = false;
-    cmd.focus();
-
     function updateAudioToggleLabels() {
       const bgmOn =
         window.GameRuntime &&
@@ -219,34 +78,72 @@
         window.GameRuntime &&
         typeof GameRuntime.getSfxEnabled === "function" &&
         GameRuntime.getSfxEnabled();
-      bgmToggleBtn.textContent = `Music: ${bgmOn ? "On" : "Off"}`;
-      sfxToggleBtn.textContent = `FX: ${sfxOn ? "On" : "Off"}`;
+
+      bgmToggleBtn.textContent = bgmOn ? "Music" : "Muted";
+      sfxToggleBtn.textContent = sfxOn ? "FX" : "FX Off";
+      bgmToggleBtn.title = bgmOn ? "Music on" : "Music off";
+      sfxToggleBtn.title = sfxOn ? "FX on" : "FX off";
     }
 
-    bgmToggleBtn.addEventListener("click", () => {
-      if (window.GameRuntime && typeof GameRuntime.toggleBgm === "function") {
-        GameRuntime.toggleBgm();
-        updateAudioToggleLabels();
-      }
-    });
+    function getAsciiDims(text) {
+      const lines = String(text || "").split("\n");
+      const rows = Math.max(1, lines.length);
+      let cols = 1;
+      for (const line of lines) cols = Math.max(cols, line.length);
+      return { rows, cols };
+    }
 
-    sfxToggleBtn.addEventListener("click", () => {
-      if (window.GameRuntime && typeof GameRuntime.toggleSfx === "function") {
-        GameRuntime.toggleSfx();
-        updateAudioToggleLabels();
-      }
-    });
+    function measureCharAt16Px() {
+      const probe = document.createElement("span");
+      probe.textContent = "M";
+      probe.style.position = "absolute";
+      probe.style.visibility = "hidden";
+      probe.style.pointerEvents = "none";
+      probe.style.fontFamily = getComputedStyle(asciiOutputEl).fontFamily;
+      probe.style.fontSize = "16px";
+      probe.style.lineHeight = "1";
+      document.body.appendChild(probe);
+      const rect = probe.getBoundingClientRect();
+      document.body.removeChild(probe);
+      return {
+        width: Math.max(1, rect.width),
+        height: Math.max(1, rect.height),
+      };
+    }
+
+    function sizeMapSquare() {
+      const roomNameH = roomNameEl.getBoundingClientRect().height || 0;
+      const gap = 8;
+      const innerW = Math.max(1, rightPaneEl.clientWidth);
+      const innerH = Math.max(1, rightPaneEl.clientHeight - roomNameH - gap);
+      const side = Math.max(40, Math.floor(Math.min(innerW, innerH)));
+      mapSquareEl.style.width = `${side}px`;
+      mapSquareEl.style.height = `${side}px`;
+    }
+
+    function fitAsciiToMapSquare() {
+      const text = asciiOutputEl.textContent || "";
+      const { rows, cols } = getAsciiDims(text);
+      const availableW = Math.max(1, mapSquareEl.clientWidth - 8);
+      const availableH = Math.max(1, mapSquareEl.clientHeight - 8);
+      const char16 = measureCharAt16Px();
+
+      const pxByWidth = (availableW * 16) / (cols * char16.width);
+      const pxByHeight = (availableH * 16) / (rows * char16.height);
+      const next = Math.max(4, Math.floor(Math.min(pxByWidth, pxByHeight)));
+      asciiOutputEl.style.fontSize = `${next}px`;
+    }
 
     async function updateRoomTile() {
-        const room = GameRuntime.getCurrentRoom();
-        const asciiOutput = document.getElementById("asciiOutput");
-        if (typeof getRoomTileHtml === "function") {
-          asciiOutput.innerHTML = getRoomTileHtml(room);
-        } else {
-          gridstring = getRoomTile(room);
-          asciiOutput.textContent = gridstring;
-        }
-        roomNameEl.textContent = room?.name || "";
+      const room = GameRuntime.getCurrentRoom();
+      if (typeof getRoomTileHtml === "function") {
+        asciiOutputEl.innerHTML = getRoomTileHtml(room);
+      } else {
+        asciiOutputEl.textContent = getRoomTile(room);
+      }
+      roomNameEl.textContent = room?.name || "";
+      sizeMapSquare();
+      fitAsciiToMapSquare();
     }
 
     async function run() {
@@ -260,9 +157,7 @@
       cmd.value = "";
       say("");
       cmd.focus();
-
       updateRoomTile();
-
     }
 
     async function runRawCommand(text) {
@@ -281,8 +176,8 @@
       const relX = Math.max(0, Math.min(rect.width - 1, clientX - rect.left));
       const relY = Math.max(0, Math.min(rect.height - 1, clientY - rect.top));
 
-      const col = Math.floor((relX / rect.width) * 7);  // tile x: 0..6
-      const row = Math.floor((relY / rect.height) * 7); // tile y: 0..6
+      const col = Math.floor((relX / rect.width) * 7);
+      const row = Math.floor((relY / rect.height) * 7);
 
       if (row === 0 && col === 3) return "NORTH";
       if (row === 6 && col === 3) return "SOUTH";
@@ -291,19 +186,40 @@
       return null;
     }
 
+    cmd.disabled = false;
+    sendBtn.disabled = false;
+    cmd.focus();
+
     sendBtn.addEventListener("click", run);
     helpBtn.addEventListener("click", () => runRawCommand("HELP"));
-    cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+
+    bgmToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleBgm === "function") {
+        GameRuntime.toggleBgm();
+        updateAudioToggleLabels();
+      }
+    });
+
+    sfxToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleSfx === "function") {
+        GameRuntime.toggleSfx();
+        updateAudioToggleLabels();
+      }
+    });
+
+    cmd.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") run();
+    });
+
     asciiOutputEl.addEventListener("pointerdown", (e) => {
       const dir = directionFromAsciiGapTap(e.clientX, e.clientY);
       if (!dir) return;
       e.preventDefault();
       runRawCommand(`GO ${dir}`);
     });
+
     window.addEventListener("keydown", (e) => {
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
-
-      // If typing in input with content, keep normal arrow behavior for editing.
       if (document.activeElement === cmd && cmd.value.trim().length > 0) return;
 
       const dirByKey = {
@@ -320,13 +236,18 @@
       runRawCommand(`GO ${dir}`);
     });
 
+    window.addEventListener("resize", () => {
+      sizeMapSquare();
+      fitAsciiToMapSquare();
+    });
+
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
       updateRoomTile();
       updateAudioToggleLabels();
-
       say("");
     } else {
+      sendBtn.disabled = true;
       helpBtn.disabled = true;
       bgmToggleBtn.disabled = true;
       sfxToggleBtn.disabled = true;

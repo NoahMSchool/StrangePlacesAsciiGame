@@ -1,0 +1,275 @@
+@font-face {
+  font-family: "simpleMonoFont";
+  src: url("Fonts/JetBrainsMono-Regular.ttf");
+}
+
+@font-face {
+  font-family: "headerMono";
+  src: url("Fonts/MajorMonoDisplay-Regular.ttf");
+}
+
+:root {
+  --bg: #2e3d2f;
+  --panel: #d1ceb8;
+  --panel-dark: #000000;
+  --ink: #292720;
+  --terminal: #33ff33;
+  --accent: #355447;
+  --heading-bg: #a9d5db;
+  --heading-ink: #e33d6f;
+  --line: #355447;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "simpleMonoFont", ui-monospace, monospace;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.neatApp {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.neatHeader {
+  display: grid;
+  gap: 4px;
+  background: var(--heading-bg);
+  color: var(--heading-ink);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: -10px -10px 0 -10px;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+}
+
+.neatHeader h1,
+.neatHeader h2 {
+  margin: 0;
+  font-family: "headerMono", "simpleMonoFont", ui-monospace, monospace;
+  font-weight: 400;
+}
+
+.neatHeader h2 {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+  .neatHeader h1 {
+    font-size: 0.86rem;
+  }
+}
+
+#status {
+  min-height: 1.2em;
+  color: #5a4a42;
+  font-size: 0.9rem;
+}
+
+.workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.leftPane {
+  order: 2;
+}
+
+.rightPane {
+  order: 1;
+}
+
+@media (orientation: landscape) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .leftPane,
+  .rightPane {
+    order: 0;
+  }
+}
+
+.leftPane,
+.rightPane {
+  min-height: 0;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+  background: var(--panel);
+}
+
+.leftPane {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 10px;
+  overflow: hidden;
+  background: var(--panel-dark);
+  border-color: var(--terminal);
+}
+
+#inputBox {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: var(--panel-dark);
+  color: var(--terminal);
+  border: 0;
+  border-radius: 0;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.leftPane input,
+.leftPane button {
+  background: #121212;
+  color: var(--terminal);
+  border: 1px solid var(--terminal);
+}
+
+.leftPane input::placeholder {
+  color: #8cd78c;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+#cmd {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  .controls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  #cmd {
+    grid-column: 1 / span 3;
+    min-width: 0;
+    width: auto;
+  }
+
+  .controls button {
+    width: 100%;
+    min-width: 0;
+    height: 1.9rem;
+  }
+
+  #send {
+    height: 1.7rem;
+    padding: 0 6px;
+    font-size: 0.85rem;
+  }
+}
+
+input,
+button {
+  font: inherit;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: #e8e5d4;
+  color: var(--ink);
+}
+
+button {
+  cursor: pointer;
+}
+
+#send,
+#helpBtn,
+#bgmToggle,
+#sfxToggle {
+  min-width: 0;
+  height: 2rem;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rightPane {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  justify-items: center;
+  overflow: hidden;
+}
+
+#mapSquare {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#asciiOutput {
+  margin: 0;
+  line-height: 1;
+  white-space: pre;
+  overflow: hidden;
+  user-select: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 8px;
+}
+
+#asciiOutput .tile-seg {
+  color: inherit;
+}
+
+#roomName {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #4c5a4f;
+  min-height: 1.1em;
+}
+
+@supports (height: 100dvh) {
+  html,
+  body {
+    height: 100dvh;
+  }
+}
