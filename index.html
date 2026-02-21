@@ -142,6 +142,7 @@
     <div class="row">
       <input id="cmd" placeholder="Type anything…" disabled />
       <button id="send" disabled>Send</button>
+      <button id="audioToggle" type="button">Sound: On</button>
     </div>
   </div>
 
@@ -166,8 +167,7 @@
     const status = document.getElementById("status");
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
-    const testBtn = document.getElementById("test");
-    const testTile = document.getElementById("testTile");
+    const audioToggleBtn = document.getElementById("audioToggle");
 
     function say(t) {
       log.textContent += t + "\n";
@@ -181,6 +181,21 @@
     cmd.disabled = false;
     sendBtn.disabled = false;
     cmd.focus();
+
+    function updateAudioToggleLabel() {
+      const isOn =
+        window.GameRuntime &&
+        typeof GameRuntime.getAudioEnabled === "function" &&
+        GameRuntime.getAudioEnabled();
+      audioToggleBtn.textContent = `Sound: ${isOn ? "On" : "Off"}`;
+    }
+
+    audioToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleAudio === "function") {
+        GameRuntime.toggleAudio();
+        updateAudioToggleLabel();
+      }
+    });
 
     async function updateRoomTile() {
         gridstring = getRoomTile(GameRuntime.getCurrentRoom());
@@ -209,9 +224,11 @@
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
       updateRoomTile();
+      updateAudioToggleLabel();
 
       say("");
     } else {
+      audioToggleBtn.disabled = true;
       say("GameRuntime not loaded. Check that game_core.js and game_commands.js are included and error-free.");
     }
   </script>
