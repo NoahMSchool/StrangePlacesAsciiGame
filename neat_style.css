@@ -10,13 +10,13 @@
 
 :root {
   --bg: #2e3d2f;
-  --panel: #d1ceb8;
+  --panel: #d7d2bd;
   --panel-dark: #000000;
-  --ink: #292720;
+  --ink: #1f1c16;
   --terminal: #33ff33;
   --accent: #355447;
   --heading-bg: #a9d5db;
-  --heading-ink: #e33d6f;
+  --heading-ink: #b42558;
   --line: #355447;
 }
 
@@ -79,7 +79,7 @@ body {
 
 #status {
   min-height: 1.2em;
-  color: #5a4a42;
+  color: #4b3d36;
   font-size: 0.9rem;
 }
 
@@ -263,7 +263,7 @@ button {
   font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #4c5a4f;
+  color: #2f3f35;
   min-height: 1.1em;
 }
 
