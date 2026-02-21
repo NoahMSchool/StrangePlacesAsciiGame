@@ -185,6 +185,7 @@
     const bgmToggleBtn = document.getElementById("bgmToggle");
     const sfxToggleBtn = document.getElementById("sfxToggle");
     const roomNameEl = document.getElementById("roomName");
+    const asciiOutputEl = document.getElementById("asciiOutput");
 
     function say(t) {
       log.textContent += t + "\n";
@@ -258,8 +259,31 @@
       updateRoomTile();
     }
 
+    function directionFromAsciiGapTap(clientX, clientY) {
+      const rect = asciiOutputEl.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+
+      const relX = Math.max(0, Math.min(rect.width - 1, clientX - rect.left));
+      const relY = Math.max(0, Math.min(rect.height - 1, clientY - rect.top));
+
+      const col = Math.floor((relX / rect.width) * 7);  // tile x: 0..6
+      const row = Math.floor((relY / rect.height) * 7); // tile y: 0..6
+
+      if (row === 0 && col === 3) return "NORTH";
+      if (row === 6 && col === 3) return "SOUTH";
+      if (col === 0 && row === 3) return "WEST";
+      if (col === 6 && row === 3) return "EAST";
+      return null;
+    }
+
     sendBtn.addEventListener("click", run);
     cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+    asciiOutputEl.addEventListener("pointerdown", (e) => {
+      const dir = directionFromAsciiGapTap(e.clientX, e.clientY);
+      if (!dir) return;
+      e.preventDefault();
+      runRawCommand(`GO ${dir}`);
+    });
     window.addEventListener("keydown", (e) => {
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
 
