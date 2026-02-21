@@ -277,6 +277,13 @@
     const recipe = findActionRecipe(verb, targetId);
     if (!recipe) {
       if (verb === "EAT") return G.saySafe(sayFn, G.cantEatMessage(targetId));
+      if (
+        verb === "OPEN" &&
+        typeof ITEM !== "undefined" &&
+        targetId === ITEM.DOOR_LOCKED
+      ) {
+        return G.saySafe(sayFn, "It's locked.");
+      }
       return G.saySafe(sayFn, "Nothing happens.");
     }
 
