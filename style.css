@@ -45,15 +45,18 @@ h1{
   background: #a9d5db;
   color: #e33d6f;
   font-family: headerMono;
+  border-radius: 10px;
+  padding: 5px;
 
 }
 h2{
   margin: 0px;
   background: #a9d5db;
   color: #e33d6f;
+  border-radius: 10px;
+  padding: 3px;
 
 }
-
 
   body{
     
@@ -80,7 +83,7 @@ h2{
 #asciiOutput {
   background: #d1ceb8;
   border: 5px solid #2d7aa1;
-  border-radius: 100;
+  border-radius: 5px;
   margin: 0px;
   /*
   margin: 0;
@@ -99,9 +102,10 @@ h2{
   background: #000000;
   color: #33ff33;
   border: 5px #33ff33;
-  border-radius: 10;
+  border-radius: 10px;
   margin: 0px;
   height: 100%;
+  padding: 5px;
 
   
   /*
