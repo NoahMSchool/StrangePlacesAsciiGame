@@ -2,14 +2,15 @@
 // Simple global audio system
 
 (function () {
-  let enabled = true;
+  let bgmEnabled = true;
+  let sfxEnabled = true;
   let unlocked = false;
 
   let bgmAudio = null;
   let pendingBgm = null;
 
   function tryPlay(audio) {
-    if (!audio || !enabled || !unlocked) return;
+    if (!audio || !unlocked) return;
     audio.play().catch(() => {});
   }
 
@@ -32,16 +33,25 @@
     window.addEventListener("touchstart", unlock, opts);
   }
 
-  function setEnabled(v) {
-    enabled = !!v;
-
-    if (!enabled) {
+  function setBgmEnabled(v) {
+    bgmEnabled = !!v;
+    if (!bgmEnabled) {
       stopBgm();
     }
   }
 
+  function setSfxEnabled(v) {
+    sfxEnabled = !!v;
+  }
+
+  // Backward-compatible master toggle.
+  function setEnabled(v) {
+    setBgmEnabled(v);
+    setSfxEnabled(v);
+  }
+
   function playBgm(url, { loop = true, volume = 0.6 } = {}) {
-    if (!enabled) return;
+    if (!bgmEnabled) return;
 
     pendingBgm = { url, options: { loop, volume } };
 
@@ -67,7 +77,7 @@
   }
 
   function playSfx(url, volume = 1) {
-    if (!enabled || !unlocked) return;
+    if (!sfxEnabled || !unlocked) return;
 
     const a = new Audio(url);
     a.volume = volume;
@@ -78,6 +88,10 @@
 
   window.Sound = {
     setEnabled,
+    setBgmEnabled,
+    setSfxEnabled,
+    getBgmEnabled: () => bgmEnabled,
+    getSfxEnabled: () => sfxEnabled,
     playBgm,
     stopBgm,
     playSfx,

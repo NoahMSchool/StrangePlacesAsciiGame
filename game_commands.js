@@ -25,25 +25,26 @@
 
   // Single place to store settings (you can later persist this to localStorage)
   const Settings = {
-    audioEnabled: true, // default ON
+    bgmEnabled: true,
+    sfxEnabled: true,
   };
 
-  function applyAudioEnabled() {
-    // Assumes sound.js exposes these:
-    //   Sound.setEnabled(boolean)
-    //   Sound.playBgm(url, { loop:true })
-    //   Sound.stopBgm()
-    Sound.setEnabled(Settings.audioEnabled);
-
-    if (Settings.audioEnabled) {
+  function applyBgmEnabled() {
+    Sound.setBgmEnabled(Settings.bgmEnabled);
+    if (Settings.bgmEnabled) {
       Sound.playBgm(DEFAULT_BGM_LOOP, { loop: true });
     } else {
       Sound.stopBgm();
     }
   }
 
+  function applySfxEnabled() {
+    Sound.setSfxEnabled(Settings.sfxEnabled);
+  }
+
   // Start ambience immediately (default ON)
-  applyAudioEnabled();
+  applyBgmEnabled();
+  applySfxEnabled();
 
   // ---------------- helpers ----------------
 
@@ -688,18 +689,25 @@
       // SOUND ON / SOUND OFF / SOUND
       const arg = (a || "").toUpperCase();
       if (arg === "ON") {
-        Settings.audioEnabled = true;
-        applyAudioEnabled();
+        Settings.bgmEnabled = true;
+        Settings.sfxEnabled = true;
+        applyBgmEnabled();
+        applySfxEnabled();
         return G.saySafe(sayFn, "Audio: ON");
       }
       if (arg === "OFF") {
-        Settings.audioEnabled = false;
-        applyAudioEnabled();
+        Settings.bgmEnabled = false;
+        Settings.sfxEnabled = false;
+        applyBgmEnabled();
+        applySfxEnabled();
         return G.saySafe(sayFn, "Audio: OFF");
       }
-      Settings.audioEnabled = !Settings.audioEnabled;
-      applyAudioEnabled();
-      return G.saySafe(sayFn, `Audio: ${Settings.audioEnabled ? "ON" : "OFF"}`);
+      const next = !(Settings.bgmEnabled && Settings.sfxEnabled);
+      Settings.bgmEnabled = next;
+      Settings.sfxEnabled = next;
+      applyBgmEnabled();
+      applySfxEnabled();
+      return G.saySafe(sayFn, `Audio: ${next ? "ON" : "OFF"}`);
     }
 
     if (verb === "HELP") return G.helpText(sayFn);
@@ -756,15 +764,41 @@
     makeTarget,
 
     // ✅ settings hooks for UI buttons/toggles later
-    getAudioEnabled: () => Settings.audioEnabled,
+    getAudioEnabled: () => Settings.bgmEnabled && Settings.sfxEnabled,
     setAudioEnabled: (enabled) => {
-      Settings.audioEnabled = !!enabled;
-      applyAudioEnabled();
+      const on = !!enabled;
+      Settings.bgmEnabled = on;
+      Settings.sfxEnabled = on;
+      applyBgmEnabled();
+      applySfxEnabled();
     },
     toggleAudio: () => {
-      Settings.audioEnabled = !Settings.audioEnabled;
-      applyAudioEnabled();
-      return Settings.audioEnabled;
+      const on = !(Settings.bgmEnabled && Settings.sfxEnabled);
+      Settings.bgmEnabled = on;
+      Settings.sfxEnabled = on;
+      applyBgmEnabled();
+      applySfxEnabled();
+      return on;
+    },
+    getBgmEnabled: () => Settings.bgmEnabled,
+    setBgmEnabled: (enabled) => {
+      Settings.bgmEnabled = !!enabled;
+      applyBgmEnabled();
+    },
+    toggleBgm: () => {
+      Settings.bgmEnabled = !Settings.bgmEnabled;
+      applyBgmEnabled();
+      return Settings.bgmEnabled;
+    },
+    getSfxEnabled: () => Settings.sfxEnabled,
+    setSfxEnabled: (enabled) => {
+      Settings.sfxEnabled = !!enabled;
+      applySfxEnabled();
+    },
+    toggleSfx: () => {
+      Settings.sfxEnabled = !Settings.sfxEnabled;
+      applySfxEnabled();
+      return Settings.sfxEnabled;
     },
   };
 })();

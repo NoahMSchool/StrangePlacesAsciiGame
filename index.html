@@ -156,7 +156,8 @@
     <div class="row">
       <input id="cmd" placeholder="Type anything…" disabled />
       <button id="send" disabled>Send</button>
-      <button id="audioToggle" type="button">Sound: On</button>
+      <button id="bgmToggle" type="button">Music: On</button>
+      <button id="sfxToggle" type="button">FX: On</button>
     </div>
   </div>
 
@@ -181,7 +182,8 @@
     const status = document.getElementById("status");
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
-    const audioToggleBtn = document.getElementById("audioToggle");
+    const bgmToggleBtn = document.getElementById("bgmToggle");
+    const sfxToggleBtn = document.getElementById("sfxToggle");
     const roomNameEl = document.getElementById("roomName");
 
     function say(t) {
@@ -197,18 +199,30 @@
     sendBtn.disabled = false;
     cmd.focus();
 
-    function updateAudioToggleLabel() {
-      const isOn =
+    function updateAudioToggleLabels() {
+      const bgmOn =
         window.GameRuntime &&
-        typeof GameRuntime.getAudioEnabled === "function" &&
-        GameRuntime.getAudioEnabled();
-      audioToggleBtn.textContent = `Sound: ${isOn ? "On" : "Off"}`;
+        typeof GameRuntime.getBgmEnabled === "function" &&
+        GameRuntime.getBgmEnabled();
+      const sfxOn =
+        window.GameRuntime &&
+        typeof GameRuntime.getSfxEnabled === "function" &&
+        GameRuntime.getSfxEnabled();
+      bgmToggleBtn.textContent = `Music: ${bgmOn ? "On" : "Off"}`;
+      sfxToggleBtn.textContent = `FX: ${sfxOn ? "On" : "Off"}`;
     }
 
-    audioToggleBtn.addEventListener("click", () => {
-      if (window.GameRuntime && typeof GameRuntime.toggleAudio === "function") {
-        GameRuntime.toggleAudio();
-        updateAudioToggleLabel();
+    bgmToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleBgm === "function") {
+        GameRuntime.toggleBgm();
+        updateAudioToggleLabels();
+      }
+    });
+
+    sfxToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleSfx === "function") {
+        GameRuntime.toggleSfx();
+        updateAudioToggleLabels();
       }
     });
 
@@ -269,11 +283,12 @@
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
       updateRoomTile();
-      updateAudioToggleLabel();
+      updateAudioToggleLabels();
 
       say("");
     } else {
-      audioToggleBtn.disabled = true;
+      bgmToggleBtn.disabled = true;
+      sfxToggleBtn.disabled = true;
       say("GameRuntime not loaded. Check that game_core.js and game_commands.js are included and error-free.");
     }
   </script>

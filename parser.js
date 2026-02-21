@@ -33,7 +33,7 @@ const VERB_SYNONYMS = {
   UNLOCK:  ["unlock"],
   OPEN:    ["open"],
   CLOSE:   ["close", "shut"],
-  EXTINGUISH: ["extinguish", "put out"],
+  EXTINGUISH: ["extinguish", "put out", "douse", "dowse"],
   HIT:     ["hit", "whack", "smack", "strike", "bash", "bonk", "clobber", "punch", "attack"],
   SEARCH:  ["search", "rummage", "dig through", "look in"],
   THROW:   ["throw", "toss", "hurl"],
