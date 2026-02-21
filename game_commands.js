@@ -1,19 +1,61 @@
 // game_commands.js
-// Command execution + crafting/recipes. Depends on GameCore being loaded first.
+// Command execution + crafting/recipes.
+// Depends on GameCore + sound.js being loaded first.
 
 (function () {
   const G = window.GameCore;
+  const Sound = window.Sound;
+
   if (!G) {
     console.error("GameCore not found. Load game_core.js before game_commands.js");
     return;
   }
+  if (!Sound) {
+    console.error("Sound not found. Load sound.js before game_commands.js");
+    return;
+  }
+
+  // ---------------- Audio config ----------------
+
+  const DEFAULT_SUCCESS_SFX =
+    "Audio/ksjsbwuil-apple-pay-success-sound-effect-481188.mp3";
+
+  const DEFAULT_BGM_LOOP =
+    "Audio/freesound_community-eerie-ambience-6836.mp3";
+
+  // Single place to store settings (you can later persist this to localStorage)
+  const Settings = {
+    audioEnabled: true, // default ON
+  };
+
+  function applyAudioEnabled() {
+    // Assumes sound.js exposes these:
+    //   Sound.setEnabled(boolean)
+    //   Sound.playBgm(url, { loop:true })
+    //   Sound.stopBgm()
+    Sound.setEnabled(Settings.audioEnabled);
+
+    if (Settings.audioEnabled) {
+      Sound.playBgm(DEFAULT_BGM_LOOP, { loop: true });
+    } else {
+      Sound.stopBgm();
+    }
+  }
+
+  // Start ambience immediately (default ON)
+  applyAudioEnabled();
 
   // ---------------- helpers ----------------
+
+  function playSuccessSound(recipe) {
+    const url = recipe?.successSfx || DEFAULT_SUCCESS_SFX;
+    Sound.playSfx(url);
+  }
 
   function formatProducedList(produceIds) {
     const ids = (produceIds || []).filter(Boolean);
     if (ids.length === 0) return "";
-    const parts = ids.map((id) => G.formatItem(id)); // includes emoji + name
+    const parts = ids.map((id) => G.formatItem(id)); // emoji + name
     return ` (${parts.join(", ")})`;
   }
 
@@ -32,10 +74,13 @@
     return `(used: ${formatEmojiList(consume)} → made: ${formatEmojiList(produce)})`;
   }
 
-  function sayRecipeResult(sayFn, text, consume, produce) {
+  function sayRecipeResult(sayFn, recipe, consume, produce) {
     const suffix = formatProducedList(produce);
     const summary = formatRecipeSummaryLine(consume, produce);
-    G.saySafe(sayFn, (text || "Done.") + suffix + "\n" + summary);
+    G.saySafe(sayFn, (recipe?.text || "Done.") + suffix + "\n" + summary);
+
+    // ✅ SFX on success (respects Settings.audioEnabled via Sound.setEnabled)
+    playSuccessSound(recipe);
   }
 
   // ---------------- availability helpers (prevent partial consume bugs) ----------------
@@ -63,7 +108,7 @@
 
   function canConsumeAllHere(consumeIds) {
     const want = new Map();
-    for (const id of (consumeIds || [])) {
+    for (const id of consumeIds || []) {
       if (!id) continue;
       want.set(id, (want.get(id) || 0) + 1);
     }
@@ -93,18 +138,22 @@
       }
     }
 
-    const recipe = typeof window.findRecipe === "function" ? window.findRecipe(inputs) : null;
+    const recipe =
+      typeof window.findRecipe === "function" ? window.findRecipe(inputs) : null;
     if (!recipe) return G.saySafe(sayFn, "Nothing happens.");
 
     const consume = Array.isArray(recipe.consume)
       ? recipe.consume
-      : (Array.isArray(recipe.inputs) ? recipe.inputs : inputs);
+      : Array.isArray(recipe.inputs)
+      ? recipe.inputs
+      : inputs;
 
     const produce = Array.isArray(recipe.produce)
       ? recipe.produce
-      : (recipe.output ? [recipe.output] : []);
+      : recipe.output
+      ? [recipe.output]
+      : [];
 
-    // Prevent “half-used” bugs: never remove anything unless we can remove everything.
     if (!canConsumeAllHere(consume)) {
       G.saySafe(sayFn, "You can't do that right now.");
       return;
@@ -139,10 +188,10 @@
       else G.addToRoom(outId);
     }
 
-    sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
+    sayRecipeResult(sayFn, recipe, consume, produce);
   }
 
-  // ---------------- ACTION RECIPES (EAT / PUSH / PULL / OPEN / UNLOCK / CLOSE) ----------------
+  // ---------------- ACTION RECIPES ----------------
 
   function listAllRecipes() {
     return window.RECIPES ? Object.values(window.RECIPES) : [];
@@ -152,7 +201,8 @@
     const a = String(action || "").toUpperCase();
     return (
       listAllRecipes().find(
-        (r) => r && String(r.action || "").toUpperCase() === a && r.target === targetId
+        (r) =>
+          r && String(r.action || "").toUpperCase() === a && r.target === targetId
       ) || null
     );
   }
@@ -164,12 +214,9 @@
   }
 
   function coordToDir(coord) {
-    // must match rooms.js edgeCoordForDir layout (7x7)
     const x = coord?.[0],
       y = coord?.[1];
     if (x == null || y == null) return null;
-
-    // MID=3 in 7x7
     if (x === 3 && y === 0) return "NORTH";
     if (x === 3 && y === 6) return "SOUTH";
     if (x === 0 && y === 3) return "WEST";
@@ -192,11 +239,8 @@
 
     room.items[idx] = [toId, c];
 
-    // If this is an edge midpoint, also update exits barrier
     const dir = coordToDir(c);
     if (dir && room.exits && room.exits[dir] && typeof room.exits[dir] === "object") {
-      // If open door -> no barrier (movement allowed)
-      // Otherwise barrier is the new door state item id (locked/closed/etc)
       room.exits[dir].barrier = isDoorOpenId(toId) ? null : toId;
     }
 
@@ -204,8 +248,8 @@
   }
 
   function lockedDoorFailMessage(verb, targetId) {
-    // Nice default, but don’t hard-crash if you haven’t added DOOR_LOCKED yet.
-    if (verb === "OPEN" && typeof ITEM !== "undefined" && targetId === ITEM.DOOR_LOCKED) return "It's locked.";
+    if (verb === "OPEN" && typeof ITEM !== "undefined" && targetId === ITEM.DOOR_LOCKED)
+      return "It's locked.";
     return null;
   }
 
@@ -217,9 +261,6 @@
     const inRoom = G.isInRoom(targetId);
     const inInv = G.isInInventory(targetId);
 
-    // Presence rules:
-    // - EAT: can be in room OR inventory
-    // - others: must be in room
     if (verb === "EAT") {
       if (!inRoom && !inInv) return G.saySafe(sayFn, "You can't see that here.");
     } else {
@@ -227,7 +268,6 @@
     }
 
     const recipe = findActionRecipe(verb, targetId);
-
     if (!recipe) {
       if (verb === "EAT") return G.saySafe(sayFn, G.cantEatMessage(targetId));
       return G.saySafe(sayFn, "Nothing happens.");
@@ -236,13 +276,19 @@
     if (!hasAllRequired(recipe.requires)) {
       const have = G.allAvailableItemsSet();
       const missing = (recipe.requires || []).filter((id) => !have.has(id));
-      return G.saySafe(sayFn, `You can't do that yet. You need: ${missing.map(G.formatItem).join(", ")}.`);
+      return G.saySafe(
+        sayFn,
+        `You can't do that yet. You need: ${missing.map(G.formatItem).join(", ")}.`
+      );
     }
 
     const consume = Array.isArray(recipe.consume) ? recipe.consume : [targetId];
     const produce = Array.isArray(recipe.produce)
       ? recipe.produce
-      : (recipe.output ? [recipe.output] : []);
+      : recipe.output
+      ? [recipe.output]
+      : [];
+
     const placeResult = recipe.placeResult === "inventory" ? "inventory" : "room";
 
     if (placeResult === "inventory") {
@@ -256,35 +302,28 @@
       }
     }
 
-    // ✅ Don’t partially consume (this was the “door disappears” bug)
     if (!canConsumeAllHere(consume)) {
       const nicer = lockedDoorFailMessage(verb, targetId);
       return G.saySafe(sayFn, nicer || "You can't do that.");
     }
 
-    // ✅ keepCoord simple rule:
-    // replace FIRST item in consume with FIRST item in produce, keeping coord
-    // then consume the rest normally, and add any extra outputs normally.
+    // keepCoord: replace FIRST consume with FIRST produce at the same coord
     if (recipe.keepCoord && consume.length >= 1 && produce.length >= 1) {
       const fromId = consume[0];
       const toId = produce[0];
 
-      // Only makes sense if the replaced thing is in the room
       if (G.isInRoom(fromId)) {
         const room = G.getRoom(G.state.currentRoom);
 
-        // Consume everything except the first (we replace it instead)
         for (let i = 1; i < consume.length; i++) {
           const id = consume[i];
           const removedFrom = G.removeOne(id);
           if (!removedFrom) return G.saySafe(sayFn, "You can't do that right now.");
         }
 
-        // Replace the first consumed item in-place
         const ok = replaceRoomItemKeepingCoord(room, fromId, toId);
         if (!ok) return G.saySafe(sayFn, "You can't do that right now.");
 
-        // Add any extra produced items
         for (let i = 1; i < produce.length; i++) {
           const outId = produce[i];
           if (!outId) continue;
@@ -292,17 +331,19 @@
           else G.addToRoom(outId);
         }
 
-        sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
+        sayRecipeResult(sayFn, recipe, consume, produce);
         return;
       }
-      // If not in room, just fall through to normal consume/produce.
     }
 
     // Normal path
     for (const id of consume) {
       const removedFrom = G.removeOne(id);
       if (!removedFrom) {
-        return G.saySafe(sayFn, `You can't seem to ${verb.toLowerCase()} ${G.formatItem(targetId)} right now.`);
+        return G.saySafe(
+          sayFn,
+          `You can't seem to ${verb.toLowerCase()} ${G.formatItem(targetId)} right now.`
+        );
       }
     }
 
@@ -312,7 +353,7 @@
       else G.addToRoom(outId);
     }
 
-    sayRecipeResult(sayFn, recipe.text || "Done.", consume, produce);
+    sayRecipeResult(sayFn, recipe, consume, produce);
   }
 
   // ---------------- MAKE system ----------------
@@ -320,7 +361,9 @@
   function recipeProduces(recipe, targetId) {
     const produced = Array.isArray(recipe.produce)
       ? recipe.produce
-      : (recipe.output ? [recipe.output] : []);
+      : recipe.output
+      ? [recipe.output]
+      : [];
     return produced.includes(targetId);
   }
 
@@ -340,7 +383,7 @@
     if (!window.RECIPES) {
       G.saySafe(
         sayFn,
-        'MAKE needs recipes.js to expose RECIPES. Add:\nwindow.RECIPES = RECIPES;\nwindow.findRecipe = findRecipe;'
+        "MAKE needs recipes.js to expose RECIPES. Add:\nwindow.RECIPES = RECIPES;\nwindow.findRecipe = findRecipe;"
       );
       return;
     }
@@ -349,14 +392,18 @@
     const targetName = targetDef ? targetDef.name : targetId;
 
     const candidates = listAllRecipes().filter((r) => recipeProduces(r, targetId));
-    if (candidates.length === 0) return G.saySafe(sayFn, `You don't know how to make ${targetName}.`);
+    if (candidates.length === 0)
+      return G.saySafe(sayFn, `You don't know how to make ${targetName}.`);
 
     const doable = candidates.find(canMake);
     const chosen = doable || candidates[0];
 
     if (!canMake(chosen)) {
       const miss = missingFor(chosen);
-      G.saySafe(sayFn, `You can't make ${targetName} yet. You need: ${miss.map(G.formatItem).join(", ")}.`);
+      G.saySafe(
+        sayFn,
+        `You can't make ${targetName} yet. You need: ${miss.map(G.formatItem).join(", ")}.`
+      );
       return;
     }
 
@@ -372,7 +419,6 @@
     const b = parts[2] || null;
     const c = parts[3] || null;
 
-    // Aliases
     if (verb === "L") return G.renderRoom(sayFn);
     if (verb === "I") return G.showInventory(sayFn);
 
@@ -405,51 +451,58 @@
       return;
     }
 
-    if (verb === "COMBINE") {
-      return combineItems([a, b, c].filter(Boolean), sayFn);
-    }
-
+    if (verb === "COMBINE") return combineItems([a, b, c].filter(Boolean), sayFn);
     if (verb === "MAKE") {
       if (!a) return G.saySafe(sayFn, "Make what?");
       return makeTarget(a, sayFn);
     }
 
-    // Recipe-driven actions:
     if (verb === "EAT") {
       if (!a) return G.saySafe(sayFn, "Eat what?");
       return doAction("EAT", a, sayFn);
     }
-
     if (verb === "PUSH") {
       if (!a) return G.saySafe(sayFn, "Push what?");
       return doAction("PUSH", a, sayFn);
     }
-
     if (verb === "PULL") {
       if (!a) return G.saySafe(sayFn, "Pull what?");
       return doAction("PULL", a, sayFn);
     }
-
     if (verb === "UNLOCK") {
       if (!a) return G.saySafe(sayFn, "Unlock what?");
       return doAction("UNLOCK", a, sayFn);
     }
-
     if (verb === "OPEN") {
       if (!a) return G.saySafe(sayFn, "Open what?");
       return doAction("OPEN", a, sayFn);
     }
-
     if (verb === "CLOSE") {
       if (!a) return G.saySafe(sayFn, "Close what?");
       return doAction("CLOSE", a, sayFn);
     }
 
-    if (verb === "HELP") {
-      return G.helpText(sayFn);
+    // ✅ Audio setting (optional commands)
+    if (verb === "SOUND" || verb === "AUDIO") {
+      // SOUND ON / SOUND OFF / SOUND
+      const arg = (a || "").toUpperCase();
+      if (arg === "ON") {
+        Settings.audioEnabled = true;
+        applyAudioEnabled();
+        return G.saySafe(sayFn, "Audio: ON");
+      }
+      if (arg === "OFF") {
+        Settings.audioEnabled = false;
+        applyAudioEnabled();
+        return G.saySafe(sayFn, "Audio: OFF");
+      }
+      Settings.audioEnabled = !Settings.audioEnabled;
+      applyAudioEnabled();
+      return G.saySafe(sayFn, `Audio: ${Settings.audioEnabled ? "ON" : "OFF"}`);
     }
 
-    // Keep USE mapped to crafting for now
+    if (verb === "HELP") return G.helpText(sayFn);
+
     if (verb === "USE") {
       if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
       if (!a) return G.saySafe(sayFn, "Use what?");
@@ -470,40 +523,32 @@
     }
   }
 
-  function executeKnownCommand(cmdStr, sayFn) {
-    executeCommand(cmdStr, sayFn);
-  }
-
-  function resetGame({ roomId } = {}) {
-    G.state.currentRoom = roomId ?? window.START_ROOM;
-    G.state.inventory.length = 0;
-  }
-
   // ---------------- EXPOSE RUNTIME ----------------
   window.GameRuntime = {
     state: G.state,
-    resetGame,
-    getItemDef: G.getItemDef,
-
-    getCurrentRoom: G.getCurrentRoom,
-    renderRoom: G.renderRoom,
-    showInventory: G.showInventory,
 
     executeCommand,
-    executeKnownCommand,
     executeParseResult,
 
-    // actions
-    goDir: G.goDir,
-    takeItem: G.takeItem,
-    dropItem: G.dropItem,
-    examineItem: G.examineItem,
+    // rendering helpers used by index.html
+    renderRoom: G.renderRoom,
+    getCurrentRoom: G.getCurrentRoom,
 
-    // crafting
+    // actions/crafting
+    doAction,
     combineItems,
     makeTarget,
 
-    // new action system (optional external use)
-    doAction,
+    // ✅ settings hooks for UI buttons/toggles later
+    getAudioEnabled: () => Settings.audioEnabled,
+    setAudioEnabled: (enabled) => {
+      Settings.audioEnabled = !!enabled;
+      applyAudioEnabled();
+    },
+    toggleAudio: () => {
+      Settings.audioEnabled = !Settings.audioEnabled;
+      applyAudioEnabled();
+      return Settings.audioEnabled;
+    },
   };
 })();
