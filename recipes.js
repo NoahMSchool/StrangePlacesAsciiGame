@@ -133,6 +133,7 @@ const RECIPES = Object.freeze({
     consume: [ITEM.CHICKEN_IN_WEB],
     produce: [ITEM.CHICKEN, ITEM.ROPE],
     placeResult: "room",
+    successSfx: "Audio/alex_jauk-chicken-noise-228106.mp3",
     text: "Squaaawk! You free the chicken from the web. It eyes you suspicisouly. Strings of web are all over the floor",
   },
 
