@@ -6,6 +6,140 @@
   <title>A Strange Character Is In (ASCII)</title>
   <link rel="stylesheet" href="style.css">
 
+
+
+  <style>
+    :root {
+      --fg: #33ff33;
+      --bg: #000;
+      --panel-bg: #050505;
+      --border: 1px solid #33ff33;
+      --radius: 10px;
+
+      /* ASCII panel: 7x7 tiles, each tile 9x5 => 63x35 */
+      --ascii-w: 63ch;
+      --ascii-lines: 35;
+      --ascii-lh: 1.1em;
+    }
+
+    html, body { height: 100%; margin: 0; }
+
+    body {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 16px;
+      box-sizing: border-box;
+    }
+
+    /* Mobile first: header, map, log, input */
+    .app {
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto minmax(0, 1fr) auto; /* no extra bottom box row */
+      grid-template-areas:
+        "header"
+        "ascii"
+        "log"
+        "input";
+    }
+
+    /* Desktop: 2 columns (left: header/log/input, right: map)
+       Header aligns with top of map. */
+    @media (min-width: 900px) {
+      .app {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+          "header ascii"
+          "log    ascii"
+          "input  ascii";
+        align-items: start;
+      }
+    }
+
+    .header { grid-area: header; }
+    h3 { margin: 0 0 6px 0; }
+    .status { opacity: 0.95; margin: 0; min-height: 1.2em; }
+
+    /* Make header and map top edges line up nicely */
+    @media (min-width: 900px) {
+      .header { padding-top: 2px; }
+      .asciiWrap { margin-top: 0; }
+    }
+
+    #log {
+      grid-area: log;
+      border: var(--border);
+      padding: 10px;
+      border-radius: var(--radius);
+      background: var(--panel-bg);
+      white-space: pre-wrap;
+
+      overflow-y: auto;
+      min-height: 0;
+      height: 100%;
+    }
+
+    /* Input row contains input + Send + Test (same line) */
+    .row {
+      grid-area: input;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input, button { font: inherit; padding: 8px; }
+    input { flex: 1 1 320px; min-width: 220px; } /* grows but doesn't force overlap */
+    button { cursor: pointer; }
+
+    /* ASCII panel */
+    .asciiCol {
+      grid-area: ascii;
+      align-self: start;
+    }
+
+    .asciiWrap {
+      border: var(--border);
+      border-radius: var(--radius);
+      background: var(--panel-bg);
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    #asciiOutput {
+      margin: 0;
+      width: var(--ascii-w);
+      line-height: var(--ascii-lh);
+      height: calc(var(--ascii-lines) * var(--ascii-lh));
+      overflow: hidden;
+      white-space: pre;
+      user-select: none;
+      font-size: 0.5em;
+    }
+    #asciiOutput .tile-seg { color: inherit; }
+
+    #roomName {
+      margin-top: 6px;
+      font-size: 0.72em;
+      opacity: 0.9;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    @supports (height: 100dvh) {
+      html, body { height: 100dvh; }
+    }
+  </style>
+
+
+
 </head>
 
 <body>
@@ -16,8 +150,11 @@
     </div>
     <h2> A Submission for Brackeys GameJam 2026.2</h2>
 
-    <div class="asciiWrap" aria-label="ASCII panel">
-      <pre id="asciiOutput"></pre>
+    <div class="asciiCol">
+      <div class="asciiWrap" aria-label="ASCII panel">
+        <pre id="asciiOutput"></pre>
+      </div>
+      <div id="roomName"></div>
     </div>
 
 
@@ -27,11 +164,14 @@
     <div class="row">
       <input id="cmd" placeholder="Type anything…" disabled />
       <button id="send" disabled>Send</button>
+      <button id="helpBtn" type="button">Help</button>
+      <button id="bgmToggle" type="button">Music: On</button>
+      <button id="sfxToggle" type="button">FX: On</button>
     </div>
   </div>
 
   <script>
-    window.START_ROOM = "CLEARING";
+    window.START_ROOM = "DARKFOREST";
   </script>
 
   <script src="items.js"></script>
@@ -39,8 +179,10 @@
   <script src="rooms.js"></script>
   <script src="parser.js"></script>
 
+  <script src="sounds.js"></script>
   <script src="game_core.js"></script>
   <script src="game_commands.js"></script>
+
 
   <script src="ascii.js"></script>
 
@@ -49,8 +191,11 @@
     const status = document.getElementById("status");
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
-    const testBtn = document.getElementById("test");
-    const testTile = document.getElementById("testTile");
+    const helpBtn = document.getElementById("helpBtn");
+    const bgmToggleBtn = document.getElementById("bgmToggle");
+    const sfxToggleBtn = document.getElementById("sfxToggle");
+    const roomNameEl = document.getElementById("roomName");
+    const asciiOutputEl = document.getElementById("asciiOutput");
 
     function say(t) {
       inputBox.textContent += t + "\n";
@@ -65,9 +210,43 @@
     sendBtn.disabled = false;
     cmd.focus();
 
+    function updateAudioToggleLabels() {
+      const bgmOn =
+        window.GameRuntime &&
+        typeof GameRuntime.getBgmEnabled === "function" &&
+        GameRuntime.getBgmEnabled();
+      const sfxOn =
+        window.GameRuntime &&
+        typeof GameRuntime.getSfxEnabled === "function" &&
+        GameRuntime.getSfxEnabled();
+      bgmToggleBtn.textContent = `Music: ${bgmOn ? "On" : "Off"}`;
+      sfxToggleBtn.textContent = `FX: ${sfxOn ? "On" : "Off"}`;
+    }
+
+    bgmToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleBgm === "function") {
+        GameRuntime.toggleBgm();
+        updateAudioToggleLabels();
+      }
+    });
+
+    sfxToggleBtn.addEventListener("click", () => {
+      if (window.GameRuntime && typeof GameRuntime.toggleSfx === "function") {
+        GameRuntime.toggleSfx();
+        updateAudioToggleLabels();
+      }
+    });
+
     async function updateRoomTile() {
-        gridstring = getRoomTile(GameRuntime.getCurrentRoom());
-        document.getElementById("asciiOutput").textContent = gridstring;
+        const room = GameRuntime.getCurrentRoom();
+        const asciiOutput = document.getElementById("asciiOutput");
+        if (typeof getRoomTileHtml === "function") {
+          asciiOutput.innerHTML = getRoomTileHtml(room);
+        } else {
+          gridstring = getRoomTile(room);
+          asciiOutput.textContent = gridstring;
+        }
+        roomNameEl.textContent = room?.name || "";
     }
 
     async function run() {
@@ -86,16 +265,72 @@
 
     }
 
+    async function runRawCommand(text) {
+      if (!text) return;
+      setStatus("");
+      const reply = parseCommands(text);
+      GameRuntime.executeParseResult(reply, say);
+      say("");
+      updateRoomTile();
+    }
+
+    function directionFromAsciiGapTap(clientX, clientY) {
+      const rect = asciiOutputEl.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+
+      const relX = Math.max(0, Math.min(rect.width - 1, clientX - rect.left));
+      const relY = Math.max(0, Math.min(rect.height - 1, clientY - rect.top));
+
+      const col = Math.floor((relX / rect.width) * 7);  // tile x: 0..6
+      const row = Math.floor((relY / rect.height) * 7); // tile y: 0..6
+
+      if (row === 0 && col === 3) return "NORTH";
+      if (row === 6 && col === 3) return "SOUTH";
+      if (col === 0 && row === 3) return "WEST";
+      if (col === 6 && row === 3) return "EAST";
+      return null;
+    }
+
     sendBtn.addEventListener("click", run);
+    helpBtn.addEventListener("click", () => runRawCommand("HELP"));
     cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+    asciiOutputEl.addEventListener("pointerdown", (e) => {
+      const dir = directionFromAsciiGapTap(e.clientX, e.clientY);
+      if (!dir) return;
+      e.preventDefault();
+      runRawCommand(`GO ${dir}`);
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+
+      // If typing in input with content, keep normal arrow behavior for editing.
+      if (document.activeElement === cmd && cmd.value.trim().length > 0) return;
+
+      const dirByKey = {
+        ArrowUp: "NORTH",
+        ArrowDown: "SOUTH",
+        ArrowLeft: "WEST",
+        ArrowRight: "EAST",
+      };
+
+      const dir = dirByKey[e.key];
+      if (!dir) return;
+
+      e.preventDefault();
+      runRawCommand(`GO ${dir}`);
+    });
 
     if (window.GameRuntime && typeof GameRuntime.renderRoom === "function") {
       GameRuntime.renderRoom(say);
       updateRoomTile();
+      updateAudioToggleLabels();
 
       say("");
     } else {
-      say("GameRuntime not loaded. Check that game.js is included and error-free.");
+      helpBtn.disabled = true;
+      bgmToggleBtn.disabled = true;
+      sfxToggleBtn.disabled = true;
+      say("GameRuntime not loaded. Check that game_core.js and game_commands.js are included and error-free.");
     }
   </script>
 </body>

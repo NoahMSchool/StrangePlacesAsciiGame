@@ -1,6 +1,6 @@
 // ---------------- CONFIG (declare once) ----------------
 
-const STOPWORDS = new Set(["the", "a", "an", "at"]);
+const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to"]);
 
 // ✅ Noun connectors used to split "X with Y", "X in Y", etc.
 const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
@@ -19,12 +19,25 @@ const VERB_SYNONYMS = {
   HELP:    ["help", "?", "??", "???", "wtf"],
   GO:      ["go", "walk", "run", "head"],
   INV:     ["inventory", "i"],
+  SOUND:   ["sound", "audio"],
+  FXTEST:  ["fxtest"],
+  ROCCO:   ["rocco"],
+  MCBOOF:  ["mcboof"],
+  READ:    ["read"],
+  TALK:    ["talk", "speak", "chat", "talk to", "speak to"],
+  SLEEP:   ["sleep", "rest", "nap", "lie down"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
   USE:     ["use", "apply", "fish"],
+  FILL:    ["fill"],
+  COOK:    ["cook", "heat", "microwave"],
+  FREE:    ["free", "rescue", "release", "save"],
   UNLOCK:  ["unlock"],
   OPEN:    ["open"],
   CLOSE:   ["close", "shut"],
+  EXTINGUISH: ["extinguish", "put out", "douse", "dowse"],
+  HIT:     ["hit", "whack", "smack", "strike", "bash", "bonk", "clobber", "punch", "attack"],
+  SEARCH:  ["search", "rummage", "dig through", "look in"],
   THROW:   ["throw", "toss", "hurl"],
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
@@ -39,7 +52,21 @@ const VERB_NOUN_COUNTS = {
   GO: [0],
   INV: [0],
   HELP: [0],
+  SOUND: [0, 1],
+  FXTEST: [0, 1],
+  ROCCO: [0],
+  MCBOOF: [1],
+  READ: [1],
+  TALK: [1],
+  SLEEP: [0, 1],
   LOOK: [0, 1],
+  OPEN: [1, 2],
+  EXTINGUISH: [1],
+  FREE: [1],
+  HIT: [1],
+  SEARCH: [1],
+  FILL: [1, 2],
+  COOK: [1, 2],
   USE: [1, 2],
   COMBINE: [2, 3],
 };
@@ -275,6 +302,38 @@ function parseCommands(input) {
     const allowedCounts = allowedNounCountsForVerb(vm.canon);
     const restClean = stripStopwords(vm.rest);
 
+    // SOUND: optional ON/OFF arg, otherwise toggle
+    if (vm.canon === "SOUND") {
+      if (!restClean) {
+        result.known.push("SOUND");
+        continue;
+      }
+
+      const arg = restClean.toUpperCase();
+      if (arg === "ON" || arg === "OFF") {
+        result.known.push(`SOUND ${arg}`);
+      } else {
+        result.unknown.push({
+          raw,
+          verb: vm.verbToken,
+          object: restClean,
+          reason: "bad_sound_arg",
+          error: 'Use "SOUND ON" or "SOUND OFF".',
+        });
+      }
+      continue;
+    }
+
+    // FXTEST: optional free-text effect id/name
+    if (vm.canon === "FXTEST") {
+      if (!restClean) {
+        result.known.push("FXTEST");
+      } else {
+        result.known.push(`FXTEST ${normalizeSpaces(vm.rest)}`);
+      }
+      continue;
+    }
+
     // 0 nouns only: [0]
     if (allowedCounts.length === 1 && allowedCounts[0] === 0) {
       if (restClean) {
@@ -303,12 +362,24 @@ function parseCommands(input) {
       continue;
     }
 
-    // COMBINE: 2 OR 3 nouns: [2,3]
+    // COMBINE: allow 1 noun for implied-target commands, otherwise 2 or 3 nouns.
     if (vm.canon === "COMBINE" && allowedCounts.includes(2) && allowedCounts.includes(3)) {
       const got = parseNounList(vm.rest, { min: 2, max: 3 });
 
       if (got.nouns) {
         result.known.push(`${vm.canon} ${got.nouns.join(" ")}`);
+      } else if (got.parts && got.parts.length === 1) {
+        const rn = resolveNoun(got.parts[0]);
+        if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
+        else {
+          result.unknown.push({
+            raw,
+            verb: vm.verbToken,
+            object: restClean || null,
+            reason: "unknown_noun",
+            error: rn.error,
+          });
+        }
       } else if (got.error) {
         result.unknown.push({
           raw,

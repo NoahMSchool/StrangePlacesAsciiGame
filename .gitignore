@@ -1,4 +1,6 @@
+# macOS Finder metadata (all directories)
 .DS_Store
+**/.DS_Store
 Thumbs.db
 *.zip
 *.log
@@ -11,5 +13,3 @@ out/
 .idea/
 .env
 .env.*
-.DS_Store
-.DS_Store

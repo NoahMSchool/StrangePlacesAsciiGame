@@ -7,10 +7,20 @@
 // -----------------------------------------------------------------------------
 const ITEM = Object.freeze({
   WALL: "WALL",
+  WOOD_WALL: "WOOD_WALL",
   TREE: "TREE",
+  CAMPFIRE: "CAMPFIRE",
+  CAMPFIRE_OUT: "CAMPFIRE_OUT",
   DOOR_CLOSED: "DOOR_CLOSED",
   DOOR_OPEN: "DOOR_OPEN",
   DOOR_LOCKED: "DOOR_LOCKED",
+  NOTE: "NOTE",
+  BED: "BED",
+  STRANGE_PLACES_BOOK: "STRANGE_PLACES_BOOK",
+  SIGN: "SIGN",
+  OIL_DRUM: "OIL_DRUM",
+  FRIDGE: "FRIDGE",
+  HEALTH_INSPECTOR: "HEALTH_INSPECTOR",
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   CHICKEN_IN_WEB: "CHICKEN_IN_WEB",
@@ -27,6 +37,10 @@ const ITEM = Object.freeze({
   MAGNET: "MAGNET",
   LEAVES: "LEAVES",
   STICK: "STICK",
+  RIVER: "RIVER",
+  RIVER_TILE: "RIVER_TILE",
+  EMPTY_BOTTLE: "EMPTY_BOTTLE",
+  WATER_BOTTLE: "WATER_BOTTLE",
   FISHING_ROD: "FISHING_ROD",
   COIN: "COIN",
 
@@ -37,6 +51,50 @@ const ITEM = Object.freeze({
 
   MAGNET_STRING: "MAGNET_STRING",
   STRING_STICK: "STRING_STICK",
+});
+
+const ITEM_DEF_MAP_COLORS = Object.freeze({
+  WALL: "#6b7280",
+  WOOD_WALL: "#8b5a2b",
+  TREE: "#1f6f3f",
+  CAMPFIRE: "#ff8a00",
+  CAMPFIRE_OUT: "#7c7f87",
+  DOOR_CLOSED: "#c07a2f",
+  DOOR_OPEN: "#d9a066",
+  DOOR_LOCKED: "#b6b6c2",
+  NOTE: "#f5f1c8",
+  BED: "#8ea5b8",
+  STRANGE_PLACES_BOOK: "#b3364a",
+  SIGN: "#d9c27a",
+  OIL_DRUM: "#3b3f46",
+  FRIDGE: "#a7d8ff",
+  HEALTH_INSPECTOR: "#ffd54d",
+  TEDDYBEAR: "#c58b6f",
+  CHICKEN: "#f2d479",
+  CHICKEN_IN_WEB: "#d9d9d9",
+  DINOSAUR: "#7bc96f",
+  GRATE: "#9ca3af",
+  CORN: "#ffd166",
+  LAMP: "#f4b860",
+  ROPE: "#d2b48c",
+  HOOK: "#b0bec5",
+  KEY: "#f2cc4d",
+  EGG: "#f8f4e8",
+  DINOSAUR_EGG: "#d9f2c2",
+  MAGNET: "#ef4444",
+  LEAVES: "#7aa35a",
+  STICK: "#b17a50",
+  RIVER: "#4da3ff",
+  RIVER_TILE: "#4da3ff",
+  EMPTY_BOTTLE: "#e5f3ff",
+  WATER_BOTTLE: "#60a5fa",
+  FISHING_ROD: "#c98c58",
+  COIN: "#f2c94c",
+  ALPHAPARTICLE: "#b388ff",
+  MICROWAVE: "#a0a0a0",
+  TIME_LEVER: "#f472b6",
+  MAGNET_STRING: "#e57373",
+  STRING_STICK: "#c08a5a",
 });
 
 // -----------------------------------------------------------------------------
@@ -56,7 +114,7 @@ const ITEM = Object.freeze({
  * }
  */
 
-const ITEM_DEFS = Object.freeze({
+const ITEM_DEFS_BASE = {
   [ITEM.WALL]: {
     id: ITEM.WALL,
     name: "Wall",
@@ -72,6 +130,23 @@ const ITEM_DEFS = Object.freeze({
       "#########",
       "#########",
       "#########",
+    ],
+  },
+
+  [ITEM.WOOD_WALL]: {
+    id: ITEM.WOOD_WALL,
+    name: "Wooden Wall",
+    emoji: "🪵",
+    synonyms: ["wood wall", "wooden wall", "planks", "timber wall"],
+    examine: "Rough wooden planks lashed together into a sturdy wall.",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "||=|=|=||",
+      "||=|=|=||",
+      "||=|=|=||",
+      "||=|=|=||",
+      "||=|=|=||",
     ],
   },
 
@@ -126,6 +201,137 @@ const ITEM_DEFS = Object.freeze({
     ],
   },
 
+ [ITEM.NOTE]: {
+    id: ITEM.NOTE,
+    name: "Note",
+    emoji: "📝",
+    synonyms: ["note", "paper", "letter"],
+    examine:
+      "The note reads: \"We are leaving this cottage. The walls whisper after dark and the paths do not stay put. If you find this, do not sleep here.\"",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      " _______ ",
+      "|\\  *  /|",
+      "| \\___/ |",
+      "|  ---  |",
+      "|_______|",
+    ],
+  },
+
+ [ITEM.BED]: {
+    id: ITEM.BED,
+    name: "Bed",
+    emoji: "🛏️",
+    synonyms: [
+      "bed",
+      "cot",
+      "mattress",
+      "under bed",
+      "under the bed",
+      "beneath bed",
+      "beneath the bed",
+    ],
+    examine: "A wooden bedframe with a thin mattress. Something is tucked underneath.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "_________",
+      "|=======|",
+      "|  ___  |",
+      "|_|___|_|",
+      "  | | |  ",
+    ],
+  },
+
+ [ITEM.STRANGE_PLACES_BOOK]: {
+    id: ITEM.STRANGE_PLACES_BOOK,
+    name: "Strange Places",
+    emoji: "📕",
+    synonyms: ["book", "strange places", "red book", "journal"],
+    examine: "A worn book titled \"Strange Places\". Many pages are dog-eared and damp.",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      " _______ ",
+      "/|=====|\\",
+      "||     ||",
+      "||_____/|",
+      "\\_______/",
+    ],
+  },
+
+ [ITEM.SIGN]: {
+    id: ITEM.SIGN,
+    name: "Sign",
+    emoji: "🪧",
+    synonyms: ["sign", "warning sign", "board"],
+    examine: "The sign reads: \"No fishing. It is not grate.\"",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " _______ ",
+      "| NO F. |",
+      "|NOT    |",
+      "|GRATE  |",
+      "   ||    ",
+    ],
+  },
+
+ [ITEM.OIL_DRUM]: {
+    id: ITEM.OIL_DRUM,
+    name: "Oil Drum",
+    emoji: "🛢️",
+    synonyms: ["oil drum", "drum", "barrel", "oil"],
+    examine: "A heavy metal drum with black residue around the cap.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "  _____  ",
+      " /=====\\ ",
+      "|  OIL  |",
+      "|       |",
+      " \\_____/ ",
+    ],
+  },
+
+ [ITEM.FRIDGE]: {
+    id: ITEM.FRIDGE,
+    name: "Fridge",
+    emoji: "🧊",
+    synonyms: ["fridge", "refrigerator"],
+    examine: "An old humming fridge. A fridge magnet is stuck to the door, and something bottle-shaped rattles inside.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " _______ ",
+      "| _____ |",
+      "||     ||",
+      "||  o  ||",
+      "||_____||",
+    ],
+  },
+
+ [ITEM.HEALTH_INSPECTOR]: {
+    id: ITEM.HEALTH_INSPECTOR,
+    name: "Health and Safety Inspector",
+    emoji: "🦺",
+    synonyms: ["inspector", "health inspector", "safety inspector", "health and safety inspector"],
+    examine: ({ state }) =>
+      state?.flags?.fireOut
+        ? "The inspector gives you an approving nod. \"Fire's out. You're good to proceed.\""
+        : "A stern inspector with a clipboard. He keeps pointing at your open fire.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "   ___   ",
+      "  (o o)  ",
+      "  /|_|\\  ",
+      "   / \\   ",
+      "  _| |_  ",
+    ],
+  },
+
 
  [ITEM.TREE]: {
     id: ITEM.TREE,
@@ -136,11 +342,46 @@ const ITEM_DEFS = Object.freeze({
     visible: false,
     portable: false,
     asciiTile: [
-      "  TREE   ",
-      "  TREE   ",
-      "  TREE   ",
-      "  TREE   ",
-      "  TREE   "
+      "  /^^^\\  ",
+      " /^^^^^\\ ",
+      "/^^^|^^^\\",
+      "   |||   ",
+      "   |||   "
+    ],
+  },
+
+ [ITEM.CAMPFIRE]: {
+    id: ITEM.CAMPFIRE,
+    name: "Campfire",
+    emoji: "🔥",
+    synonyms: ["campfire", "fire", "bonfire", "flames"],
+    examine: "A roaring campfire crackles in the middle of the clearing, throwing orange light across the trees.",
+    visible: true,
+    portable: false,
+    takeText: "It's far too hot to pick up.",
+    asciiTile: [
+      "   ( )   ",
+      "  (   )  ",
+      " (  ^  ) ",
+      "  \\|||/  ",
+      "   /_\\   ",
+    ],
+  },
+
+ [ITEM.CAMPFIRE_OUT]: {
+    id: ITEM.CAMPFIRE_OUT,
+    name: "Doused Campfire",
+    emoji: "🪵",
+    synonyms: ["doused fire", "out fire", "embers", "ashes"],
+    examine: "Wet ash and smoking wood. The fire is out.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "  .---.  ",
+      " (_____) ",
+      "  /___\\  ",
+      "  _|||_  ",
+      "   |||   ",
     ],
   },
 
@@ -166,10 +407,24 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.CHICKEN_IN_WEB,
     name: "Chicken In Web",
     emoji: "🐔",
-    synonyms: ["chicken", "chick", "chiccie", "hen", "bird", "simon"],
+    synonyms: [
+      "chicken",
+      "chick",
+      "chiccie",
+      "hen",
+      "bird",
+      "chicken in web",
+      "chicken_in_web",
+      "web chicken",
+      "trapped chicken",
+      "stuck chicken",
+      "chicken in spider web",
+      "web"
+    ],
     examine: "A poor chicken trapped by spider webs. The spiders next meal?",
     visible: true,
     portable: false,
+    takeText: "The chicken is stuck fast in the web.",
     eatText: "That's the spiders food",
     asciiTile: [
       "    ^.   ",
@@ -259,7 +514,10 @@ const ITEM_DEFS = Object.freeze({
     name: "Grate",
     emoji: "🕳️",
     synonyms: ["grate", "grating", "metal grate", "iron grate"],
-    examine: "A heavy iron grate set into the ground. Something dark lies beneath.",
+    examine: ({ state }) =>
+      state?.flags?.grateKeyTaken
+        ? "A heavy iron grate set into the ground. Whatever was glinting inside is gone."
+        : "A heavy iron grate set into the ground. Something shiny glints inside.",
     visible: true,
     portable: false,
     eatText: "Your dentist would not like that",
@@ -286,7 +544,7 @@ const ITEM_DEFS = Object.freeze({
     id: ITEM.ROPE,
     name: "String",
     emoji: "🧵",
-    synonyms: ["rope", "cord", "line", "string", "twine","web"],
+    synonyms: ["rope", "cord", "line", "string", "twine","web","webs"],
     examine: "A length of string. Useful for tying things together.",
     visible: true,
     portable: true,
@@ -420,6 +678,75 @@ const ITEM_DEFS = Object.freeze({
    ]
   },
 
+  [ITEM.RIVER]: {
+    id: ITEM.RIVER,
+    name: "River",
+    emoji: "🌊",
+    synonyms: ["river", "water", "stream"],
+    examine: "Cold, fast water rushes past the bank.",
+    visible: true,
+    portable: false,
+    takeText: "You can't carry an entire river.",
+    asciiTile: [
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+    ],
+  },
+
+  [ITEM.RIVER_TILE]: {
+    id: ITEM.RIVER_TILE,
+    name: "River Water",
+    emoji: "🌊",
+    synonyms: [],
+    examine: "Fast, cold water.",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+      " ~~ ~~ ~~",
+      "~~~~~~~~~",
+    ],
+  },
+
+  [ITEM.EMPTY_BOTTLE]: {
+    id: ITEM.EMPTY_BOTTLE,
+    name: "Empty Bottle",
+    emoji: "🧴",
+    synonyms: ["empty bottle", "bottle", "glass bottle", "flask"],
+    examine: "An empty bottle. Good for collecting liquids.",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      "   ___   ",
+      "  /   \\  ",
+      "  |   |  ",
+      "  |   |  ",
+      "  \\___/  ",
+    ],
+  },
+
+  [ITEM.WATER_BOTTLE]: {
+    id: ITEM.WATER_BOTTLE,
+    name: "Bottle of Water",
+    emoji: "💧",
+    synonyms: ["water bottle", "bottle of water", "full bottle"],
+    examine: "A bottle filled with river water.",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      "   ___   ",
+      "  /~~~\\  ",
+      "  |~~~|  ",
+      "  |~~~|  ",
+      "  \\___/  ",
+    ],
+  },
+
   [ITEM.COIN]: {
     id: ITEM.COIN,
     name: "Coin",
@@ -542,7 +869,20 @@ const ITEM_DEFS = Object.freeze({
     portable: false,
     eatText: "Probably not edible. Also, what?",
   },
-});
+};
+
+for (const [id, def] of Object.entries(ITEM_DEFS_BASE)) {
+  if (!def || typeof def !== "object") continue;
+  if (!def.mapColor && ITEM_DEF_MAP_COLORS[id]) {
+    def.mapColor = ITEM_DEF_MAP_COLORS[id];
+  }
+}
+
+const ITEM_DEFS = Object.freeze(
+  Object.fromEntries(
+    Object.entries(ITEM_DEFS_BASE).map(([id, def]) => [id, Object.freeze(def)])
+  )
+);
 
 // -----------------------------------------------------------------------------
 // Helper: build NOUN_SYNONYMS for your parser from ITEM_DEFS

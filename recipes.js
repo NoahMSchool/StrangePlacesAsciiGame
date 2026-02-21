@@ -11,10 +11,13 @@ const RECIPES = Object.freeze({
   UNLOCK_LOCKED_DOOR: {
     action: "UNLOCK",
     target: ITEM.DOOR_LOCKED,
+    requires: [ITEM.KEY],
     consume: [ITEM.DOOR_LOCKED, ITEM.KEY],
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          
     placeResult: "room",
+    successSfx: "Audio/freesound_community-unlock_door-90282.mp3",
+    missingRequiresText: "The lock won't budge. You need a key.",
     text: "You unlock the door. The key breaks.",
   },
 
@@ -25,6 +28,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_OPEN],
     keepCoord: true,          // ✅ this is the magic bit
     placeResult: "room",
+    successSfx: "Audio/dragon-studio-opening-door-sfx-454240.mp3",
     text: "You open the door.",
   },
 
@@ -35,6 +39,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          // ✅ this is the magic bit
     placeResult: "room",
+    successSfx: "Audio/freesound_community-door-open-and-close-with-a-creak-102380.mp3",
     text: "You close the door.",
   },
 
@@ -93,9 +98,10 @@ const RECIPES = Object.freeze({
   // 🎣 Fishing rod + grate = key (rod/grate stay)
   [keyOf([ITEM.FISHING_ROD, ITEM.GRATE])]: {
     inputs: [ITEM.FISHING_ROD, ITEM.GRATE],
-    consume: [],               // consume nothing
-    produce: [ITEM.KEY],       // produce a key
-    text: "You lower the rod through the grate and snag something metal. A key!",
+    consume: [ITEM.FISHING_ROD],
+    produce: [ITEM.KEY],
+    setFlag: "grateKeyTaken",
+    text: "You lower the rod through the grate and snag something metal. The rod slips from your hands and disappears below. You pull up a key.",
   },
 
   // 🪵🧵 String-on-a-stick + grate → not enough reach
@@ -114,6 +120,51 @@ const RECIPES = Object.freeze({
     text: "You dangle the magnet into the grate, but the string has no reach. You need something rigid to guide it.",
   },
 
+  [keyOf([ITEM.EMPTY_BOTTLE, ITEM.RIVER])]: {
+    inputs: [ITEM.EMPTY_BOTTLE, ITEM.RIVER],
+    consume: [ITEM.EMPTY_BOTTLE],
+    produce: [ITEM.WATER_BOTTLE],
+    placeResult: "inventory",
+    text: "You dip the bottle into the river and fill it with water.",
+  },
+
+  [keyOf([ITEM.WATER_BOTTLE, ITEM.CAMPFIRE])]: {
+    inputs: [ITEM.WATER_BOTTLE, ITEM.CAMPFIRE],
+    consume: [ITEM.CAMPFIRE, ITEM.WATER_BOTTLE],
+    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BOTTLE],
+    keepCoord: true,
+    placeResult: "inventory",
+    setFlag: "fireOut",
+    successSfx: "Audio/djartmusic-short-fire-whoosh_1-317280.mp3",
+    text: "You pour the water over the flames. The fire hisses and dies out.",
+  },
+
+  EXTINGUISH_CAMPFIRE: {
+    action: "EXTINGUISH",
+    target: ITEM.CAMPFIRE,
+    requires: [ITEM.WATER_BOTTLE],
+    consume: [ITEM.CAMPFIRE, ITEM.WATER_BOTTLE],
+    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BOTTLE],
+    keepCoord: true,
+    placeResult: "inventory",
+    setFlag: "fireOut",
+    successSfx: "Audio/djartmusic-short-fire-whoosh_1-317280.mp3",
+    missingRequiresText: "You need water to put out the fire.",
+    repeatText: "The fire is already out.",
+    text: "You pour the water over the flames. The fire hisses and dies out.",
+  },
+
+  OPEN_FRIDGE_FIND_BOTTLE: {
+    action: "OPEN",
+    target: ITEM.FRIDGE,
+    consume: [],
+    produce: [ITEM.EMPTY_BOTTLE],
+    placeResult: "room",
+    setFlag: "fridgeOpened",
+    repeatText: "The fridge is already open. Just cold air and old shelves now.",
+    text: "You open the fridge. Inside you find an empty bottle.",
+  },
+
 
   // ---------------- ACTION RECIPE: PUSH LEAVES reveals GRATE ----------------
   // This makes PUSH LEAVES work, and it will NOT make EAT LEAVES work.
@@ -127,12 +178,36 @@ const RECIPES = Object.freeze({
     text: "You push aside the leaves, revealing a grate.",
   },
 
+  SEARCH_LEAVES_REVEAL_GRATE: {
+    action: "SEARCH",
+    target: ITEM.LEAVES,
+    consume: [ITEM.LEAVES],
+    produce: [ITEM.GRATE],
+    placeResult: "room",
+    keepCoord: true,
+    text: "You search through the leaves and reveal a grate.",
+  },
+
+  SEARCH_BED_REVEAL_BOOK: {
+    action: "SEARCH",
+    target: ITEM.BED,
+    consume: [],
+    produce: [ITEM.STRANGE_PLACES_BOOK],
+    placeResult: "room",
+    setFlag: "bedBookFound",
+    repeatText: "You already checked under the bed. There's nothing else there.",
+    text: "You reach under the bed and pull out a book titled \"Strange Places.\"",
+  },
+
   FREE_CHICKEN: {
     action: "PUSH",
     target: ITEM.CHICKEN_IN_WEB,
+    requires: [ITEM.STICK],
     consume: [ITEM.CHICKEN_IN_WEB],
     produce: [ITEM.CHICKEN, ITEM.ROPE],
     placeResult: "room",
+    successSfx: "Audio/alex_jauk-chicken-noise-228106.mp3",
+    missingRequiresText: "The webbing is too tough to tear by hand. You need something sturdy, like a stick.",
     text: "Squaaawk! You free the chicken from the web. It eyes you suspicisouly. Strings of web are all over the floor",
   },
 

@@ -9,6 +9,7 @@
   const state = {
     currentRoom: window.START_ROOM,
     inventory: [], // array of ITEM IDs
+    flags: {},
   };
 
   // ---------------- UTIL ----------------
@@ -142,12 +143,17 @@
       return;
     }
 
+    const roomDesc =
+      typeof room.desc === "function"
+        ? room.desc({ room, state })
+        : room.desc;
+
     saySafe(sayFn, `You are in ${room.name}.`);
-    saySafe(sayFn, room.desc);
+    saySafe(sayFn, roomDesc);
 
     const visible = (window.getVisibleItems ? window.getVisibleItems(state.currentRoom) : null);
     if (Array.isArray(visible)) {
-      saySafe(sayFn, "You see: " + (visible.length ? visible.join(", ") : "(nothing)"));
+      if (visible.length) saySafe(sayFn, "You see: " + visible.join(", "));
     } else {
       const entries = room.items || [];
       const list = entries
@@ -155,7 +161,7 @@
         .map((id) => getItemDef(id))
         .filter((d) => d && d.visible !== false)
         .map((d) => `${d.emoji} ${d.name}`);
-      saySafe(sayFn, "You see: " + (list.length ? list.join(", ") : "(nothing)"));
+      if (list.length) saySafe(sayFn, "You see: " + list.join(", "));
     }
 
     const exits = Object.keys(room.exits || {});
@@ -174,7 +180,7 @@
   function helpText(sayFn) {
     saySafe(
       sayFn,
-      "This is a game of skill and cunning. Type commands like LOOK (L), GO NORTH, TAKE <item>, DROP <item>, INVENTORY (I), COMBINE, MAKE, EAT, PUSH, PULL, HELP."
+      "Commands: LOOK (L), GO <dir>, TAKE/DROP <item>, COMBINE, MAKE, USE, OPEN, UNLOCK, SEARCH, TALK, READ. Press I for inventory. Move with arrow keys (desktop) or tap map gaps. Type HELP anytime."
     );
   }
 
@@ -228,7 +234,19 @@
       return saySafe(sayFn, "You can't see that here.");
     }
 
-    saySafe(sayFn, `${def.emoji} ${def.name}: ${def.examine}`);
+    const examineText =
+      typeof def.examine === "function"
+        ? def.examine({
+            itemId,
+            roomId: state.currentRoom,
+            room: getRoom(state.currentRoom),
+            state,
+            isInRoom,
+            isInInventory,
+          })
+        : def.examine;
+
+    saySafe(sayFn, `${def.emoji} ${def.name}: ${examineText}`);
   }
 
   function goDir(direction, sayFn) {

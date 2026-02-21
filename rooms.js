@@ -12,59 +12,147 @@ const ROOM = Object.freeze({
   DARKFOREST: "DARKFOREST",
   DARKCLEARING: "DARKCLEARING",
   SHED: "SHED",
+  COTTAGE_BEDROOM: "COTTAGE_BEDROOM",
+  COTTAGE_STOREROOM: "COTTAGE_STOREROOM",
+  COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
+  MINE_ENTRANCE: "MINE_ENTRANCE",
+  MINE_CAVERN: "MINE_CAVERN",
   RIVER: "RIVER",
   SPIDERFOREST: "SPIDERFOREST",
 });
 
 const ROOM_DEFS = {
+
   [ROOM.DARKFOREST]: {
     id: ROOM.DARKFOREST,
     name: "Dark Forest",
-    desc: "A dark an spooky forest with trees everywhere except a small gap to the east",
-    items: [
-      [ITEM.TREE, [3, 3]],
-      [ITEM.TREE, [5, 5]],
-      ITEM.KEY,
-    ],    
-    exits: {
-      EAST: ROOM.DARKCLEARING,
+    desc: ({ room }) => {
+      const ids = (room?.items || []).map((entry) => (Array.isArray(entry) ? entry[0] : entry));
+      const fireText = ids.includes(ITEM.CAMPFIRE_OUT)
+        ? "A doused campfire smolders in the middle, sending up thin smoke."
+        : "A roaring campfire burns in the middle, spitting sparks into the dark.";
+      return `The trees stand too close together. ${fireText} There’s a narrow gap to the east.`;
     },
+    items: [
+      [ITEM.TREE, [1, 1]],
+      [ITEM.TREE, [3, 1]],
+      [ITEM.TREE, [5, 1]],
+      [ITEM.TREE, [1, 3]],
+      [ITEM.CAMPFIRE, [3, 3]],
+      [ITEM.TREE, [3, 5]],
+      [ITEM.TREE, [1, 5]],
+      [ITEM.TREE, [5, 5]],
+    ],
+    exits: { EAST: ROOM.DARKCLEARING },
   },
 
   [ROOM.DARKCLEARING]: {
     id: ROOM.DARKCLEARING,
     name: "Dark Clearing",
-    desc: "A clearing. A shed to the north, and path to the south. A door to the east",
-    items: [
-      [ITEM.LEAVES, [5, 4]],
-    ],
+    desc: ({ room }) => {
+      const items = room?.items || [];
+      const ids = items.map((entry) => (Array.isArray(entry) ? entry[0] : entry));
+
+      let doorText = "A door stands to the east for no obvious reason.";
+      if (ids.includes(ITEM.DOOR_LOCKED)) {
+        doorText = "A locked door stands to the east for no obvious reason.";
+      } else if (ids.includes(ITEM.DOOR_CLOSED)) {
+        doorText = "A closed door stands to the east for no obvious reason.";
+      } else if (ids.includes(ITEM.DOOR_OPEN)) {
+        doorText = "An open doorway leads east.";
+      }
+
+      return `A bare clearing with flattened leaves. A curious wooden cottage waits to the north. A path slopes down to the south. ${doorText}`;
+    },
+    items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
       NORTH: ROOM.SHED,
       SOUTH: ROOM.RIVER,
       WEST: ROOM.DARKFOREST,
-      EAST: { to: ROOM.BANK, barrier: ITEM.DOOR_LOCKED },
+      EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED },
     },
   },
 
   [ROOM.SHED]: {
     id: ROOM.SHED,
-    name: "Shed",
-    desc: "A shed with a beer fridge. Worth a closer look ... ",
-    items: [
-      ITEM.MAGNET,
-      ITEM.LAMP,
-    ],
+    name: "Cottage Entrance",
+    desc: "A curious wooden cottage sits in the gloom. The entrance room is bare except for a note on the floor.",
+    items: [[ITEM.NOTE, [3, 3]]],
     exits: {
       SOUTH: ROOM.DARKCLEARING,
+      NORTH: ROOM.COTTAGE_BEDROOM,
+      WEST: ROOM.COTTAGE_STOREROOM,
+      EAST: ROOM.COTTAGE_KITCHEN,
+    },
+  },
+
+  [ROOM.COTTAGE_BEDROOM]: {
+    id: ROOM.COTTAGE_BEDROOM,
+    name: "Cottage Bedroom",
+    desc: "A small wooden bedroom with a low ceiling and stale air.",
+    items: [[ITEM.BED, [3, 3]]],
+    exits: { SOUTH: ROOM.SHED },
+  },
+
+  [ROOM.COTTAGE_STOREROOM]: {
+    id: ROOM.COTTAGE_STOREROOM,
+    name: "Cottage Storeroom",
+    desc: "Shelves sag under old crates. An oil drum rests in the corner.",
+    items: [[ITEM.OIL_DRUM, [3, 3]]],
+    exits: { EAST: ROOM.SHED },
+  },
+
+  [ROOM.COTTAGE_KITCHEN]: {
+    id: ROOM.COTTAGE_KITCHEN,
+    name: "Cottage Kitchen",
+    desc: "A cramped kitchen of warped boards. A humming fridge stands against the wall with a fridge magnet on its door.",
+    items: [
+      [ITEM.FRIDGE, [3, 3]],
+      [ITEM.MAGNET, [4, 3]],
+    ],
+    exits: { WEST: ROOM.SHED },
+  },
+
+  [ROOM.MINE_ENTRANCE]: {
+    id: ROOM.MINE_ENTRANCE,
+    name: "Mine Entrance",
+    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails.",
+    items: [],
+    exits: {
+      WEST: ROOM.DARKCLEARING,
+      EAST: { to: ROOM.MINE_CAVERN, barrier: ITEM.HEALTH_INSPECTOR },
+    },
+  },
+
+  [ROOM.MINE_CAVERN]: {
+    id: ROOM.MINE_CAVERN,
+    name: "Mine Cavern",
+    desc: "A vast cavern opens ahead, dripping and echoing.",
+    items: [[ITEM.CORN, [3, 3]]],
+    exits: {
+      WEST: ROOM.MINE_ENTRANCE,
     },
   },
 
   [ROOM.RIVER]: {
     id: ROOM.RIVER,
-    name: "River",
-    desc: "The bank of a running river",
+    name: "River Bank",
+    desc: "A fast river moves past without making much sound. The surface reflects the sky, but the colours are wrong.",
     items: [
-      ITEM.STICK,
+      [ITEM.TREE, [1, 1]],
+      [ITEM.TREE, [5, 1]],
+      [ITEM.STICK, [2, 2]],
+      [ITEM.SIGN, [4, 2]],
+      [ITEM.RIVER, [3, 4]],
+      [ITEM.RIVER_TILE, [1, 4]],
+      [ITEM.RIVER_TILE, [2, 4]],
+      [ITEM.RIVER_TILE, [4, 4]],
+      [ITEM.RIVER_TILE, [5, 4]],
+      [ITEM.RIVER_TILE, [1, 5]],
+      [ITEM.RIVER_TILE, [2, 5]],
+      [ITEM.RIVER_TILE, [3, 5]],
+      [ITEM.RIVER_TILE, [4, 5]],
+      [ITEM.RIVER_TILE, [5, 5]],
     ],
     exits: {
       NORTH: ROOM.DARKCLEARING,
@@ -75,26 +163,28 @@ const ROOM_DEFS = {
   [ROOM.SPIDERFOREST]: {
     id: ROOM.SPIDERFOREST,
     name: "Spider Forest",
-    desc: "Spider webs everywhere!",
+    desc: "Webs hang between the trees at head height. Some are old. Some are not. The only clear way back is west.",
     items: [
+      [ITEM.TREE, [2, 2]],
+      [ITEM.TREE, [4, 2]],
+      [ITEM.TREE, [2, 4]],
+      [ITEM.TREE, [4, 4]],
       ITEM.CHICKEN_IN_WEB,
     ],
-    exits: {
-      WEST: ROOM.RIVER,
-    },
+    exits: { WEST: ROOM.RIVER },
   },
 
   [ROOM.CLEARING]: {
     id: ROOM.CLEARING,
     name: "Forest Clearing",
-    desc: "You are standing in a quiet forest clearing. A large, slightly spooky house lies to the north.",
+    desc: "A neat circle of grass in the forest. The house to the north looks closer than it should.",
     items: [
       [ITEM.CHICKEN, [5, 3]],
       ITEM.STICK,
       ITEM.LEAVES,
       ITEM.CORN,
       ITEM.MAGNET,
-      ITEM.ROPE, // your "string"
+      ITEM.ROPE,
     ],
     exits: {
       NORTH: ROOM.ENTRANCE_HALL,
@@ -105,10 +195,8 @@ const ROOM_DEFS = {
   [ROOM.ENTRANCE_HALL]: {
     id: ROOM.ENTRANCE_HALL,
     name: "Entrance Hall",
-    desc: "A tall, dusty hall with a chandelier overhead. Footsteps echo on the wooden floor.",
-    items: [
-      ITEM.DINOSAUR,
-    ],
+    desc: "A tall hall with a chandelier that isn’t quite still. Your footsteps sound a fraction late.",
+    items: [ITEM.DINOSAUR],
     exits: {
       SOUTH: ROOM.CLEARING,
       WEST: ROOM.DINING_ROOM,
@@ -120,29 +208,23 @@ const ROOM_DEFS = {
   [ROOM.DINING_ROOM]: {
     id: ROOM.DINING_ROOM,
     name: "Dining Room",
-    desc: "A long table dominates the room, laid for a meal that never came.",
+    desc: "A long table laid for a meal that never started. The chairs are all slightly misaligned.",
     items: [],
-    exits: {
-      EAST: ROOM.ENTRANCE_HALL,
-    },
+    exits: { EAST: ROOM.ENTRANCE_HALL },
   },
 
   [ROOM.PLAYROOM]: {
     id: ROOM.PLAYROOM,
     name: "Playroom",
-    desc: "Shelves of old toys line the walls. One of them seems to have moved.",
-    items: [
-      ITEM.MAGNET,
-    ],
-    exits: {
-      WEST: ROOM.ENTRANCE_HALL,
-    },
+    desc: "Rows of toys watch from the shelves. One space is empty, recently.",
+    items: [ITEM.MAGNET],
+    exits: { WEST: ROOM.ENTRANCE_HALL },
   },
 
   [ROOM.BANK]: {
     id: ROOM.BANK,
     name: "Bank",
-    desc: "Loads of coins.",
+    desc: "Coins are piled everywhere, but the room still feels empty. The air smells faintly of paper and dust.",
     items: [
       ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
       ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
@@ -156,7 +238,7 @@ const ROOM_DEFS = {
   [ROOM.KITCHEN]: {
     id: ROOM.KITCHEN,
     name: "Kitchen",
-    desc: "Pots and pans hang from the ceiling. Something smells faintly of soup.",
+    desc: "Hanging pans sway slightly, though the air is still. Something here was used not long ago.",
     items: [
       [ITEM.ROPE, [2, 1]],
       [ITEM.MICROWAVE, [4, 4]],
@@ -170,16 +252,14 @@ const ROOM_DEFS = {
   [ROOM.NOAHROOM]: {
     id: ROOM.NOAHROOM,
     name: "Noahs Room",
-    desc: "Where Noah tests stuff",
+    desc: "A test room. Things are placed carefully, as if waiting to see what you’ll do.",
     items: [
       [ITEM.TEDDYBEAR, [2, 1]],
       [ITEM.TEDDYBEAR, [3, 5]],
       [ITEM.TEDDYBEAR, [4, 3]],
       [ITEM.CHICKEN, [5, 3]],
     ],
-    exits: {
-      SOUTH: ROOM.KITCHEN,
-    },
+    exits: { SOUTH: ROOM.KITCHEN },
   },
 };
 
@@ -200,6 +280,14 @@ function edgeCoordForDir(dir) {
   if (d === "WEST") return [0, MID];
   if (d === "EAST") return [ROOM_SIZE - 1, MID];
   return [MID, MID];
+}
+
+function borderItemAtDirection(room, dir) {
+  const [x, y] = edgeCoordForDir(dir);
+  const hit = (room?.items || []).find(
+    (e) => Array.isArray(e) && e[1]?.[0] === x && e[1]?.[1] === y
+  );
+  return hit ? hit[0] : null;
 }
 
 function entryToId(entry) {
@@ -305,6 +393,93 @@ function normaliseBorderWalls(room) {
   }
 }
 
+const BORDER_THEMES = Object.freeze({
+  [ROOM.DARKFOREST]: {
+    NORTH: ITEM.TREE,
+    SOUTH: ITEM.TREE,
+    EAST: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.SPIDERFOREST]: {
+    NORTH: ITEM.TREE,
+    SOUTH: ITEM.TREE,
+    EAST: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.CLEARING]: {
+    SOUTH: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.DARKCLEARING]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.RIVER]: {
+    NORTH: ITEM.TREE,
+    EAST: ITEM.TREE,
+    WEST: ITEM.TREE,
+    SOUTH: ITEM.RIVER_TILE,
+  },
+  [ROOM.SHED]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.COTTAGE_BEDROOM]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.COTTAGE_STOREROOM]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.COTTAGE_KITCHEN]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+});
+
+function coordIsOnSide(coord, side) {
+  const x = coord?.[0];
+  const y = coord?.[1];
+  if (x == null || y == null) return false;
+  if (side === "NORTH") return y === 0;
+  if (side === "SOUTH") return y === ROOM_SIZE - 1;
+  if (side === "WEST") return x === 0;
+  if (side === "EAST") return x === ROOM_SIZE - 1;
+  return false;
+}
+
+function applyBorderTheme(room) {
+  if (!room || !Array.isArray(room.items)) return;
+  const theme = BORDER_THEMES[room.id];
+  if (!theme) return;
+
+  room.items = room.items.map((entry) => {
+    if (!Array.isArray(entry)) return entry;
+    const id = entry[0];
+    const coord = entry[1];
+
+    // Only swap generated border WALL tiles. Exits and doors are preserved.
+    if (id !== ITEM.WALL) return entry;
+
+    for (const [side, borderItem] of Object.entries(theme)) {
+      if (coordIsOnSide(coord, side)) {
+        return [borderItem, coord];
+      }
+    }
+    return entry;
+  });
+}
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -376,9 +551,11 @@ function normalizeRoomItems() {
 // Run once at load:
 // 1) add door items from exit barriers
 // 2) add border walls except openings/doors
-// 3) randomise interior coords for items without coords
+// 3) apply room-specific border themes
+// 4) randomise interior coords for items without coords
 for (const r of Object.values(ROOM_DEFS)) normaliseExitBarriers(r);
 for (const r of Object.values(ROOM_DEFS)) normaliseBorderWalls(r);
+for (const r of Object.values(ROOM_DEFS)) applyBorderTheme(r);
 normalizeRoomItems();
 
 // -----------------------------------------------------------------------------
@@ -400,7 +577,11 @@ function tryMoveRoom(currentRoomId, direction) {
 
   // No exit at all => wall
   if (!exit) {
-    return { blocked: true, reason: "wall", barrier: null };
+    return {
+      blocked: true,
+      reason: "wall",
+      barrier: borderItemAtDirection(room, dir) ?? null,
+    };
   }
 
   // Old format: exits: { NORTH: "KITCHEN" }
@@ -411,6 +592,22 @@ function tryMoveRoom(currentRoomId, direction) {
   // New format
   const to = exit.to ?? null;
   const barrier = exit.barrier ?? null;
+
+  // Dynamic gate: inspector only blocks until the campfire is put out.
+  if (
+    barrier === ITEM.HEALTH_INSPECTOR &&
+    window.GameCore?.state?.flags?.fireOut
+  ) {
+    // Once condition is met, clear the barrier permanently.
+    exit.barrier = null;
+    if (Array.isArray(room.items)) {
+      room.items = room.items.filter(
+        (e) =>
+          !(Array.isArray(e) && e[0] === ITEM.HEALTH_INSPECTOR && e[1]?.[0] === ROOM_SIZE - 1 && e[1]?.[1] === MID)
+      );
+    }
+    return { to };
+  }
 
   if (!to) {
     return { blocked: true, reason: "wall", barrier: null };
@@ -435,18 +632,27 @@ function moveRoom(currentRoomId, direction) {
 function getMoveBlockedMessage(result) {
   if (!result || !result.blocked) return null;
 
-  if (result.reason === "wall") {
-    // return "You bump into the wall. Ouch.";
-  }
-
   if (result.reason === "barrier") {
     if (result.barrier === ITEM.DOOR_CLOSED) return "The door is closed.";
+    if (result.barrier === ITEM.DOOR_LOCKED) return "It's locked.";
+    if (result.barrier === ITEM.HEALTH_INSPECTOR) {
+      return "The Health and Safety Inspector blocks your way. \"No entry while you've got an open fire.\"";
+    }
     const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
     const name = def?.name ?? "something";
     return `The ${name.toLowerCase()} blocks your way.`;
   }
 
-  return "You can't go that way";
+  if (result.reason === "wall") {
+    if (result.barrier === ITEM.TREE) return "Trees block your way.";
+    if (result.barrier === ITEM.RIVER || result.barrier === ITEM.RIVER_TILE) {
+      return "A river blocks your way.";
+    }
+    if (result.barrier === ITEM.WOOD_WALL) return "A wooden wall blocks your way.";
+    if (result.barrier === ITEM.WALL) return "A wall blocks your way.";
+  }
+
+  return "You can't go that way.";
 
 }
 
