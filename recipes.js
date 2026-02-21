@@ -98,6 +98,7 @@ const RECIPES = Object.freeze({
     inputs: [ITEM.FISHING_ROD, ITEM.GRATE],
     consume: [],               // consume nothing
     produce: [ITEM.KEY],       // produce a key
+    setFlag: "grateKeyTaken",
     text: "You lower the rod through the grate and snag something metal. A key!",
   },
 

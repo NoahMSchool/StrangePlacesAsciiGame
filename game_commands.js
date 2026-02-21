@@ -83,6 +83,12 @@
     playSuccessSound(recipe);
   }
 
+  function applyRecipePostEffects(recipe) {
+    if (!recipe || !recipe.setFlag) return;
+    if (!G.state.flags) G.state.flags = {};
+    G.state.flags[recipe.setFlag] = true;
+  }
+
   // ---------------- availability helpers (prevent partial consume bugs) ----------------
 
   function isEntryWithCoord(e) {
@@ -188,6 +194,7 @@
       else G.addToRoom(outId);
     }
 
+    applyRecipePostEffects(recipe);
     sayRecipeResult(sayFn, recipe, consume, produce);
   }
 
@@ -331,6 +338,7 @@
           else G.addToRoom(outId);
         }
 
+        applyRecipePostEffects(recipe);
         sayRecipeResult(sayFn, recipe, consume, produce);
         return;
       }
@@ -353,6 +361,7 @@
       else G.addToRoom(outId);
     }
 
+    applyRecipePostEffects(recipe);
     sayRecipeResult(sayFn, recipe, consume, produce);
   }
 
@@ -467,6 +476,10 @@
     }
     if (verb === "FREE") {
       if (!a) return G.saySafe(sayFn, "Free what?");
+      return doAction("PUSH", a, sayFn);
+    }
+    if (verb === "SEARCH") {
+      if (!a) return G.saySafe(sayFn, "Search what?");
       return doAction("PUSH", a, sayFn);
     }
     if (verb === "PULL") {

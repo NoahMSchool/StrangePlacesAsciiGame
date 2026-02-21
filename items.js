@@ -183,6 +183,7 @@ const ITEM_DEFS = Object.freeze({
     examine: "A poor chicken trapped by spider webs. The spiders next meal?",
     visible: true,
     portable: false,
+    takeText: "The chicken is stuck fast in the web.",
     eatText: "That's the spiders food",
     asciiTile: [
       "    ^.   ",
@@ -272,7 +273,10 @@ const ITEM_DEFS = Object.freeze({
     name: "Grate",
     emoji: "🕳️",
     synonyms: ["grate", "grating", "metal grate", "iron grate"],
-    examine: "A heavy iron grate set into the ground. Something dark lies beneath.",
+    examine: ({ state }) =>
+      state?.flags?.grateKeyTaken
+        ? "A heavy iron grate set into the ground. Whatever was glinting inside is gone."
+        : "A heavy iron grate set into the ground. Something shiny glints inside.",
     visible: true,
     portable: false,
     eatText: "Your dentist would not like that",

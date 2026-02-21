@@ -27,6 +27,7 @@ const VERB_SYNONYMS = {
   UNLOCK:  ["unlock"],
   OPEN:    ["open"],
   CLOSE:   ["close", "shut"],
+  SEARCH:  ["search", "rummage", "dig through", "look in"],
   THROW:   ["throw", "toss", "hurl"],
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
@@ -44,6 +45,7 @@ const VERB_NOUN_COUNTS = {
   SOUND: [0, 1],
   LOOK: [0, 1],
   FREE: [1],
+  SEARCH: [1],
   USE: [1, 2],
   COMBINE: [2, 3],
 };

@@ -33,7 +33,21 @@ const ROOM_DEFS = {
   [ROOM.DARKCLEARING]: {
     id: ROOM.DARKCLEARING,
     name: "Dark Clearing",
-    desc: "A bare clearing with flattened leaves. A shed waits to the north. A path slopes down to the south. A locked door stands to the east for no obvious reason.",
+    desc: ({ room }) => {
+      const items = room?.items || [];
+      const ids = items.map((entry) => (Array.isArray(entry) ? entry[0] : entry));
+
+      let doorText = "A door stands to the east for no obvious reason.";
+      if (ids.includes(ITEM.DOOR_LOCKED)) {
+        doorText = "A locked door stands to the east for no obvious reason.";
+      } else if (ids.includes(ITEM.DOOR_CLOSED)) {
+        doorText = "A closed door stands to the east for no obvious reason.";
+      } else if (ids.includes(ITEM.DOOR_OPEN)) {
+        doorText = "An open doorway leads east.";
+      }
+
+      return `A bare clearing with flattened leaves. A shed waits to the north. A path slopes down to the south. ${doorText}`;
+    },
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
       NORTH: ROOM.SHED,
