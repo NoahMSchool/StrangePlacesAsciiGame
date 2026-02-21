@@ -465,6 +465,10 @@
       if (!a) return G.saySafe(sayFn, "Push what?");
       return doAction("PUSH", a, sayFn);
     }
+    if (verb === "FREE") {
+      if (!a) return G.saySafe(sayFn, "Free what?");
+      return doAction("PUSH", a, sayFn);
+    }
     if (verb === "PULL") {
       if (!a) return G.saySafe(sayFn, "Pull what?");
       return doAction("PULL", a, sayFn);

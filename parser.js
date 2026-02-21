@@ -22,6 +22,7 @@ const VERB_SYNONYMS = {
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
   USE:     ["use", "apply", "fish"],
+  FREE:    ["free", "rescue", "release", "save"],
   UNLOCK:  ["unlock"],
   OPEN:    ["open"],
   CLOSE:   ["close", "shut"],
@@ -40,6 +41,7 @@ const VERB_NOUN_COUNTS = {
   INV: [0],
   HELP: [0],
   LOOK: [0, 1],
+  FREE: [1],
   USE: [1, 2],
   COMBINE: [2, 3],
 };
