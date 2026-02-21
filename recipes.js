@@ -15,6 +15,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          
     placeResult: "room",
+    successSfx: "Audio/freesound_community-unlock_door-90282.mp3",
     text: "You unlock the door. The key breaks.",
   },
 
@@ -25,6 +26,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_OPEN],
     keepCoord: true,          // ✅ this is the magic bit
     placeResult: "room",
+    successSfx: "Audio/dragon-studio-opening-door-sfx-454240.mp3",
     text: "You open the door.",
   },
 
@@ -35,6 +37,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          // ✅ this is the magic bit
     placeResult: "room",
+    successSfx: "Audio/freesound_community-door-open-and-close-with-a-creak-102380.mp3",
     text: "You close the door.",
   },
 
