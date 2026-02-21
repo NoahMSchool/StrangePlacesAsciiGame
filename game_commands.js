@@ -71,6 +71,13 @@
   }
 
   function formatRecipeSummaryLine(consume, produce) {
+    const consumed = (consume || []).filter(Boolean);
+    const produced = (produce || []).filter(Boolean);
+
+    if (consumed.length === 0 && produced.length > 0) {
+      return `Found ${formatEmojiList(produced)}`;
+    }
+
     return `(used: ${formatEmojiList(consume)} → made: ${formatEmojiList(produce)})`;
   }
 
@@ -287,6 +294,10 @@
       return G.saySafe(sayFn, "Nothing happens.");
     }
 
+    if (recipe.setFlag && G.state.flags?.[recipe.setFlag]) {
+      return G.saySafe(sayFn, recipe.repeatText || "You've already done that.");
+    }
+
     if (!hasAllRequired(recipe.requires)) {
       const have = G.allAvailableItemsSet();
       const missing = (recipe.requires || []).filter((id) => !have.has(id));
@@ -443,8 +454,32 @@
 
     if (verb === "LOOK") {
       if (!a) G.renderRoom(sayFn);
-      else G.examineItem(a, sayFn);
+      else if (
+        typeof ITEM !== "undefined" &&
+        a === ITEM.BED &&
+        !G.state.flags?.bedBookFound
+      ) {
+        doAction("SEARCH", ITEM.BED, sayFn);
+      } else {
+        G.examineItem(a, sayFn);
+      }
       return;
+    }
+
+    if (verb === "READ") {
+      if (!a) return G.saySafe(sayFn, "Read what?");
+      G.examineItem(a, sayFn);
+      return;
+    }
+
+    if (verb === "SLEEP") {
+      if (typeof ITEM === "undefined") return G.saySafe(sayFn, "You can't sleep here.");
+      if (!a) {
+        if (G.isInRoom(ITEM.BED)) return doAction("SEARCH", ITEM.BED, sayFn);
+        return G.saySafe(sayFn, "You can't sleep here.");
+      }
+      if (a === ITEM.BED) return doAction("SEARCH", ITEM.BED, sayFn);
+      return G.saySafe(sayFn, "You can't sleep there.");
     }
 
     if (verb === "GO") {
@@ -474,7 +509,7 @@
       if (!firstId || typeof ITEM === "undefined") return false;
 
       const impliedRules = [
-        // River-bank convenience: bottle + river
+        // River convenience
         { a: ITEM.EMPTY_BOTTLE, b: ITEM.RIVER },
         // Grate interactions
         { a: ITEM.FISHING_ROD, b: ITEM.GRATE },
@@ -510,13 +545,17 @@
       if (!a) return G.saySafe(sayFn, "Push what?");
       return doAction("PUSH", a, sayFn);
     }
+    if (verb === "HIT") {
+      if (!a) return G.saySafe(sayFn, "Hit what?");
+      return doAction("PUSH", a, sayFn);
+    }
     if (verb === "FREE") {
       if (!a) return G.saySafe(sayFn, "Free what?");
       return doAction("PUSH", a, sayFn);
     }
     if (verb === "SEARCH") {
       if (!a) return G.saySafe(sayFn, "Search what?");
-      return doAction("PUSH", a, sayFn);
+      return doAction("SEARCH", a, sayFn);
     }
     if (verb === "PULL") {
       if (!a) return G.saySafe(sayFn, "Pull what?");
@@ -528,6 +567,9 @@
     }
     if (verb === "OPEN") {
       if (!a) return G.saySafe(sayFn, "Open what?");
+      if (b && typeof ITEM !== "undefined" && b === ITEM.KEY) {
+        return doAction("UNLOCK", a, sayFn);
+      }
       return doAction("OPEN", a, sayFn);
     }
     if (verb === "CLOSE") {

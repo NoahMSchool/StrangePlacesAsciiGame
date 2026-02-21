@@ -1,6 +1,6 @@
 // ---------------- CONFIG (declare once) ----------------
 
-const STOPWORDS = new Set(["the", "a", "an", "at"]);
+const STOPWORDS = new Set(["the", "a", "an", "at", "up"]);
 
 // ✅ Noun connectors used to split "X with Y", "X in Y", etc.
 const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
@@ -20,6 +20,8 @@ const VERB_SYNONYMS = {
   GO:      ["go", "walk", "run", "head"],
   INV:     ["inventory", "i"],
   SOUND:   ["sound", "audio"],
+  READ:    ["read"],
+  SLEEP:   ["sleep", "rest", "nap", "lie down"],
   TAKE:    ["take", "grab", "pick up", "pickup", "get"],
   DROP:    ["drop", "discard", "leave"],
   USE:     ["use", "apply", "fish"],
@@ -29,6 +31,7 @@ const VERB_SYNONYMS = {
   UNLOCK:  ["unlock"],
   OPEN:    ["open"],
   CLOSE:   ["close", "shut"],
+  HIT:     ["hit", "whack", "smack", "strike", "bash", "bonk", "clobber"],
   SEARCH:  ["search", "rummage", "dig through", "look in"],
   THROW:   ["throw", "toss", "hurl"],
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
@@ -45,8 +48,12 @@ const VERB_NOUN_COUNTS = {
   INV: [0],
   HELP: [0],
   SOUND: [0, 1],
+  READ: [1],
+  SLEEP: [0, 1],
   LOOK: [0, 1],
+  OPEN: [1, 2],
   FREE: [1],
+  HIT: [1],
   SEARCH: [1],
   FILL: [1, 2],
   COOK: [1, 2],

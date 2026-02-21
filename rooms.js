@@ -12,6 +12,9 @@ const ROOM = Object.freeze({
   DARKFOREST: "DARKFOREST",
   DARKCLEARING: "DARKCLEARING",
   SHED: "SHED",
+  COTTAGE_BEDROOM: "COTTAGE_BEDROOM",
+  COTTAGE_STOREROOM: "COTTAGE_STOREROOM",
+  COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
   RIVER: "RIVER",
   SPIDERFOREST: "SPIDERFOREST",
 });
@@ -25,9 +28,7 @@ const ROOM_DEFS = {
     items: [
       [ITEM.TREE, [2, 2]],
       [ITEM.CAMPFIRE, [3, 3]],
-      [ITEM.EMPTY_BOTTLE, [4, 2]],
       [ITEM.TREE, [5, 5]],
-      ITEM.KEY,
     ],
     exits: { EAST: ROOM.DARKCLEARING },
   },
@@ -48,7 +49,7 @@ const ROOM_DEFS = {
         doorText = "An open doorway leads east.";
       }
 
-      return `A bare clearing with flattened leaves. A shed waits to the north. A path slopes down to the south. ${doorText}`;
+      return `A bare clearing with flattened leaves. A curious wooden cottage waits to the north. A path slopes down to the south. ${doorText}`;
     },
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
@@ -61,10 +62,42 @@ const ROOM_DEFS = {
 
   [ROOM.SHED]: {
     id: ROOM.SHED,
-    name: "Shed",
-    desc: "A small wooden shed. It smells of cold metal and something electrical that isn’t plugged in.",
-    items: [ITEM.MAGNET, ITEM.LAMP],
-    exits: { SOUTH: ROOM.DARKCLEARING },
+    name: "Cottage Entrance",
+    desc: "A curious wooden cottage sits in the gloom. The entrance room is bare except for a note on the floor.",
+    items: [[ITEM.NOTE, [3, 3]]],
+    exits: {
+      SOUTH: ROOM.DARKCLEARING,
+      NORTH: ROOM.COTTAGE_BEDROOM,
+      WEST: ROOM.COTTAGE_STOREROOM,
+      EAST: ROOM.COTTAGE_KITCHEN,
+    },
+  },
+
+  [ROOM.COTTAGE_BEDROOM]: {
+    id: ROOM.COTTAGE_BEDROOM,
+    name: "Cottage Bedroom",
+    desc: "A small wooden bedroom with a low ceiling and stale air.",
+    items: [[ITEM.BED, [3, 3]]],
+    exits: { SOUTH: ROOM.SHED },
+  },
+
+  [ROOM.COTTAGE_STOREROOM]: {
+    id: ROOM.COTTAGE_STOREROOM,
+    name: "Cottage Storeroom",
+    desc: "Shelves sag under old crates. An oil drum rests in the corner.",
+    items: [[ITEM.OIL_DRUM, [3, 3]]],
+    exits: { EAST: ROOM.SHED },
+  },
+
+  [ROOM.COTTAGE_KITCHEN]: {
+    id: ROOM.COTTAGE_KITCHEN,
+    name: "Cottage Kitchen",
+    desc: "A cramped kitchen of warped boards. A humming fridge stands against the wall with a fridge magnet on its door.",
+    items: [
+      [ITEM.FRIDGE, [3, 3]],
+      [ITEM.MAGNET, [4, 3]],
+    ],
+    exits: { WEST: ROOM.SHED },
   },
 
   [ROOM.RIVER]: {
@@ -73,6 +106,7 @@ const ROOM_DEFS = {
     desc: "A fast river moves past without making much sound. The surface reflects the sky, but the colours are wrong.",
     items: [
       [ITEM.STICK, [2, 2]],
+      [ITEM.SIGN, [4, 2]],
       [ITEM.RIVER, [3, 4]],
       [ITEM.RIVER_TILE, [1, 4]],
       [ITEM.RIVER_TILE, [2, 4]],
@@ -346,6 +380,24 @@ const BORDER_THEMES = Object.freeze({
     SOUTH: ITEM.RIVER_TILE,
   },
   [ROOM.SHED]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.COTTAGE_BEDROOM]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.COTTAGE_STOREROOM]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.COTTAGE_KITCHEN]: {
     NORTH: ITEM.WOOD_WALL,
     SOUTH: ITEM.WOOD_WALL,
     EAST: ITEM.WOOD_WALL,

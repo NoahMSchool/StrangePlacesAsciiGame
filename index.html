@@ -97,14 +97,17 @@
     button { cursor: pointer; }
 
     /* ASCII panel */
-    .asciiWrap {
+    .asciiCol {
       grid-area: ascii;
+      align-self: start;
+    }
+
+    .asciiWrap {
       border: var(--border);
       border-radius: var(--radius);
       background: var(--panel-bg);
       padding: 10px;
       overflow: hidden;
-      align-self: start;
     }
 
     #asciiOutput {
@@ -116,6 +119,14 @@
       white-space: pre;
       user-select: none;
       font-size: 0.5em;
+    }
+
+    #roomName {
+      margin-top: 6px;
+      font-size: 0.72em;
+      opacity: 0.9;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     @supports (height: 100dvh) {
@@ -131,8 +142,11 @@
       <div class="status" id="status"></div>
     </div>
 
-    <div class="asciiWrap" aria-label="ASCII panel">
-      <pre id="asciiOutput"></pre>
+    <div class="asciiCol">
+      <div class="asciiWrap" aria-label="ASCII panel">
+        <pre id="asciiOutput"></pre>
+      </div>
+      <div id="roomName"></div>
     </div>
 
 
@@ -168,6 +182,7 @@
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
     const audioToggleBtn = document.getElementById("audioToggle");
+    const roomNameEl = document.getElementById("roomName");
 
     function say(t) {
       log.textContent += t + "\n";
@@ -198,8 +213,10 @@
     });
 
     async function updateRoomTile() {
-        gridstring = getRoomTile(GameRuntime.getCurrentRoom());
+        const room = GameRuntime.getCurrentRoom();
+        gridstring = getRoomTile(room);
         document.getElementById("asciiOutput").textContent = gridstring;
+        roomNameEl.textContent = room?.name || "";
     }
 
     async function run() {

@@ -98,10 +98,10 @@ const RECIPES = Object.freeze({
   // 🎣 Fishing rod + grate = key (rod/grate stay)
   [keyOf([ITEM.FISHING_ROD, ITEM.GRATE])]: {
     inputs: [ITEM.FISHING_ROD, ITEM.GRATE],
-    consume: [],               // consume nothing
-    produce: [ITEM.KEY],       // produce a key
+    consume: [ITEM.FISHING_ROD],
+    produce: [ITEM.KEY],
     setFlag: "grateKeyTaken",
-    text: "You lower the rod through the grate and snag something metal. A key!",
+    text: "You lower the rod through the grate and snag something metal. The rod slips from your hands and disappears below. You pull up a key.",
   },
 
   // 🪵🧵 String-on-a-stick + grate → not enough reach
@@ -120,12 +120,22 @@ const RECIPES = Object.freeze({
     text: "You dangle the magnet into the grate, but the string has no reach. You need something rigid to guide it.",
   },
 
-  // 🧴 Empty bottle + river = bottle of water
   [keyOf([ITEM.EMPTY_BOTTLE, ITEM.RIVER])]: {
     inputs: [ITEM.EMPTY_BOTTLE, ITEM.RIVER],
     consume: [ITEM.EMPTY_BOTTLE],
     produce: [ITEM.WATER_BOTTLE],
     text: "You dip the bottle into the river and fill it with water.",
+  },
+
+  OPEN_FRIDGE_FIND_BOTTLE: {
+    action: "OPEN",
+    target: ITEM.FRIDGE,
+    consume: [],
+    produce: [ITEM.EMPTY_BOTTLE],
+    placeResult: "room",
+    setFlag: "fridgeOpened",
+    repeatText: "The fridge is already open. Just cold air and old shelves now.",
+    text: "You open the fridge. Inside you find an empty bottle.",
   },
 
 
@@ -139,6 +149,27 @@ const RECIPES = Object.freeze({
     placeResult: "room",
     keepCoord: true,          
     text: "You push aside the leaves, revealing a grate.",
+  },
+
+  SEARCH_LEAVES_REVEAL_GRATE: {
+    action: "SEARCH",
+    target: ITEM.LEAVES,
+    consume: [ITEM.LEAVES],
+    produce: [ITEM.GRATE],
+    placeResult: "room",
+    keepCoord: true,
+    text: "You search through the leaves and reveal a grate.",
+  },
+
+  SEARCH_BED_REVEAL_BOOK: {
+    action: "SEARCH",
+    target: ITEM.BED,
+    consume: [],
+    produce: [ITEM.STRANGE_PLACES_BOOK],
+    placeResult: "room",
+    setFlag: "bedBookFound",
+    repeatText: "You already checked under the bed. There's nothing else there.",
+    text: "You reach under the bed and pull out a book titled \"Strange Places.\"",
   },
 
   FREE_CHICKEN: {
