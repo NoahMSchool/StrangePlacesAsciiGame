@@ -156,6 +156,7 @@
     <div class="row">
       <input id="cmd" placeholder="Type anything…" disabled />
       <button id="send" disabled>Send</button>
+      <button id="helpBtn" type="button">Help</button>
       <button id="bgmToggle" type="button">Music: On</button>
       <button id="sfxToggle" type="button">FX: On</button>
     </div>
@@ -182,6 +183,7 @@
     const status = document.getElementById("status");
     const cmd = document.getElementById("cmd");
     const sendBtn = document.getElementById("send");
+    const helpBtn = document.getElementById("helpBtn");
     const bgmToggleBtn = document.getElementById("bgmToggle");
     const sfxToggleBtn = document.getElementById("sfxToggle");
     const roomNameEl = document.getElementById("roomName");
@@ -277,6 +279,7 @@
     }
 
     sendBtn.addEventListener("click", run);
+    helpBtn.addEventListener("click", () => runRawCommand("HELP"));
     cmd.addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
     asciiOutputEl.addEventListener("pointerdown", (e) => {
       const dir = directionFromAsciiGapTap(e.clientX, e.clientY);
@@ -311,6 +314,7 @@
 
       say("");
     } else {
+      helpBtn.disabled = true;
       bgmToggleBtn.disabled = true;
       sfxToggleBtn.disabled = true;
       say("GameRuntime not loaded. Check that game_core.js and game_commands.js are included and error-free.");

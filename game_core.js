@@ -180,7 +180,7 @@
   function helpText(sayFn) {
     saySafe(
       sayFn,
-      "This is a game of skill and cunning. Type commands like LOOK (L), GO NORTH, TAKE <item>, DROP <item>, INVENTORY (I), COMBINE, MAKE, EAT, PUSH, PULL, HELP."
+      "Commands: LOOK (L), GO <dir>, TAKE/DROP <item>, COMBINE, MAKE, USE, OPEN, UNLOCK, SEARCH, TALK, READ. Press I for inventory. Move with arrow keys (desktop) or tap map gaps. Type HELP anytime."
     );
   }
 
