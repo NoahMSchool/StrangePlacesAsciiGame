@@ -548,6 +548,8 @@ const ITEM_DEFS_BASE = {
       "web"
     ],
     examine: "A poor chicken trapped by spider webs. The spiders next meal?",
+    roomDescExtra: "A little chicken is thrashing about in the webs.",
+
     visible: true,
     portable: false,
     takeText: "The chicken is stuck fast in the web.",
