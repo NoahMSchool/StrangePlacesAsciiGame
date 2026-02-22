@@ -180,7 +180,7 @@
   function helpText(sayFn) {
     saySafe(
       sayFn,
-      "Commands: LOOK (L), GO <dir>, TAKE/DROP <item>, COMBINE, MAKE, USE, OPEN, UNLOCK, SEARCH, TALK, READ. Press I for inventory. Move with arrow keys (desktop) or tap map gaps. Type HELP anytime."
+      "Commands: LOOK (L), GO <dir>, TAKE/DROP <item>, COMBINE, MAKE, USE, OPEN, UNLOCK, SEARCH, TALK, READ, ETC. Press I for inventory.\nAlso move with arrow keys (desktop) or tap exits on map."
     );
   }
 

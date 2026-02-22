@@ -18,10 +18,20 @@
   // ---------------- Audio config ----------------
 
   const DEFAULT_SUCCESS_SFX =
-    "Audio/ksjsbwuil-apple-pay-success-sound-effect-481188.mp3";
+    "Audio/recipes/ksjsbwuil-apple-pay-success-sound-effect-481188.mp3";
 
   const DEFAULT_BGM_LOOP =
-    "Audio/freesound_community-eerie-ambience-6836.mp3";
+    "Audio/ambient/freesound_community-eerie-ambience-6836.mp3";
+
+  const ROOM_BGM = Object.freeze({
+    RIVER: "Audio/ambient/soundsforyou-calm-river-ambience-loop-125071.mp3",
+    MINE_ENTRANCE: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+    MINE_CAVERN: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+    TIME_WARP: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+    CAVERN_TAVERN: "Audio/ambient/freesound_community-eerie-ambience-6836.mp3",
+    COTTAGE_STOREROOM: "Audio/ambient/freesound_community-eerie-ambience-6836.mp3",
+    PARTICLE_ROOM: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+  });
 
   // Single place to store settings (you can later persist this to localStorage)
   const Settings = {
@@ -29,10 +39,20 @@
     sfxEnabled: true,
   };
 
+  function bgmForCurrentRoom() {
+    const roomId = G?.state?.currentRoom;
+    return ROOM_BGM[roomId] || DEFAULT_BGM_LOOP;
+  }
+
+  function refreshRoomBgm() {
+    if (!Settings.bgmEnabled) return;
+    Sound.playBgm(bgmForCurrentRoom(), { loop: true });
+  }
+
   function applyBgmEnabled() {
     Sound.setBgmEnabled(Settings.bgmEnabled);
     if (Settings.bgmEnabled) {
-      Sound.playBgm(DEFAULT_BGM_LOOP, { loop: true });
+      refreshRoomBgm();
     } else {
       Sound.stopBgm();
     }
@@ -140,6 +160,10 @@
     const consumed = (consume || []).filter(Boolean);
     const produced = (produce || []).filter(Boolean);
 
+    if (consumed.length === 0 && produced.length === 0) {
+      return "";
+    }
+
     if (consumed.length === 0 && produced.length > 0) {
       return `Found ${formatEmojiList(produced)}`;
     }
@@ -150,7 +174,8 @@
   function sayRecipeResult(sayFn, recipe, consume, produce) {
     const suffix = formatProducedList(produce);
     const summary = formatRecipeSummaryLine(consume, produce);
-    G.saySafe(sayFn, (recipe?.text || "Done.") + suffix + "\n" + summary);
+    const msg = (recipe?.text || "Done.") + suffix + (summary ? "\n" + summary : "");
+    G.saySafe(sayFn, msg);
 
     // ✅ SFX on success (respects Settings.audioEnabled via Sound.setEnabled)
     playSuccessSound(recipe);
@@ -180,6 +205,58 @@
       G.state.flags.inspectorRelocated = true;
       G.saySafe(sayFn, "The inspector arrives, checks his clipboard, and nods. \"Good work. That's much safer.\"");
     }
+
+    if (recipe.setFlag === "timeForward1000") {
+      const mineField = window.getRoom ? window.getRoom("MINE_CAVERN") : null;
+      if (mineField && Array.isArray(mineField.items)) {
+        let changed = 0;
+        mineField.items = mineField.items.map((entry) => {
+          if (Array.isArray(entry)) {
+            const id = entry[0];
+            const coord = entry[1];
+            if (id === ITEM.SEED) {
+              changed++;
+              return [ITEM.CORN, coord];
+            }
+            return entry;
+          }
+          if (entry === ITEM.SEED) {
+            changed++;
+            return ITEM.CORN;
+          }
+          return entry;
+        });
+        if (changed > 0) {
+          G.saySafe(sayFn, "Far away in the Mine Field, the seed has become corn.");
+        }
+      }
+    }
+
+    if (recipe.setFlag === "eggOilExperimentReady") {
+      const tavern = window.getRoom ? window.getRoom("CAVERN_TAVERN") : null;
+      if (tavern?.exits?.SOUTH && typeof tavern.exits.SOUTH === "object") {
+        tavern.exits.SOUTH.barrier = null;
+      }
+      if (Array.isArray(tavern?.items)) {
+        const edgeX = 3;
+        const edgeY = 6;
+        const moved = [];
+        tavern.items = tavern.items.map((entry) => {
+          if (!Array.isArray(entry) || !Array.isArray(entry[1])) return entry;
+          const id = entry[0];
+          const c = entry[1];
+          if (id === ITEM.EINSTEIN_BARMAN && c[0] === edgeX && c[1] === edgeY) {
+            moved.push(true);
+            return [ITEM.EINSTEIN_BARMAN, [4, 4]];
+          }
+          return entry;
+        });
+        if (!moved.length && !G.roomHasItem(tavern, ITEM.EINSTEIN_BARMAN)) {
+          G.addToRoomAtRandomInterior(tavern, ITEM.EINSTEIN_BARMAN);
+        }
+      }
+      G.saySafe(sayFn, "Einstein Barman grins. \"Ja! The experiment is complete. You may pass south.\"");
+    }
   }
 
   // ---------------- availability helpers (prevent partial consume bugs) ----------------
@@ -203,6 +280,31 @@
 
   function countInInv(itemId) {
     return G.state.inventory.filter((x) => x === itemId).length;
+  }
+
+  function countConsumedFromInventory(consumeIds) {
+    const want = new Map();
+    for (const id of consumeIds || []) {
+      if (!id) continue;
+      want.set(id, (want.get(id) || 0) + 1);
+    }
+
+    let consumed = 0;
+    for (const [id, needed] of want.entries()) {
+      consumed += Math.min(needed, countInInv(id));
+    }
+    return consumed;
+  }
+
+  function wouldOverflowInventory(consume, produce, placeResult, keepCoordApplies) {
+    if (placeResult !== "inventory") return false;
+
+    const totalProduced = (produce || []).filter(Boolean).length;
+    const producedToInventory = Math.max(0, totalProduced - (keepCoordApplies ? 1 : 0));
+    const consumedFromInventory = countConsumedFromInventory(consume || []);
+
+    const finalCount = G.state.inventory.length - consumedFromInventory + producedToInventory;
+    return finalCount > G.MAX_INVENTORY_SIZE;
   }
 
   function canConsumeAllHere(consumeIds) {
@@ -268,16 +370,15 @@
         ? "inventory"
         : "room";
 
-    if (placeResult === "inventory") {
-      const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
-      const needed = produce.filter(Boolean).length;
-      if (needed > space) {
-        G.saySafe(
-          sayFn,
-          `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
-        );
-        return;
-      }
+    const keepCoordApplies =
+      !!(recipe.keepCoord && consume.length >= 1 && produce.length >= 1 && G.isInRoom(consume[0]));
+
+    if (wouldOverflowInventory(consume, produce, placeResult, keepCoordApplies)) {
+      G.saySafe(
+        sayFn,
+        `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
+      );
+      return;
     }
 
     if (recipe.keepCoord && consume.length >= 1 && produce.length >= 1) {
@@ -447,15 +548,14 @@
 
     const placeResult = recipe.placeResult === "inventory" ? "inventory" : "room";
 
-    if (placeResult === "inventory") {
-      const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
-      const needed = produce.filter(Boolean).length;
-      if (needed > space) {
-        return G.saySafe(
-          sayFn,
-          `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
-        );
-      }
+    const keepCoordApplies =
+      !!(recipe.keepCoord && consume.length >= 1 && produce.length >= 1 && G.isInRoom(consume[0]));
+
+    if (wouldOverflowInventory(consume, produce, placeResult, keepCoordApplies)) {
+      return G.saySafe(
+        sayFn,
+        `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
+      );
     }
 
     if (!canConsumeAllHere(consume)) {
@@ -617,6 +717,21 @@
         }
         return G.saySafe(sayFn, "The inspector says, \"All clear now. Proceed safely.\"");
       }
+      if (typeof ITEM !== "undefined" && a === ITEM.EINSTEIN_BARMAN) {
+        if (!G.isInRoom(ITEM.EINSTEIN_BARMAN)) {
+          return G.saySafe(sayFn, "They're not here.");
+        }
+        if (!G.state.flags?.eggOilExperimentReady) {
+          return G.saySafe(
+            sayFn,
+            "Einstein Barman says, \"I have been waiting for an egg to complete my master experiment with eggs and oil.\""
+          );
+        }
+        return G.saySafe(
+          sayFn,
+          "Einstein Barman says, \"Magnificent! Egg plus oil has unlocked new possibilities. The south door is open.\""
+        );
+      }
       return G.saySafe(sayFn, "They have nothing to say.");
     }
 
@@ -725,9 +840,11 @@
       if (!firstId || typeof ITEM === "undefined") return false;
 
       const impliedRules = [
+        // Feeding convenience
+        { a: ITEM.CHICKEN, b: ITEM.CORN },
         // River convenience
-        { a: ITEM.EMPTY_BOTTLE, b: ITEM.RIVER },
-        { a: ITEM.WATER_BOTTLE, b: ITEM.CAMPFIRE },
+        { a: ITEM.EMPTY_BUCKET, b: ITEM.RIVER },
+        { a: ITEM.WATER_BUCKET, b: ITEM.CAMPFIRE },
         // Grate interactions
         { a: ITEM.FISHING_ROD, b: ITEM.GRATE },
         { a: ITEM.STRING_STICK, b: ITEM.GRATE },
@@ -737,7 +854,8 @@
       ];
 
       for (const rule of impliedRules) {
-        if (firstId === rule.a && G.isInRoom(rule.b)) {
+        const targetAvailable = G.isInRoom(rule.b) || G.isInInventory(rule.b);
+        if (firstId === rule.a && targetAvailable) {
           combineItems([rule.a, rule.b], sayFn);
           return true;
         }
@@ -840,7 +958,19 @@
     if (verb === "HELP") return G.helpText(sayFn);
 
     if (verb === "USE") {
-      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+      if (a && b) {
+        if (typeof ITEM !== "undefined") {
+          const hasKey = a === ITEM.KEY || b === ITEM.KEY;
+          const doorCandidate = a === ITEM.KEY ? b : a;
+          if (
+            hasKey &&
+            (doorCandidate === ITEM.DOOR_LOCKED || doorCandidate === ITEM.DOOR_CLOSED || doorCandidate === ITEM.DOOR_OPEN)
+          ) {
+            return doAction("UNLOCK", doorCandidate, sayFn);
+          }
+        }
+        return combineItems([a, b, c].filter(Boolean), sayFn);
+      }
       if (!a) return G.saySafe(sayFn, "Use what?");
       if (tryImpliedSecondNoun(a)) return;
       return G.saySafe(sayFn, `You can't figure out how to use ${G.formatItem(a)} here.`);
@@ -872,6 +1002,8 @@
       if (u?.error) G.saySafe(sayFn, u.error);
       else G.saySafe(sayFn, `I don't understand "${u?.raw ?? "that"}".`);
     }
+
+    refreshRoomBgm();
   }
 
   // ---------------- EXPOSE RUNTIME ----------------

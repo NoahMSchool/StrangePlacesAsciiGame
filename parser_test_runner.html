@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Parser Unit Tests</title>
+  <style>
+    :root {
+      --bg: #2e3d2f;
+      --panel: #d7d2bd;
+      --ink: #1f1c16;
+      --line: #355447;
+      --heading-bg: #a9d5db;
+      --heading-ink: #b42558;
+      --ok: #1f7a43;
+      --bad: #9f2f2f;
+      --muted: #4b3d36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+    }
+    .card {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .head {
+      background: var(--heading-bg);
+      color: var(--heading-ink);
+      border: 2px solid var(--heading-ink);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .head p {
+      margin: 0;
+      color: #4b3d36;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      text-decoration: none;
+      border: 1px solid var(--heading-ink);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--heading-ink);
+      background: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+    }
+    .nav a[aria-current="page"] {
+      background: var(--heading-ink);
+      color: var(--heading-bg);
+    }
+    h1 { margin: 0; font-size: 1.1rem; }
+    p { margin: 6px 0 0; color: var(--muted); font-size: 0.9rem; }
+    #summary { font-size: 0.95rem; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .bad { color: var(--bad); font-weight: 700; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    th, td {
+      border: 1px solid #8a8776;
+      padding: 6px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: #ece7d2; position: sticky; top: 0; z-index: 1; }
+    tbody tr.pass { background: #edf7ef; }
+    tbody tr.fail { background: #f9ecec; }
+    code, pre {
+      font-family: inherit;
+      white-space: pre-wrap;
+      margin: 0;
+    }
+    .small { font-size: 0.78rem; color: var(--muted); }
+    .expected-fail {
+      display: inline-block;
+      border: 1px solid #8a8776;
+      border-radius: 999px;
+      padding: 1px 7px;
+      font-size: 0.72rem;
+      background: #ece7d2;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="head">
+      <h1>Parser Unit Tests</h1>
+      <p>Runs parser checks for known-good commands and human-style inputs that are currently unsupported.</p>
+      <nav class="nav" aria-label="Debug Pages">
+        <a href="all_rooms_ascii.html">World Map</a>
+        <a href="recipe_book.html">Recipes</a>
+        <a href="item_catalog.html">Items</a>
+        <a href="parser_test_runner.html" aria-current="page">Parser Tests</a>
+      </nav>
+    </section>
+    <section id="summary" class="card">Running tests...</section>
+    <section class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Category</th>
+            <th>Input</th>
+            <th>Context</th>
+            <th>Expected</th>
+            <th>Actual</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="items.js"></script>
+  <script src="parser.js"></script>
+  <script>
+    (function () {
+      const rowsEl = document.getElementById("rows");
+      const summaryEl = document.getElementById("summary");
+      const A = (...ids) => ids;
+
+      const TESTS = [
+        // Movement
+        { c: "Movement", in: "north", ex: { knownExact: ["GO NORTH"], unknownCount: 0 } },
+        { c: "Movement", in: "go south", ex: { knownExact: ["GO SOUTH"], unknownCount: 0 } },
+        { c: "Movement", in: "walk east", ex: { knownExact: ["GO EAST"], unknownCount: 0 } },
+        { c: "Movement", in: "head west", ex: { knownExact: ["GO WEST"], unknownCount: 0 } },
+        { c: "Movement", in: "go to n", ex: { knownExact: ["GO NORTH"], unknownCount: 0 } },
+        { c: "Movement", in: "run e", ex: { knownExact: ["GO EAST"], unknownCount: 0 } },
+
+        // Core single noun
+        { c: "Core", in: "look", ex: { knownExact: ["LOOK"], unknownCount: 0 } },
+        { c: "Core", in: "l", ex: { knownExact: ["LOOK"], unknownCount: 0 } },
+        { c: "Core", in: "examine grate", ex: { knownExact: ["LOOK GRATE"], unknownCount: 0 } },
+        { c: "Core", in: "read note", ex: { knownExact: ["READ NOTE"], unknownCount: 0 } },
+        { c: "Core", in: "talk to inspector", ex: { knownExact: ["TALK HEALTH_INSPECTOR"], unknownCount: 0 } },
+        { c: "Core", in: "talk to barman", ex: { knownExact: ["TALK EINSTEIN_BARMAN"], unknownCount: 0 } },
+        { c: "Core", in: "sleep bed", ex: { knownExact: ["SLEEP BED"], unknownCount: 0 } },
+        { c: "Core", in: "take stick", ex: { knownExact: ["TAKE STICK"], unknownCount: 0 } },
+        { c: "Core", in: "drop stick", ex: { knownExact: ["DROP STICK"], unknownCount: 0 } },
+        { c: "Core", in: "search leaves", ex: { knownExact: ["SEARCH LEAVES"], unknownCount: 0 } },
+        { c: "Core", in: "push leaves", ex: { knownExact: ["PUSH LEAVES"], unknownCount: 0 } },
+        { c: "Core", in: "pull lever", ex: { knownExact: ["PULL TIME_LEVER"], unknownCount: 0 } },
+        { c: "Core", in: "hit inspector", ex: { knownExact: ["HIT HEALTH_INSPECTOR"], unknownCount: 0 } },
+        { c: "Core", in: "free chicken in web", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "save chicken in web", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "free chicken", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "rescue chicken", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "extinguish fire", ex: { knownExact: ["EXTINGUISH CAMPFIRE"], unknownCount: 0 } },
+        { c: "Core", in: "dowse fire", ex: { knownExact: ["EXTINGUISH CAMPFIRE"], unknownCount: 0 } },
+        { c: "Core", in: "unlock door", ex: { knownExact: ["UNLOCK DOOR_LOCKED"], unknownCount: 0 } },
+        { c: "Core", in: "open door with key", ex: { knownExact: ["OPEN DOOR_LOCKED KEY"], unknownCount: 0 } },
+        { c: "Core", in: "use key on door", ex: { knownExact: ["USE KEY DOOR_LOCKED"], unknownCount: 0 } },
+        { c: "Core", in: "fill up bucket", ex: { knownExact: ["FILL EMPTY_BUCKET"], unknownCount: 0 } },
+        { c: "Core", in: "use rod on grate", ex: { knownExact: ["USE FISHING_ROD GRATE"], unknownCount: 0 } },
+        { c: "Core", in: "put egg into oil drum", ex: { knownExact: ["COMBINE EGG OIL_DRUM"], unknownCount: 0 } },
+        { c: "Core", in: "look under the bed", ex: { knownExact: ["LOOK BED"], unknownCount: 0 } },
+
+        // Combine
+        { c: "Combine", in: "combine hook with rope", ex: { knownExact: ["COMBINE HOOK ROPE"], unknownCount: 0 } },
+        { c: "Combine", in: "combine rope and stick", ex: { knownExact: ["COMBINE ROPE STICK"], unknownCount: 0 } },
+        { c: "Combine", in: "combine hook rope", ex: { knownExact: ["COMBINE HOOK ROPE"], unknownCount: 0 } },
+        { c: "Combine", in: "combine string hook", ex: { knownExact: ["COMBINE ROPE HOOK"], unknownCount: 0 }, available: A(ITEM.ROPE, ITEM.HOOK) },
+        { c: "Combine", in: "combine hook rope stick", ex: { knownExact: ["COMBINE HOOK ROPE STICK"], unknownCount: 0 } },
+        { c: "Combine", in: "combine stick hook string", ex: { knownExact: ["COMBINE STICK HOOK ROPE"], unknownCount: 0 } },
+        { c: "Combine", in: "combine fishing rod grate", ex: { knownExact: ["COMBINE FISHING_ROD GRATE"], unknownCount: 0 } },
+        { c: "Combine", in: "feed corn chicken", ex: { knownExact: ["COMBINE CORN CHICKEN"], unknownCount: 0 }, available: A(ITEM.CORN, ITEM.CHICKEN) },
+        { c: "Combine", in: "make fishing rod", ex: { knownExact: ["MAKE FISHING_ROD"], unknownCount: 0 } },
+        { c: "Combine", in: "combine bucket", ex: { knownExact: ["COMBINE EMPTY_BUCKET"], unknownCount: 0 } },
+
+        // Utility/commands
+        { c: "Utility", in: "help", ex: { knownExact: ["HELP"], unknownCount: 0 } },
+        { c: "Utility", in: "inventory", ex: { knownExact: ["INV"], unknownCount: 0 } },
+        { c: "Utility", in: "i", ex: { knownExact: ["INV"], unknownCount: 0 } },
+        { c: "Utility", in: "sound", ex: { knownExact: ["SOUND"], unknownCount: 0 } },
+        { c: "Utility", in: "sound on", ex: { knownExact: ["SOUND ON"], unknownCount: 0 } },
+        { c: "Utility", in: "sound off", ex: { knownExact: ["SOUND OFF"], unknownCount: 0 } },
+        { c: "Utility", in: "inventory please", ex: { knownExact: ["INV"], unknownCount: 0 } },
+        { c: "Utility", in: "fxtest", ex: { knownExact: ["FXTEST"], unknownCount: 0 } },
+        { c: "Utility", in: "fxtest unlock", ex: { knownExact: ["FXTEST unlock"], unknownCount: 0 } },
+        { c: "Utility", in: "rocco", ex: { knownExact: ["ROCCO"], unknownCount: 0 } },
+        { c: "Utility", in: "mcboof key", ex: { knownExact: ["MCBOOF KEY"], unknownCount: 0 } },
+
+        // Chaining/splitting
+        { c: "Chaining", in: "take stick; take rope", ex: { knownExact: ["TAKE STICK", "TAKE ROPE"], unknownCount: 0 } },
+        { c: "Chaining", in: "look then inventory", ex: { knownExact: ["LOOK", "INV"], unknownCount: 0 } },
+        { c: "Chaining", in: "combine hook and rope and stick", ex: { knownExact: ["COMBINE HOOK ROPE STICK"], unknownCount: 0 } },
+
+        // Human-ish unsupported (expected parser failures)
+        { c: "Core", in: "please open the door", ex: { knownExact: ["OPEN DOOR_LOCKED"], unknownCount: 0 } },
+        { c: "Unsupported", in: "go northeast", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Unsupported", in: "use", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Unsupported", in: "combine", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Unsupported", in: "fill", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Unsupported", in: "take all coins", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Unsupported", in: "where am i", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Core", in: "x grate", ex: { knownExact: ["LOOK GRATE"], unknownCount: 0 } },
+        { c: "Unsupported", in: "drop", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Unsupported", in: "talk to", ex: { unknownMin: 1 }, expectUnsupported: true },
+      ];
+
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function arrEq(a, b) {
+        if (!Array.isArray(a) || !Array.isArray(b)) return false;
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+        return true;
+      }
+
+      function evaluate(actual, expected) {
+        const fails = [];
+
+        if (expected.knownExact && !arrEq(actual.known, expected.knownExact)) {
+          fails.push("knownExact mismatch");
+        }
+        if (typeof expected.knownCount === "number" && actual.known.length !== expected.knownCount) {
+          fails.push("knownCount mismatch");
+        }
+        if (expected.knownIncludes) {
+          for (const k of expected.knownIncludes) {
+            if (!actual.known.includes(k)) fails.push(`missing known "${k}"`);
+          }
+        }
+        if (typeof expected.unknownCount === "number" && actual.unknown.length !== expected.unknownCount) {
+          fails.push("unknownCount mismatch");
+        }
+        if (typeof expected.unknownMin === "number" && actual.unknown.length < expected.unknownMin) {
+          fails.push("unknownMin mismatch");
+        }
+
+        return { pass: fails.length === 0, fails };
+      }
+
+      const results = TESTS.map((t, idx) => {
+        let actual;
+        let crash = null;
+        try {
+          actual = parseCommands(t.in, { availableItems: t.available || null });
+        } catch (e) {
+          actual = { known: [], unknown: [] };
+          crash = e;
+        }
+        const ev = evaluate(actual, t.ex || {});
+        return { i: idx + 1, t, actual, ev, crash };
+      });
+
+      const passed = results.filter((r) => r.ev.pass).length;
+      const failed = results.length - passed;
+      const unsupported = TESTS.filter((t) => t.expectUnsupported).length;
+
+      summaryEl.innerHTML =
+        `<div><strong>Total:</strong> ${results.length} &nbsp; ` +
+        `<span class="ok">Passed: ${passed}</span> &nbsp; ` +
+        `<span class="${failed ? "bad" : "ok"}">Failed: ${failed}</span> &nbsp; ` +
+        `<span class="small">(includes ${unsupported} expected-unsupported human-style inputs)</span></div>`;
+
+      rowsEl.innerHTML = results.map((r) => {
+        const t = r.t;
+        const status = r.ev.pass ? "PASS" : "FAIL";
+        const className = r.ev.pass ? "pass" : "fail";
+        const expectedTxt = [];
+        if (t.ex.knownExact) expectedTxt.push(`knownExact: ${JSON.stringify(t.ex.knownExact)}`);
+        if (typeof t.ex.knownCount === "number") expectedTxt.push(`knownCount: ${t.ex.knownCount}`);
+        if (t.ex.knownIncludes) expectedTxt.push(`knownIncludes: ${JSON.stringify(t.ex.knownIncludes)}`);
+        if (typeof t.ex.unknownCount === "number") expectedTxt.push(`unknownCount: ${t.ex.unknownCount}`);
+        if (typeof t.ex.unknownMin === "number") expectedTxt.push(`unknownMin: ${t.ex.unknownMin}`);
+
+        const actualTxt =
+          `known: ${JSON.stringify(r.actual.known)}\n` +
+          `unknown: ${JSON.stringify(r.actual.unknown)}` +
+          (r.crash ? `\ncrash: ${String(r.crash)}` : "");
+
+        const contextTxt = Array.isArray(t.available) && t.available.length
+          ? t.available.join(", ")
+          : "(none)";
+
+        return (
+          `<tr class="${className}">` +
+            `<td>${r.i}</td>` +
+            `<td>${esc(t.c)}${t.expectUnsupported ? `<br><span class="expected-fail">expected unsupported</span>` : ""}</td>` +
+            `<td><code>${esc(t.in)}</code></td>` +
+            `<td><pre>${esc(contextTxt)}</pre></td>` +
+            `<td><pre>${esc(expectedTxt.join("\n"))}</pre></td>` +
+            `<td><pre>${esc(actualTxt)}</pre></td>` +
+            `<td><strong class="${r.ev.pass ? "ok" : "bad"}">${status}</strong>` +
+            `${r.ev.pass ? "" : `<div class="small">${esc(r.ev.fails.join(", "))}</div>`}` +
+            `</td>` +
+          `</tr>`
+        );
+      }).join("");
+    })();
+  </script>
+</body>
+</html>

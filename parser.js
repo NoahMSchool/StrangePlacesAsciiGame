@@ -1,6 +1,7 @@
 // ---------------- CONFIG (declare once) ----------------
 
-const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to"]);
+const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to", "please", "under"]);
+const LEADING_POLITENESS = new Set(["please", "pls", "kindly"]);
 
 // ✅ Noun connectors used to split "X with Y", "X in Y", etc.
 const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
@@ -41,7 +42,7 @@ const VERB_SYNONYMS = {
   THROW:   ["throw", "toss", "hurl"],
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
-  LOOK:    ["l","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
+  LOOK:    ["l","x","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
   COMBINE: ["combine", "mix", "put", "join", "attach", "merge", "connect", "tie", "feed"],
   MAKE:    ["make", "craft", "build"],
   EAT:     ["eat", "consume", "devour"]
@@ -99,10 +100,16 @@ const VERB_KEYS_LONGEST_FIRST = [...VERB_LOOKUP.keys()].sort((a, b) => b.length 
 
 // ---------------- PARSER ----------------
 
-function parseCommands(input) {
+function parseCommands(input, options = {}) {
   const result = { known: [], unknown: [] };
 
   const normalizeSpaces = (s) => (s ?? "").trim().replace(/\s+/g, " ");
+  const stripLeadingPoliteness = (phrase) => {
+    const toks = normalizeSpaces(phrase).split(" ").filter(Boolean);
+    let i = 0;
+    while (i < toks.length && LEADING_POLITENESS.has(toks[i].toLowerCase())) i++;
+    return toks.slice(i).join(" ");
+  };
   const stripStopwords = (phrase) => {
     const tokens = normalizeSpaces(phrase).toLowerCase().split(" ").filter(Boolean);
     const kept = tokens.filter((t) => !STOPWORDS.has(t));
@@ -115,6 +122,11 @@ function parseCommands(input) {
 
   // ✅ returns Set of items currently available (room + inventory), if GameCore is loaded
   function getAvailableItemSet() {
+    // Optional explicit context for tests/tools
+    const explicit = options?.availableItems;
+    if (explicit instanceof Set) return explicit;
+    if (Array.isArray(explicit)) return new Set(explicit);
+
     const G = window.GameCore;
     if (G && typeof G.allAvailableItemsSet === "function") {
       try {
@@ -245,6 +257,83 @@ function parseCommands(input) {
     return { tried: true, error: "That needs two things (try: \"use X on Y\")." };
   }
 
+  // Parse 2-3 nouns without explicit connectors, e.g. "combine hook rope stick".
+  // Greedy longest-prefix matching against known noun phrases.
+  function parseNounSequenceNoConnectors(text, { min = 2, max = 3 } = {}) {
+    const cleaned = stripStopwords(text);
+    if (!cleaned) return { error: "You need to specify what you mean." };
+
+    const tokens = cleaned.split(" ").filter(Boolean);
+    if (!tokens.length) return { error: "You need to specify what you mean." };
+
+    function resolveCandidates(candidates) {
+      if (!candidates?.length) return { ok: false, error: "I don't know what that is." };
+      if (candidates.length === 1) return { ok: true, canon: candidates[0] };
+
+      const available = getAvailableItemSet();
+      if (available) {
+        const present = candidates.filter((id) => available.has(id));
+        if (present.length === 1) return { ok: true, canon: present[0] };
+        if (present.length > 1) {
+          const options = present.map(formatItemForDisambiguation).join(" or ");
+          return { ok: false, error: `Which do you mean: ${options}?` };
+        }
+      }
+
+      return { ok: true, canon: candidates[0] };
+    }
+
+    // Pass 1: prefer simple one-token nouns when they cleanly cover the input.
+    // This keeps "combine hook rope stick" as 3 nouns rather than greedily
+    // collapsing to multi-word synonyms like "hook rope".
+    if (tokens.length >= min && tokens.length <= max) {
+      const simple = [];
+      let okSimple = true;
+      for (const tok of tokens) {
+        const candidates = NOUN_LOOKUP.get(tok);
+        if (!candidates) {
+          okSimple = false;
+          break;
+        }
+        const resolved = resolveCandidates(candidates);
+        if (!resolved.ok) return { error: resolved.error };
+        simple.push(resolved.canon);
+      }
+      if (okSimple) return { nouns: simple };
+    }
+
+    // Pass 2: greedy multi-word fallback for phrases like "fishing rod" etc.
+    const nouns = [];
+    let i = 0;
+    while (i < tokens.length && nouns.length < max) {
+      let matched = null;
+
+      for (let j = tokens.length; j > i; j--) {
+        const phrase = tokens.slice(i, j).join(" ");
+        const candidates = NOUN_LOOKUP.get(phrase);
+        if (!candidates) continue;
+
+        const resolved = resolveCandidates(candidates);
+        if (!resolved.ok) return { error: resolved.error };
+
+        matched = { canon: resolved.canon, next: j };
+        break;
+      }
+
+      if (!matched) {
+        const tail = tokens.slice(i).join(" ");
+        return { error: `I don't know what "${tail}" is.` };
+      }
+
+      nouns.push(matched.canon);
+      i = matched.next;
+    }
+
+    if (i !== tokens.length) return { error: "I couldn't parse all those things." };
+    if (nouns.length < min || nouns.length > max) return { parts: [cleaned] };
+    return { nouns };
+  }
+
   // Protect COMBINE's "and" (including 3-item combines) so we don't split the clause.
   const protectCombineAnd = (s) => {
     const lower = s.toLowerCase().trim();
@@ -267,6 +356,7 @@ function parseCommands(input) {
     let clause = normalizeSpaces(rawClause.toLowerCase())
       .replace(/__and__/g, "and")
       .replace(/__AND__/g, "and");
+    clause = stripLeadingPoliteness(clause.toLowerCase());
 
     if (!clause) continue;
 
@@ -369,16 +459,21 @@ function parseCommands(input) {
       if (got.nouns) {
         result.known.push(`${vm.canon} ${got.nouns.join(" ")}`);
       } else if (got.parts && got.parts.length === 1) {
-        const rn = resolveNoun(got.parts[0]);
-        if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
-        else {
-          result.unknown.push({
-            raw,
-            verb: vm.verbToken,
-            object: restClean || null,
-            reason: "unknown_noun",
-            error: rn.error,
-          });
+        const seq = parseNounSequenceNoConnectors(got.parts[0], { min: 2, max: 3 });
+        if (seq.nouns) {
+          result.known.push(`${vm.canon} ${seq.nouns.join(" ")}`);
+        } else {
+          const rn = resolveNoun(got.parts[0]);
+          if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
+          else {
+            result.unknown.push({
+              raw,
+              verb: vm.verbToken,
+              object: restClean || null,
+              reason: "unknown_noun",
+              error: seq.error || rn.error,
+            });
+          }
         }
       } else if (got.error) {
         result.unknown.push({

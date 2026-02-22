@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recipe Book</title>
+  <style>
+    :root {
+      --bg: #2e3d2f;
+      --panel: #d7d2bd;
+      --ink: #1f1c16;
+      --line: #355447;
+      --heading-bg: #a9d5db;
+      --heading-ink: #b42558;
+      --muted: #4b3d36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      padding: 12px;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+    }
+    .head {
+      background: var(--heading-bg);
+      color: var(--heading-ink);
+      border: 2px solid var(--heading-ink);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .head h1 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    .head p {
+      margin: 0;
+      color: #4b3d36;
+      font-size: 0.9rem;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      text-decoration: none;
+      border: 1px solid var(--heading-ink);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--heading-ink);
+      background: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+    }
+    .nav a[aria-current="page"] {
+      background: var(--heading-ink);
+      color: var(--heading-bg);
+    }
+    .toolbar {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    #q {
+      width: 100%;
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f2efdf;
+      color: var(--ink);
+    }
+    #count {
+      font-size: 0.9rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+    .recipe {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }
+    .flags {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .flags h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .flag {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f2efdf;
+      display: grid;
+      gap: 4px;
+    }
+    .r-top {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      background: #f2efdf;
+    }
+    .id {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .line {
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+    .k {
+      color: var(--muted);
+    }
+    code {
+      background: #ece7d2;
+      border: 1px solid #ccb;
+      border-radius: 4px;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="head">
+      <h1>Recipe Book</h1>
+      <p>All crafting and action recipes currently in the game.</p>
+      <nav class="nav" aria-label="Debug Pages">
+        <a href="all_rooms_ascii.html">World Map</a>
+        <a href="recipe_book.html" aria-current="page">Recipes</a>
+        <a href="item_catalog.html">Items</a>
+        <a href="parser_test_runner.html">Parser Tests</a>
+      </nav>
+    </section>
+
+    <section class="toolbar">
+      <input id="q" placeholder="Filter by id, action, item name, text..." />
+      <div id="count"></div>
+    </section>
+
+    <section id="list" class="list"></section>
+
+    <section class="flags">
+      <h2>Flags & Effects</h2>
+      <div id="flagList"></div>
+    </section>
+  </div>
+
+  <script src="items.js"></script>
+  <script src="recipes.js"></script>
+  <script>
+    (function () {
+      const listEl = document.getElementById("list");
+      const qEl = document.getElementById("q");
+      const countEl = document.getElementById("count");
+      const flagListEl = document.getElementById("flagList");
+
+      function itemLabel(id) {
+        if (!id) return "(none)";
+        const def = (typeof ITEM_DEFS !== "undefined") ? ITEM_DEFS[id] : null;
+        return def ? `${def.emoji || ""} ${def.name}`.trim() : id;
+      }
+
+      function labels(ids) {
+        const arr = Array.isArray(ids) ? ids.filter(Boolean) : [];
+        if (!arr.length) return "(nothing)";
+        return arr.map(itemLabel).join(", ");
+      }
+
+      function classify(recipe) {
+        return recipe && recipe.action ? "Action" : "Combine";
+      }
+
+      function primaryLine(recipe) {
+        if (recipe.action) {
+          const req = Array.isArray(recipe.requires) && recipe.requires.length
+            ? ` (needs ${labels(recipe.requires)})`
+            : "";
+          return `${recipe.action} ${itemLabel(recipe.target)}${req}`;
+        }
+        return `${labels(recipe.inputs)} -> ${labels(recipe.produce)}`;
+      }
+
+      function normalizeRecipes() {
+        if (typeof RECIPES === "undefined") return [];
+        return Object.entries(RECIPES).map(([id, recipe]) => ({
+          id,
+          recipe,
+          type: classify(recipe),
+          line: primaryLine(recipe),
+          searchBlob: [
+            id,
+            recipe.action || "",
+            labels(recipe.inputs),
+            itemLabel(recipe.target),
+            labels(recipe.requires),
+            labels(recipe.consume),
+            labels(recipe.produce),
+            recipe.text || "",
+            recipe.missingRequiresText || "",
+            recipe.repeatText || "",
+            recipe.successSfx || "",
+            recipe.setFlag || "",
+          ].join(" ").toLowerCase(),
+        }));
+      }
+
+      const rows = normalizeRecipes();
+      const FLAG_EFFECTS = Object.freeze({
+        grateKeyTaken: "Marks the grate key as taken so grate-related descriptions/puzzle state update.",
+        fireOut: "Douses the campfire, removes the inspector barrier at Mine Entrance east exit, and relocates the inspector to Dark Forest (one-time).",
+        fridgeOpened: "Marks fridge as opened so open-fridge recipe uses repeat behavior instead of spawning another item.",
+        bedBookFound: "Marks the hidden bed book as found so repeated searches/examines don't reveal it again.",
+        timeForward1000: "Advances time 1000 years and turns Seed into Corn in Mine Field (MINE_CAVERN).",
+        eggOilExperimentReady: "Completes the egg+oil setup, removes Einstein Barman's south-exit barrier, and moves/places him in the tavern.",
+      });
+
+      function recipeCard(row) {
+        const r = row.recipe;
+        const parts = [];
+        parts.push(`<div class="r-top"><span class="id">${row.id}</span><span class="badge">${row.type}</span></div>`);
+        parts.push(`<div class="line"><span class="k">Recipe:</span> ${row.line}</div>`);
+        if (Array.isArray(r.inputs)) parts.push(`<div class="line"><span class="k">Inputs:</span> ${labels(r.inputs)}</div>`);
+        if (r.action) parts.push(`<div class="line"><span class="k">Action Target:</span> ${itemLabel(r.target)}</div>`);
+        if (Array.isArray(r.requires) && r.requires.length) parts.push(`<div class="line"><span class="k">Requires:</span> ${labels(r.requires)}</div>`);
+        if (Array.isArray(r.consume)) parts.push(`<div class="line"><span class="k">Consumes:</span> ${labels(r.consume)}</div>`);
+        if (Array.isArray(r.produce)) parts.push(`<div class="line"><span class="k">Produces:</span> ${labels(r.produce)}</div>`);
+        if (r.placeResult) parts.push(`<div class="line"><span class="k">Place Result:</span> <code>${r.placeResult}</code></div>`);
+        if (r.keepCoord) parts.push(`<div class="line"><span class="k">Keep Coords:</span> <code>true</code></div>`);
+        if (r.successSfx) parts.push(`<div class="line"><span class="k">SFX:</span> <code>${r.successSfx}</code></div>`);
+        if (r.text) parts.push(`<div class="line"><span class="k">Success Text:</span> ${r.text}</div>`);
+        if (r.missingRequiresText) parts.push(`<div class="line"><span class="k">Missing Text:</span> ${r.missingRequiresText}</div>`);
+        if (r.repeatText) parts.push(`<div class="line"><span class="k">Repeat Text:</span> ${r.repeatText}</div>`);
+        return `<article class="recipe">${parts.join("")}</article>`;
+      }
+
+      function render() {
+        const q = qEl.value.trim().toLowerCase();
+        const filtered = q ? rows.filter((r) => r.searchBlob.includes(q)) : rows;
+        countEl.textContent = `${filtered.length} / ${rows.length} recipes`;
+        listEl.innerHTML = filtered.map(recipeCard).join("");
+      }
+
+      function renderFlags() {
+        const byFlag = new Map();
+        for (const row of rows) {
+          const f = row.recipe?.setFlag;
+          if (!f) continue;
+          if (!byFlag.has(f)) byFlag.set(f, []);
+          byFlag.get(f).push(row.id);
+        }
+
+        const flags = Array.from(byFlag.keys()).sort();
+        if (!flags.length) {
+          flagListEl.innerHTML = `<div class="line">No recipe flags found.</div>`;
+          return;
+        }
+
+        flagListEl.innerHTML = flags.map((flag) => {
+          const recipeIds = byFlag.get(flag) || [];
+          const effect = FLAG_EFFECTS[flag] || "Used as a state marker for recipe/room condition checks.";
+          return `
+            <article class="flag">
+              <div class="line"><span class="k">Flag:</span> <code>${flag}</code></div>
+              <div class="line"><span class="k">Set by:</span> ${recipeIds.map((id) => `<code>${id}</code>`).join(", ")}</div>
+              <div class="line"><span class="k">Effect:</span> ${effect}</div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      qEl.addEventListener("input", render);
+      render();
+      renderFlags();
+    })();
+  </script>
+</body>
+</html>

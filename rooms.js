@@ -1,14 +1,6 @@
 // rooms.js
 
 const ROOM = Object.freeze({
-  CLEARING: "CLEARING",
-  ENTRANCE_HALL: "ENTRANCE_HALL",
-  DINING_ROOM: "DINING_ROOM",
-  PLAYROOM: "PLAYROOM",
-  KITCHEN: "KITCHEN",
-  BANK: "BANK",
-  NOAHROOM: "NOAHROOM",
-
   DARKFOREST: "DARKFOREST",
   DARKCLEARING: "DARKCLEARING",
   SHED: "SHED",
@@ -16,7 +8,11 @@ const ROOM = Object.freeze({
   COTTAGE_STOREROOM: "COTTAGE_STOREROOM",
   COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
   MINE_ENTRANCE: "MINE_ENTRANCE",
+  CAVERN_TAVERN: "CAVERN_TAVERN",
+  PARTICLE_ROOM: "PARTICLE_ROOM",
   MINE_CAVERN: "MINE_CAVERN",
+  TIME_WARP: "TIME_WARP",
+  SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
   RIVER: "RIVER",
   SPIDERFOREST: "SPIDERFOREST",
 });
@@ -62,14 +58,32 @@ const ROOM_DEFS = {
         doorText = "An open doorway leads east.";
       }
 
-      return `A bare clearing with flattened leaves. A curious wooden cottage waits to the north. A path slopes down to the south. ${doorText}`;
+      return `A bare clearing with flattened leaves. A path slopes down to the south. ${doorText}`;
     },
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
-      NORTH: ROOM.SHED,
-      SOUTH: ROOM.RIVER,
+      NORTH: ROOM.SHIPWRECK_FOREST,
+      SOUTH: { to: ROOM.RIVER, distance: 2 },
       WEST: ROOM.DARKFOREST,
-      EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED },
+      EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED, distance: 2 },
+    },
+  },
+
+  [ROOM.SHIPWRECK_FOREST]: {
+    id: ROOM.SHIPWRECK_FOREST,
+    name: "Shipwreck Forest",
+    desc: "Trees crowd around a ruined shipwreck lodged impossibly in the forest floor. A weathered painting of Captian Hook is nailed to the hull.",
+    items: [
+      [ITEM.SHIPWRECK, [2, 2]],
+      [ITEM.SHIPWRECK, [3, 2]],
+      [ITEM.SHIPWRECK, [4, 2]],
+      [ITEM.SHIPWRECK, [2, 3]],
+      [ITEM.SHIPWRECK, [3, 3]],
+      [ITEM.SHIPWRECK, [4, 3]],
+      [ITEM.CAPTIAN_HOOK_PAINTING, [3, 3]],
+    ],
+    exits: {
+      SOUTH: ROOM.DARKCLEARING,
     },
   },
 
@@ -79,9 +93,8 @@ const ROOM_DEFS = {
     desc: "A curious wooden cottage sits in the gloom. The entrance room is bare except for a note on the floor.",
     items: [[ITEM.NOTE, [3, 3]]],
     exits: {
-      SOUTH: ROOM.DARKCLEARING,
+      SOUTH: ROOM.MINE_ENTRANCE,
       NORTH: ROOM.COTTAGE_BEDROOM,
-      WEST: ROOM.COTTAGE_STOREROOM,
       EAST: ROOM.COTTAGE_KITCHEN,
     },
   },
@@ -90,16 +103,26 @@ const ROOM_DEFS = {
     id: ROOM.COTTAGE_BEDROOM,
     name: "Cottage Bedroom",
     desc: "A small wooden bedroom with a low ceiling and stale air.",
-    items: [[ITEM.BED, [3, 3]]],
+    items: [
+      [ITEM.BED, [2, 2]],
+      [ITEM.BED, [3, 2]],
+      [ITEM.BED, [4, 2]],
+      [ITEM.BED, [2, 3]],
+      [ITEM.BED, [3, 3]],
+      [ITEM.BED, [4, 3]],
+      [ITEM.BED, [2, 4]],
+      [ITEM.BED, [3, 4]],
+      [ITEM.BED, [4, 4]],
+    ],
     exits: { SOUTH: ROOM.SHED },
   },
 
   [ROOM.COTTAGE_STOREROOM]: {
     id: ROOM.COTTAGE_STOREROOM,
-    name: "Cottage Storeroom",
-    desc: "Shelves sag under old crates. An oil drum rests in the corner.",
+    name: "Tavern Storeroom",
+    desc: "Crates, dusty barrels, and old supplies are stacked to the rafters. An oil drum rests in the corner.",
     items: [[ITEM.OIL_DRUM, [3, 3]]],
-    exits: { EAST: ROOM.SHED },
+    exits: { EAST: ROOM.CAVERN_TAVERN },
   },
 
   [ROOM.COTTAGE_KITCHEN]: {
@@ -116,21 +139,66 @@ const ROOM_DEFS = {
   [ROOM.MINE_ENTRANCE]: {
     id: ROOM.MINE_ENTRANCE,
     name: "Mine Entrance",
-    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails.",
+    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails. A wooden cottage sits up to the north, and a cavern tavern lies to the south.",
     items: [],
     exits: {
-      WEST: ROOM.DARKCLEARING,
+      WEST: { to: ROOM.DARKCLEARING, distance: 2 },
+      NORTH: ROOM.SHED,
+      SOUTH: ROOM.CAVERN_TAVERN,
       EAST: { to: ROOM.MINE_CAVERN, barrier: ITEM.HEALTH_INSPECTOR },
+    },
+  },
+
+  [ROOM.CAVERN_TAVERN]: {
+    id: ROOM.CAVERN_TAVERN,
+    name: "Cavern Tavern",
+    desc: "A rough tavern chamber carved into the rock, reinforced with timber walls. The bar is empty, but the room still smells of smoke and ale.",
+    items: [
+      [ITEM.WOOD_WALL, [2, 2]],
+      [ITEM.WOOD_WALL, [3, 2]],
+      [ITEM.WOOD_WALL, [4, 2]],
+    ],
+    exits: {
+      NORTH: ROOM.MINE_ENTRANCE,
+      WEST: ROOM.COTTAGE_STOREROOM,
+      SOUTH: { to: ROOM.PARTICLE_ROOM, barrier: ITEM.EINSTEIN_BARMAN },
+    },
+  },
+
+  [ROOM.PARTICLE_ROOM]: {
+    id: ROOM.PARTICLE_ROOM,
+    name: "Particle Room",
+    desc: "Copper coils, glass tubes, and humming machinery surround a single glowing particle.",
+    items: [
+      [ITEM.ALPHAPARTICLE, [3, 3]],
+      [ITEM.MEDAL, [5, 3]],
+    ],
+    exits: {
+      NORTH: ROOM.CAVERN_TAVERN,
     },
   },
 
   [ROOM.MINE_CAVERN]: {
     id: ROOM.MINE_CAVERN,
-    name: "Mine Cavern",
+    name: "Mine Field",
     desc: "A vast cavern opens ahead, dripping and echoing.",
-    items: [[ITEM.CORN, [3, 3]]],
+    items: [[ITEM.SEED, [3, 3]]],
     exits: {
       WEST: ROOM.MINE_ENTRANCE,
+      SOUTH: ROOM.TIME_WARP,
+    },
+  },
+
+  [ROOM.TIME_WARP]: {
+    id: ROOM.TIME_WARP,
+    name: "Time Warp",
+    desc: "The air bends and shimmers. Echoes run backward, and your footsteps arrive before you move.",
+    items: [
+      [ITEM.TIME_LEVER, [3, 3]],
+      [ITEM.INSTRUCTIONS_POSTER, [1, 3]],
+    ],
+    exits: {
+      NORTH: ROOM.MINE_CAVERN,
     },
   },
 
@@ -155,7 +223,7 @@ const ROOM_DEFS = {
       [ITEM.RIVER_TILE, [5, 5]],
     ],
     exits: {
-      NORTH: ROOM.DARKCLEARING,
+      NORTH: { to: ROOM.DARKCLEARING, distance: 2 },
       EAST: ROOM.SPIDERFOREST,
     },
   },
@@ -174,93 +242,6 @@ const ROOM_DEFS = {
     exits: { WEST: ROOM.RIVER },
   },
 
-  [ROOM.CLEARING]: {
-    id: ROOM.CLEARING,
-    name: "Forest Clearing",
-    desc: "A neat circle of grass in the forest. The house to the north looks closer than it should.",
-    items: [
-      [ITEM.CHICKEN, [5, 3]],
-      ITEM.STICK,
-      ITEM.LEAVES,
-      ITEM.CORN,
-      ITEM.MAGNET,
-      ITEM.ROPE,
-    ],
-    exits: {
-      NORTH: ROOM.ENTRANCE_HALL,
-      EAST: { to: ROOM.BANK, barrier: ITEM.DOOR_CLOSED },
-    },
-  },
-
-  [ROOM.ENTRANCE_HALL]: {
-    id: ROOM.ENTRANCE_HALL,
-    name: "Entrance Hall",
-    desc: "A tall hall with a chandelier that isn’t quite still. Your footsteps sound a fraction late.",
-    items: [ITEM.DINOSAUR],
-    exits: {
-      SOUTH: ROOM.CLEARING,
-      WEST: ROOM.DINING_ROOM,
-      EAST: ROOM.PLAYROOM,
-      NORTH: { to: ROOM.KITCHEN, barrier: ITEM.DOOR_CLOSED },
-    },
-  },
-
-  [ROOM.DINING_ROOM]: {
-    id: ROOM.DINING_ROOM,
-    name: "Dining Room",
-    desc: "A long table laid for a meal that never started. The chairs are all slightly misaligned.",
-    items: [],
-    exits: { EAST: ROOM.ENTRANCE_HALL },
-  },
-
-  [ROOM.PLAYROOM]: {
-    id: ROOM.PLAYROOM,
-    name: "Playroom",
-    desc: "Rows of toys watch from the shelves. One space is empty, recently.",
-    items: [ITEM.MAGNET],
-    exits: { WEST: ROOM.ENTRANCE_HALL },
-  },
-
-  [ROOM.BANK]: {
-    id: ROOM.BANK,
-    name: "Bank",
-    desc: "Coins are piled everywhere, but the room still feels empty. The air smells faintly of paper and dust.",
-    items: [
-      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
-      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
-      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
-    ],
-    exits: {
-      WEST: { to: ROOM.CLEARING, barrier: ITEM.DOOR_OPEN },
-    },
-  },
-
-  [ROOM.KITCHEN]: {
-    id: ROOM.KITCHEN,
-    name: "Kitchen",
-    desc: "Hanging pans sway slightly, though the air is still. Something here was used not long ago.",
-    items: [
-      [ITEM.ROPE, [2, 1]],
-      [ITEM.MICROWAVE, [4, 4]],
-    ],
-    exits: {
-      SOUTH: ROOM.ENTRANCE_HALL,
-      NORTH: ROOM.NOAHROOM,
-    },
-  },
-
-  [ROOM.NOAHROOM]: {
-    id: ROOM.NOAHROOM,
-    name: "Noahs Room",
-    desc: "A test room. Things are placed carefully, as if waiting to see what you’ll do.",
-    items: [
-      [ITEM.TEDDYBEAR, [2, 1]],
-      [ITEM.TEDDYBEAR, [3, 5]],
-      [ITEM.TEDDYBEAR, [4, 3]],
-      [ITEM.CHICKEN, [5, 3]],
-    ],
-    exits: { SOUTH: ROOM.KITCHEN },
-  },
 };
 
 // -----------------------------------------------------------------------------
@@ -406,13 +387,15 @@ const BORDER_THEMES = Object.freeze({
     EAST: ITEM.TREE,
     WEST: ITEM.TREE,
   },
-  [ROOM.CLEARING]: {
+  [ROOM.DARKCLEARING]: {
+    NORTH: ITEM.TREE,
     SOUTH: ITEM.TREE,
     WEST: ITEM.TREE,
   },
-  [ROOM.DARKCLEARING]: {
-    NORTH: ITEM.WOOD_WALL,
+  [ROOM.SHIPWRECK_FOREST]: {
+    NORTH: ITEM.TREE,
     SOUTH: ITEM.TREE,
+    EAST: ITEM.TREE,
     WEST: ITEM.TREE,
   },
   [ROOM.RIVER]: {
@@ -420,6 +403,25 @@ const BORDER_THEMES = Object.freeze({
     EAST: ITEM.TREE,
     WEST: ITEM.TREE,
     SOUTH: ITEM.RIVER_TILE,
+  },
+  [ROOM.MINE_ENTRANCE]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+  },
+  [ROOM.CAVERN_TAVERN]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.MINE_CAVERN]: {
+    SOUTH: ITEM.FORCE_FIELD,
+  },
+  [ROOM.TIME_WARP]: {
+    NORTH: ITEM.FORCE_FIELD,
+    SOUTH: ITEM.FORCE_FIELD,
+    EAST: ITEM.FORCE_FIELD,
+    WEST: ITEM.FORCE_FIELD,
   },
   [ROOM.SHED]: {
     NORTH: ITEM.WOOD_WALL,
@@ -440,6 +442,12 @@ const BORDER_THEMES = Object.freeze({
     WEST: ITEM.WOOD_WALL,
   },
   [ROOM.COTTAGE_KITCHEN]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.PARTICLE_ROOM]: {
     NORTH: ITEM.WOOD_WALL,
     SOUTH: ITEM.WOOD_WALL,
     EAST: ITEM.WOOD_WALL,
@@ -638,6 +646,9 @@ function getMoveBlockedMessage(result) {
     if (result.barrier === ITEM.HEALTH_INSPECTOR) {
       return "The Health and Safety Inspector blocks your way. \"No entry while you've got an open fire.\"";
     }
+    if (result.barrier === ITEM.EINSTEIN_BARMAN) {
+      return "Einstein Barman blocks your way. \"No entry until the egg and oil experiment is ready.\"";
+    }
     const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
     const name = def?.name ?? "something";
     return `The ${name.toLowerCase()} blocks your way.`;
@@ -648,6 +659,7 @@ function getMoveBlockedMessage(result) {
     if (result.barrier === ITEM.RIVER || result.barrier === ITEM.RIVER_TILE) {
       return "A river blocks your way.";
     }
+    if (result.barrier === ITEM.FORCE_FIELD) return "A force field blocks your way.";
     if (result.barrier === ITEM.WOOD_WALL) return "A wooden wall blocks your way.";
     if (result.barrier === ITEM.WALL) return "A wall blocks your way.";
   }
@@ -661,11 +673,21 @@ function getVisibleItems(roomId) {
   const room = ROOM_DEFS[roomId];
   if (!room) return [];
 
-  return room.items
-    .map(entry => getItemId(entry))
-    .map(id => ITEM_DEFS[id])
-    .filter(def => def?.visible !== false)
-    .map(def => `${def.emoji} ${def.name}`);
+  const seen = new Set();
+  const out = [];
+
+  for (const entry of room.items || []) {
+    const id = getItemId(entry);
+    if (!id || seen.has(id)) continue;
+
+    const def = ITEM_DEFS[id];
+    if (!def || def.visible === false) continue;
+
+    seen.add(id);
+    out.push(`${def.emoji} ${def.name}`);
+  }
+
+  return out;
 }
 
 // -----------------------------------------------------------------------------

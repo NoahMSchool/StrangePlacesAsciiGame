@@ -8,6 +8,7 @@
 const ITEM = Object.freeze({
   WALL: "WALL",
   WOOD_WALL: "WOOD_WALL",
+  FORCE_FIELD: "FORCE_FIELD",
   TREE: "TREE",
   CAMPFIRE: "CAMPFIRE",
   CAMPFIRE_OUT: "CAMPFIRE_OUT",
@@ -15,17 +16,23 @@ const ITEM = Object.freeze({
   DOOR_OPEN: "DOOR_OPEN",
   DOOR_LOCKED: "DOOR_LOCKED",
   NOTE: "NOTE",
+  INSTRUCTIONS_POSTER: "INSTRUCTIONS_POSTER",
+  SHIPWRECK: "SHIPWRECK",
+  CAPTIAN_HOOK_PAINTING: "CAPTIAN_HOOK_PAINTING",
   BED: "BED",
   STRANGE_PLACES_BOOK: "STRANGE_PLACES_BOOK",
   SIGN: "SIGN",
   OIL_DRUM: "OIL_DRUM",
   FRIDGE: "FRIDGE",
+  MEDAL: "MEDAL",
   HEALTH_INSPECTOR: "HEALTH_INSPECTOR",
+  EINSTEIN_BARMAN: "EINSTEIN_BARMAN",
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   CHICKEN_IN_WEB: "CHICKEN_IN_WEB",
   DINOSAUR: "DINOSAUR",
   GRATE: "GRATE",
+  SEED: "SEED",
   CORN: "CORN",
   LAMP: "LAMP",
   ROPE: "ROPE",
@@ -39,8 +46,8 @@ const ITEM = Object.freeze({
   STICK: "STICK",
   RIVER: "RIVER",
   RIVER_TILE: "RIVER_TILE",
-  EMPTY_BOTTLE: "EMPTY_BOTTLE",
-  WATER_BOTTLE: "WATER_BOTTLE",
+  EMPTY_BUCKET: "EMPTY_BUCKET",
+  WATER_BUCKET: "WATER_BUCKET",
   FISHING_ROD: "FISHING_ROD",
   COIN: "COIN",
 
@@ -56,6 +63,7 @@ const ITEM = Object.freeze({
 const ITEM_DEF_MAP_COLORS = Object.freeze({
   WALL: "#6b7280",
   WOOD_WALL: "#8b5a2b",
+  FORCE_FIELD: "#8b5cf6",
   TREE: "#1f6f3f",
   CAMPFIRE: "#ff8a00",
   CAMPFIRE_OUT: "#7c7f87",
@@ -63,22 +71,28 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   DOOR_OPEN: "#d9a066",
   DOOR_LOCKED: "#b6b6c2",
   NOTE: "#8b7a35",
+  INSTRUCTIONS_POSTER: "#6b4f2f",
+  SHIPWRECK: "#7a5334",
+  CAPTIAN_HOOK_PAINTING: "#5b3f2e",
   BED: "#8ea5b8",
   STRANGE_PLACES_BOOK: "#b3364a",
   SIGN: "#7a5a1f",
   OIL_DRUM: "#3b3f46",
   FRIDGE: "#4f86a9",
-  HEALTH_INSPECTOR: "#ffd54d",
+  MEDAL: "#a77c22",
+  HEALTH_INSPECTOR: "#8a6a00",
+  EINSTEIN_BARMAN: "#6c4a2d",
   TEDDYBEAR: "#c58b6f",
   CHICKEN: "#d62828",
   CHICKEN_IN_WEB: "#6f7680",
   DINOSAUR: "#7bc96f",
   GRATE: "#9ca3af",
-  CORN: "#ffd166",
+  SEED: "#6f5a2f",
+  CORN: "#b8860b",
   LAMP: "#f4b860",
-  ROPE: "#d2b48c",
-  HOOK: "#b0bec5",
-  KEY: "#f2cc4d",
+  ROPE: "#8a5a2b",
+  HOOK: "#5f646b",
+  KEY: "#8a6a00",
   EGG: "#9f8f67",
   DINOSAUR_EGG: "#6f8f52",
   MAGNET: "#ef4444",
@@ -86,8 +100,8 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   STICK: "#b17a50",
   RIVER: "#4da3ff",
   RIVER_TILE: "#4da3ff",
-  EMPTY_BOTTLE: "#5e89a5",
-  WATER_BOTTLE: "#60a5fa",
+  EMPTY_BUCKET: "#5e89a5",
+  WATER_BUCKET: "#60a5fa",
   FISHING_ROD: "#c98c58",
   COIN: "#f2c94c",
   ALPHAPARTICLE: "#b388ff",
@@ -150,6 +164,23 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
+  [ITEM.FORCE_FIELD]: {
+    id: ITEM.FORCE_FIELD,
+    name: "Force Field",
+    emoji: "🌀",
+    synonyms: ["force field", "field", "energy wall", "blue wall"],
+    examine: "A humming wall of purple circular energy.",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "oOoOoOoOo",
+      "OoOoOoOoO",
+      "oOoOoOoOo",
+      "OoOoOoOoO",
+      "oOoOoOoOo",
+    ],
+  },
+
   [ITEM.DOOR_LOCKED]: {
     id: ITEM.DOOR_LOCKED,
     name: "Locked Door",
@@ -201,7 +232,7 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
- [ITEM.NOTE]: {
+  [ITEM.NOTE]: {
     id: ITEM.NOTE,
     name: "Note",
     emoji: "📝",
@@ -216,6 +247,65 @@ const ITEM_DEFS_BASE = {
       "| \\___/ |",
       "|  ---  |",
       "|_______|",
+    ],
+  },
+
+  [ITEM.INSTRUCTIONS_POSTER]: {
+    id: ITEM.INSTRUCTIONS_POSTER,
+    name: "Instructions Poster",
+    emoji: "📜",
+    synonyms: ["poster", "instructions", "instructions poster", "sign"],
+    examine: "It reads: \"PULL BACK and PUSH FORWARD\"",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " +-----+ ",
+      " |PUSH | ",
+      " | /\\  | ",
+      " | \\/  | ",
+      " +-----+ ",
+    ],
+  },
+
+  [ITEM.SHIPWRECK]: {
+    id: ITEM.SHIPWRECK,
+    name: "Shipwreck",
+    emoji: "⛵",
+    synonyms: ["shipwreck", "wreck", "boat", "ship", "hull"],
+    examine: "A shattered wooden shipwreck, impossibly stranded among the trees.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " __/\\__  ",
+      "/_/__\\_\\ ",
+      "\\\\_||_// ",
+      " /_||_\\  ",
+      "    ||   ",
+    ],
+  },
+
+  [ITEM.CAPTIAN_HOOK_PAINTING]: {
+    id: ITEM.CAPTIAN_HOOK_PAINTING,
+    name: "Painting",
+    emoji: "🖼️",
+    synonyms: ["painting", "captian hook", "captain hook", "portrait", "picture"],
+    examine: ({ room, isInRoom, isInInventory }) => {
+      const hookAlreadyFound = isInRoom?.(ITEM.HOOK) || isInInventory?.(ITEM.HOOK);
+      if (!hookAlreadyFound && room && window.GameCore?.addToRoomAtRandomInterior) {
+        window.GameCore.addToRoomAtRandomInterior(room, ITEM.HOOK);
+        window.Sound?.playSfx?.("Audio/recipes/freesound_community-hook_sound-37232.mp3");
+        return "The painting shows Captian Hook glaring into the distance. One hook is real and falls to the ground.";
+      }
+      return "The painting shows Captian Hook glaring into the distance. The frame has already been picked clean.";
+    },
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " +-----+ ",
+      " |  C  | ",
+      " | /)  | ",
+      " | /   | ",
+      " +-----+ ",
     ],
   },
 
@@ -300,7 +390,7 @@ const ITEM_DEFS_BASE = {
     name: "Fridge",
     emoji: "🧊",
     synonyms: ["fridge", "refrigerator"],
-    examine: "An old humming fridge. A fridge magnet is stuck to the door, and something bottle-shaped rattles inside.",
+    examine: "An old humming fridge. A fridge magnet is stuck to the door, and something bucket-shaped rattles inside.",
     visible: true,
     portable: false,
     asciiTile: [
@@ -312,7 +402,24 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
- [ITEM.HEALTH_INSPECTOR]: {
+ [ITEM.MEDAL]: {
+    id: ITEM.MEDAL,
+    name: "Medal",
+    emoji: "🏅",
+    synonyms: ["medal", "plaque", "inscription"],
+    examine: "Congratulations on getting this far and thanks for playing! If you'd like more strange rooms and strange puzzles, please let me know in the Itch comments",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      "   .-.   ",
+      "  ( * )  ",
+      "   `-'   ",
+      "   /|\\   ",
+      "   \\|/   ",
+    ],
+  },
+
+  [ITEM.HEALTH_INSPECTOR]: {
     id: ITEM.HEALTH_INSPECTOR,
     name: "Health and Safety Inspector",
     emoji: "🦺",
@@ -329,6 +436,23 @@ const ITEM_DEFS_BASE = {
       "  /|_|\\  ",
       "   / \\   ",
       "  _| |_  ",
+    ],
+  },
+
+  [ITEM.EINSTEIN_BARMAN]: {
+    id: ITEM.EINSTEIN_BARMAN,
+    name: "Einstein Barman",
+    emoji: "🧪",
+    synonyms: ["einstein", "barman", "einstein barman", "bartender"],
+    examine: "A wild-haired barman in a stained apron, muttering equations over empty glasses.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "   /^^\\  ",
+      "  (o  o) ",
+      "  / || \\ ",
+      "   /  \\  ",
+      "  _|==|_ ",
     ],
   },
 
@@ -410,9 +534,6 @@ const ITEM_DEFS_BASE = {
     synonyms: [
       "chicken",
       "chick",
-      "chiccie",
-      "hen",
-      "bird",
       "chicken in web",
       "chicken_in_web",
       "web chicken",
@@ -530,6 +651,23 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
+  [ITEM.SEED]: {
+    id: ITEM.SEED,
+    name: "Seed",
+    emoji: "🌱",
+    synonyms: ["seed", "planted seed"],
+    examine: "A tiny seed is planted in the soil. It looks like it could become corn... but only after a lot of time.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "         ",
+      "    .    ",
+      "   /|\\   ",
+      "    |    ",
+      "         ",
+    ],
+  },
+
   [ITEM.LAMP]: {
     id: ITEM.LAMP,
     name: "Lamp",
@@ -549,11 +687,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      "   |\\    ",
-      "   {     ",
-      "   }     ",
-      "  /      ",
-      "         ",
+      "   /\\    ",
+      "   ||    ",
+      "   ||    ",
+      "   ||    ",
+      "   \\/    ",
     ],
   },
 
@@ -566,11 +704,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-     "    ^    ",
-     "    \\    ",
-     "    |    ",
-     "    /    ",
-     "         "
+     "    __   ",
+     "   |  |  ",
+     "   |  |  ",
+     "   |  |_ ",
+     "    \\__/ ",
    ]
   },
 
@@ -583,11 +721,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-     "   /-o\\  ",
-     "   \\_ /  ",
-     "   <|/   ",
-     "   <|\\   ",
-     "   <|/   "
+     "   .--.  ",
+     "  (o==)  ",
+     "   ||==  ",
+     "   ||==  ",
+     "   ||==  "
    ]
   },
 
@@ -713,12 +851,12 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
-  [ITEM.EMPTY_BOTTLE]: {
-    id: ITEM.EMPTY_BOTTLE,
-    name: "Empty Bottle",
-    emoji: "🧴",
-    synonyms: ["empty bottle", "bottle", "glass bottle", "flask"],
-    examine: "An empty bottle. Good for collecting liquids.",
+  [ITEM.EMPTY_BUCKET]: {
+    id: ITEM.EMPTY_BUCKET,
+    name: "Empty Bucket",
+    emoji: "🪣",
+    synonyms: ["empty bucket", "bucket", "pail", "empty bottle", "bottle"],
+    examine: "An empty bucket. Good for collecting liquids.",
     visible: true,
     portable: true,
     asciiTile: [
@@ -730,20 +868,20 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
-  [ITEM.WATER_BOTTLE]: {
-    id: ITEM.WATER_BOTTLE,
-    name: "Bottle of Water",
-    emoji: "💧",
-    synonyms: ["water bottle", "bottle of water", "full bottle"],
-    examine: "A bottle filled with river water.",
+  [ITEM.WATER_BUCKET]: {
+    id: ITEM.WATER_BUCKET,
+    name: "Water Bucket",
+    emoji: "🪣",
+    synonyms: ["water bucket", "bucket of water", "full bucket", "water", "water bottle"],
+    examine: "A bucket filled with river water.",
     visible: true,
     portable: true,
     asciiTile: [
-      "   ___   ",
-      "  /~~~\\  ",
-      "  |~~~|  ",
-      "  |~~~|  ",
-      "  \\___/  ",
+      "  _____  ",
+      " /~~~~~\\ ",
+      "|~~~~~~~|",
+      "|~~~~~~~|",
+      " \\_____/ ",
     ],
   },
 
@@ -787,23 +925,23 @@ const ITEM_DEFS_BASE = {
 
 // ✅ Add these 2 defs into ITEM_DEFS (anywhere sensible)
 
-  // ---------------- ✅ INTERMEDIATE: MAGNET ON STRING ----------------
+  // ---------------- ✅ INTERMEDIATE: HOOK ON STRING ----------------
   [ITEM.MAGNET_STRING]: {
     id: ITEM.MAGNET_STRING,
-    name: "Magnet on a String",
+    name: "Hook on a String",
     emoji: "🧲",
     synonyms: [
       "string",
-      "magnet",
-      "magnet string",
-      "magnet on string",
-      "magnet-on-a-string",
-      "magnet tied to string",
-      "string with magnet",
-      "magnet rope",
-      "magnet line",
+      "hook",
+      "hook string",
+      "hook on string",
+      "hook-on-a-string",
+      "hook tied to string",
+      "string with hook",
+      "hook rope",
+      "hook line",
     ],
-    examine: "A magnet tied securely to a length of string. It dangles ominously.",
+    examine: "A hook tied securely to a length of string. It dangles ominously.",
     visible: true,
     portable: true,
     eatText: "That seems like a very bad idea.",
@@ -868,6 +1006,13 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     eatText: "Probably not edible. Also, what?",
+    asciiTile: [
+      "    |    ",
+      "    |\\   ",
+      "    | \\  ",
+      "   /___\\ ",
+      "  _|___|_",
+    ],
   },
 };
 
