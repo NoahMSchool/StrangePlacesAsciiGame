@@ -16,7 +16,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          
     placeResult: "room",
-    successSfx: "Audio/freesound_community-unlock_door-90282.mp3",
+    successSfx: "Audio/recipes/freesound_community-unlock_door-90282.mp3",
     missingRequiresText: "The lock won't budge. You need a key.",
     text: "You unlock the door. The key breaks.",
   },
@@ -28,7 +28,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_OPEN],
     keepCoord: true,          // ✅ this is the magic bit
     placeResult: "room",
-    successSfx: "Audio/dragon-studio-opening-door-sfx-454240.mp3",
+    successSfx: "Audio/recipes/dragon-studio-opening-door-sfx-454240.mp3",
     text: "You open the door.",
   },
 
@@ -39,7 +39,7 @@ const RECIPES = Object.freeze({
     produce: [ITEM.DOOR_CLOSED],
     keepCoord: true,          // ✅ this is the magic bit
     placeResult: "room",
-    successSfx: "Audio/freesound_community-door-open-and-close-with-a-creak-102380.mp3",
+    successSfx: "Audio/recipes/freesound_community-door-open-and-close-with-a-creak-102380.mp3",
     text: "You close the door.",
   },
 
@@ -92,6 +92,7 @@ const RECIPES = Object.freeze({
     inputs: [ITEM.CORN, ITEM.CHICKEN],
     consume: [ITEM.CORN],           // only corn disappears
     produce: [ITEM.EGG],            // chicken remains automatically
+    successSfx: "Audio/recipes/the-vampires-monster-chicken-laying-an-egg-330874.mp3",
     text: "The chicken happily pecks at the corn and lays an egg. Cluck!",
   },
 
@@ -125,6 +126,7 @@ const RECIPES = Object.freeze({
     consume: [ITEM.EMPTY_BUCKET],
     produce: [ITEM.WATER_BUCKET],
     placeResult: "inventory",
+    successSfx: "Audio/recipes/ksjsbwuil-apple-pay-success-sound-effect-481188.mp3",
     text: "You dip the container into the river and fill it with water.",
   },
 
@@ -135,7 +137,7 @@ const RECIPES = Object.freeze({
     keepCoord: true,
     placeResult: "inventory",
     setFlag: "fireOut",
-    successSfx: "Audio/djartmusic-short-fire-whoosh_1-317280.mp3",
+    successSfx: "Audio/recipes/djartmusic-short-fire-whoosh_1-317280.mp3",
     text: "You pour the water over the flames. The fire hisses and dies out.",
   },
 
@@ -148,7 +150,7 @@ const RECIPES = Object.freeze({
     keepCoord: true,
     placeResult: "inventory",
     setFlag: "fireOut",
-    successSfx: "Audio/djartmusic-short-fire-whoosh_1-317280.mp3",
+    successSfx: "Audio/recipes/djartmusic-short-fire-whoosh_1-317280.mp3",
     missingRequiresText: "You need water to put out the fire.",
     repeatText: "The fire is already out.",
     text: "You pour the water over the flames. The fire hisses and dies out.",
@@ -206,7 +208,7 @@ const RECIPES = Object.freeze({
     consume: [ITEM.CHICKEN_IN_WEB],
     produce: [ITEM.CHICKEN, ITEM.ROPE],
     placeResult: "room",
-    successSfx: "Audio/alex_jauk-chicken-noise-228106.mp3",
+    successSfx: "Audio/recipes/alex_jauk-chicken-noise-228106.mp3",
     missingRequiresText: "The webbing is too tough to tear by hand. You need something sturdy, like a stick.",
     text: "Squaaawk! You free the chicken from the web. It eyes you suspicisouly. Strings of web are all over the floor",
   },
@@ -218,6 +220,7 @@ const RECIPES = Object.freeze({
     produce: [],
     placeResult: "room",
     setFlag: "timeForward1000",
+    successSfx: "Audio/recipes/freesound_community-sci-fi-portal-83746.mp3",
     repeatText: "The lever is already set forward. Time won't jump again.",
     text: "You push the lever forward. You go forward 1000 years.",
   },

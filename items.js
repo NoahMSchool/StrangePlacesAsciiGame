@@ -293,6 +293,7 @@ const ITEM_DEFS_BASE = {
       const hookAlreadyFound = isInRoom?.(ITEM.HOOK) || isInInventory?.(ITEM.HOOK);
       if (!hookAlreadyFound && room && window.GameCore?.addToRoomAtRandomInterior) {
         window.GameCore.addToRoomAtRandomInterior(room, ITEM.HOOK);
+        window.Sound?.playSfx?.("Audio/recipes/freesound_community-hook_sound-37232.mp3");
         return "The painting shows Captian Hook glaring into the distance. One hook is real and falls to the ground.";
       }
       return "The painting shows Captian Hook glaring into the distance. The frame has already been picked clean.";

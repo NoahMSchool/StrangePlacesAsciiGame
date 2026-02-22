@@ -18,10 +18,20 @@
   // ---------------- Audio config ----------------
 
   const DEFAULT_SUCCESS_SFX =
-    "Audio/ksjsbwuil-apple-pay-success-sound-effect-481188.mp3";
+    "Audio/recipes/ksjsbwuil-apple-pay-success-sound-effect-481188.mp3";
 
   const DEFAULT_BGM_LOOP =
-    "Audio/freesound_community-eerie-ambience-6836.mp3";
+    "Audio/ambient/freesound_community-eerie-ambience-6836.mp3";
+
+  const ROOM_BGM = Object.freeze({
+    RIVER: "Audio/ambient/soundsforyou-calm-river-ambience-loop-125071.mp3",
+    MINE_ENTRANCE: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+    MINE_CAVERN: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+    TIME_WARP: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+    CAVERN_TAVERN: "Audio/ambient/placidplace-tavern-ambience-with-openfire-effect-no-loops-86151.mp3",
+    COTTAGE_STOREROOM: "Audio/ambient/placidplace-tavern-ambience-with-openfire-effect-no-loops-86151.mp3",
+    PARTICLE_ROOM: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
+  });
 
   // Single place to store settings (you can later persist this to localStorage)
   const Settings = {
@@ -29,10 +39,20 @@
     sfxEnabled: true,
   };
 
+  function bgmForCurrentRoom() {
+    const roomId = G?.state?.currentRoom;
+    return ROOM_BGM[roomId] || DEFAULT_BGM_LOOP;
+  }
+
+  function refreshRoomBgm() {
+    if (!Settings.bgmEnabled) return;
+    Sound.playBgm(bgmForCurrentRoom(), { loop: true });
+  }
+
   function applyBgmEnabled() {
     Sound.setBgmEnabled(Settings.bgmEnabled);
     if (Settings.bgmEnabled) {
-      Sound.playBgm(DEFAULT_BGM_LOOP, { loop: true });
+      refreshRoomBgm();
     } else {
       Sound.stopBgm();
     }
@@ -820,6 +840,8 @@
       if (!firstId || typeof ITEM === "undefined") return false;
 
       const impliedRules = [
+        // Feeding convenience
+        { a: ITEM.CHICKEN, b: ITEM.CORN },
         // River convenience
         { a: ITEM.EMPTY_BUCKET, b: ITEM.RIVER },
         { a: ITEM.WATER_BUCKET, b: ITEM.CAMPFIRE },
@@ -832,7 +854,8 @@
       ];
 
       for (const rule of impliedRules) {
-        if (firstId === rule.a && G.isInRoom(rule.b)) {
+        const targetAvailable = G.isInRoom(rule.b) || G.isInInventory(rule.b);
+        if (firstId === rule.a && targetAvailable) {
           combineItems([rule.a, rule.b], sayFn);
           return true;
         }
@@ -979,6 +1002,8 @@
       if (u?.error) G.saySafe(sayFn, u.error);
       else G.saySafe(sayFn, `I don't understand "${u?.raw ?? "that"}".`);
     }
+
+    refreshRoomBgm();
   }
 
   // ---------------- EXPOSE RUNTIME ----------------
