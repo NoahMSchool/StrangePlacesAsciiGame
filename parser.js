@@ -1,6 +1,6 @@
 // ---------------- CONFIG (declare once) ----------------
 
-const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to"]);
+const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to", "please", "under"]);
 
 // ✅ Noun connectors used to split "X with Y", "X in Y", etc.
 const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
@@ -245,6 +245,83 @@ function parseCommands(input) {
     return { tried: true, error: "That needs two things (try: \"use X on Y\")." };
   }
 
+  // Parse 2-3 nouns without explicit connectors, e.g. "combine hook rope stick".
+  // Greedy longest-prefix matching against known noun phrases.
+  function parseNounSequenceNoConnectors(text, { min = 2, max = 3 } = {}) {
+    const cleaned = stripStopwords(text);
+    if (!cleaned) return { error: "You need to specify what you mean." };
+
+    const tokens = cleaned.split(" ").filter(Boolean);
+    if (!tokens.length) return { error: "You need to specify what you mean." };
+
+    function resolveCandidates(candidates) {
+      if (!candidates?.length) return { ok: false, error: "I don't know what that is." };
+      if (candidates.length === 1) return { ok: true, canon: candidates[0] };
+
+      const available = getAvailableItemSet();
+      if (available) {
+        const present = candidates.filter((id) => available.has(id));
+        if (present.length === 1) return { ok: true, canon: present[0] };
+        if (present.length > 1) {
+          const options = present.map(formatItemForDisambiguation).join(" or ");
+          return { ok: false, error: `Which do you mean: ${options}?` };
+        }
+      }
+
+      return { ok: true, canon: candidates[0] };
+    }
+
+    // Pass 1: prefer simple one-token nouns when they cleanly cover the input.
+    // This keeps "combine hook rope stick" as 3 nouns rather than greedily
+    // collapsing to multi-word synonyms like "hook rope".
+    if (tokens.length >= min && tokens.length <= max) {
+      const simple = [];
+      let okSimple = true;
+      for (const tok of tokens) {
+        const candidates = NOUN_LOOKUP.get(tok);
+        if (!candidates) {
+          okSimple = false;
+          break;
+        }
+        const resolved = resolveCandidates(candidates);
+        if (!resolved.ok) return { error: resolved.error };
+        simple.push(resolved.canon);
+      }
+      if (okSimple) return { nouns: simple };
+    }
+
+    // Pass 2: greedy multi-word fallback for phrases like "fishing rod" etc.
+    const nouns = [];
+    let i = 0;
+    while (i < tokens.length && nouns.length < max) {
+      let matched = null;
+
+      for (let j = tokens.length; j > i; j--) {
+        const phrase = tokens.slice(i, j).join(" ");
+        const candidates = NOUN_LOOKUP.get(phrase);
+        if (!candidates) continue;
+
+        const resolved = resolveCandidates(candidates);
+        if (!resolved.ok) return { error: resolved.error };
+
+        matched = { canon: resolved.canon, next: j };
+        break;
+      }
+
+      if (!matched) {
+        const tail = tokens.slice(i).join(" ");
+        return { error: `I don't know what "${tail}" is.` };
+      }
+
+      nouns.push(matched.canon);
+      i = matched.next;
+    }
+
+    if (i !== tokens.length) return { error: "I couldn't parse all those things." };
+    if (nouns.length < min || nouns.length > max) return { parts: [cleaned] };
+    return { nouns };
+  }
+
   // Protect COMBINE's "and" (including 3-item combines) so we don't split the clause.
   const protectCombineAnd = (s) => {
     const lower = s.toLowerCase().trim();
@@ -366,19 +443,41 @@ function parseCommands(input) {
     if (vm.canon === "COMBINE" && allowedCounts.includes(2) && allowedCounts.includes(3)) {
       const got = parseNounList(vm.rest, { min: 2, max: 3 });
 
+      function normalizeCombineNouns(nouns) {
+        const out = [...nouns];
+        // Parser-only ambiguity: "chicken" can resolve to CHICKEN_IN_WEB first.
+        // For feed/combine with corn, prefer the portable CHICKEN recipe target.
+        if (
+          out.includes(ITEM.CORN) &&
+          out.includes(ITEM.CHICKEN_IN_WEB) &&
+          !out.includes(ITEM.CHICKEN)
+        ) {
+          const idx = out.indexOf(ITEM.CHICKEN_IN_WEB);
+          if (idx >= 0) out[idx] = ITEM.CHICKEN;
+        }
+        return out;
+      }
+
       if (got.nouns) {
-        result.known.push(`${vm.canon} ${got.nouns.join(" ")}`);
+        const nn = normalizeCombineNouns(got.nouns);
+        result.known.push(`${vm.canon} ${nn.join(" ")}`);
       } else if (got.parts && got.parts.length === 1) {
-        const rn = resolveNoun(got.parts[0]);
-        if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
-        else {
-          result.unknown.push({
-            raw,
-            verb: vm.verbToken,
-            object: restClean || null,
-            reason: "unknown_noun",
-            error: rn.error,
-          });
+        const seq = parseNounSequenceNoConnectors(got.parts[0], { min: 2, max: 3 });
+        if (seq.nouns) {
+          const nn = normalizeCombineNouns(seq.nouns);
+          result.known.push(`${vm.canon} ${nn.join(" ")}`);
+        } else {
+          const rn = resolveNoun(got.parts[0]);
+          if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
+          else {
+            result.unknown.push({
+              raw,
+              verb: vm.verbToken,
+              object: restClean || null,
+              reason: "unknown_noun",
+              error: seq.error || rn.error,
+            });
+          }
         }
       } else if (got.error) {
         result.unknown.push({
@@ -476,7 +575,12 @@ function parseCommands(input) {
 
     const rn = resolveNoun(vm.rest);
     if (rn.ok && rn.canon) {
-      result.known.push(`${vm.canon} ${rn.canon}`);
+      let canonNoun = rn.canon;
+      // "FREE chicken" / "rescue chicken" should target the trapped chicken puzzle noun.
+      if (vm.canon === "FREE" && canonNoun === ITEM.CHICKEN) {
+        canonNoun = ITEM.CHICKEN_IN_WEB;
+      }
+      result.known.push(`${vm.canon} ${canonNoun}`);
     } else {
       result.unknown.push({
         raw,
