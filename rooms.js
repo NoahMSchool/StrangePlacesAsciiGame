@@ -17,6 +17,7 @@ const ROOM = Object.freeze({
   COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
   MINE_ENTRANCE: "MINE_ENTRANCE",
   MINE_CAVERN: "MINE_CAVERN",
+  SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
   RIVER: "RIVER",
   SPIDERFOREST: "SPIDERFOREST",
 });
@@ -39,7 +40,6 @@ const ROOM_DEFS = {
       [ITEM.TREE, [5, 1]],
       [ITEM.TREE, [1, 3]],
       [ITEM.CAMPFIRE, [3, 3]],
-      [ITEM.HOOK, [5, 3]],
       [ITEM.TREE, [3, 5]],
       [ITEM.TREE, [1, 5]],
       [ITEM.TREE, [5, 5]],
@@ -67,9 +67,28 @@ const ROOM_DEFS = {
     },
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
+      NORTH: ROOM.SHIPWRECK_FOREST,
       SOUTH: ROOM.RIVER,
       WEST: ROOM.DARKFOREST,
       EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED },
+    },
+  },
+
+  [ROOM.SHIPWRECK_FOREST]: {
+    id: ROOM.SHIPWRECK_FOREST,
+    name: "Shipwreck Forest",
+    desc: "Trees crowd around a ruined shipwreck lodged impossibly in the forest floor. A weathered painting of Captian Hook is nailed to the hull.",
+    items: [
+      [ITEM.SHIPWRECK, [2, 2]],
+      [ITEM.SHIPWRECK, [3, 2]],
+      [ITEM.SHIPWRECK, [4, 2]],
+      [ITEM.SHIPWRECK, [2, 3]],
+      [ITEM.SHIPWRECK, [3, 3]],
+      [ITEM.SHIPWRECK, [4, 3]],
+      [ITEM.CAPTIAN_HOOK_PAINTING, [3, 3]],
+    ],
+    exits: {
+      SOUTH: ROOM.DARKCLEARING,
     },
   },
 
@@ -422,8 +441,14 @@ const BORDER_THEMES = Object.freeze({
     WEST: ITEM.TREE,
   },
   [ROOM.DARKCLEARING]: {
-    NORTH: ITEM.WOOD_WALL,
+    NORTH: ITEM.TREE,
     SOUTH: ITEM.TREE,
+    WEST: ITEM.TREE,
+  },
+  [ROOM.SHIPWRECK_FOREST]: {
+    NORTH: ITEM.TREE,
+    SOUTH: ITEM.TREE,
+    EAST: ITEM.TREE,
     WEST: ITEM.TREE,
   },
   [ROOM.RIVER]: {
@@ -672,11 +697,21 @@ function getVisibleItems(roomId) {
   const room = ROOM_DEFS[roomId];
   if (!room) return [];
 
-  return room.items
-    .map(entry => getItemId(entry))
-    .map(id => ITEM_DEFS[id])
-    .filter(def => def?.visible !== false)
-    .map(def => `${def.emoji} ${def.name}`);
+  const seen = new Set();
+  const out = [];
+
+  for (const entry of room.items || []) {
+    const id = getItemId(entry);
+    if (!id || seen.has(id)) continue;
+
+    const def = ITEM_DEFS[id];
+    if (!def || def.visible === false) continue;
+
+    seen.add(id);
+    out.push(`${def.emoji} ${def.name}`);
+  }
+
+  return out;
 }
 
 // -----------------------------------------------------------------------------

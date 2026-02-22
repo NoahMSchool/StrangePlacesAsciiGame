@@ -15,6 +15,8 @@ const ITEM = Object.freeze({
   DOOR_OPEN: "DOOR_OPEN",
   DOOR_LOCKED: "DOOR_LOCKED",
   NOTE: "NOTE",
+  SHIPWRECK: "SHIPWRECK",
+  CAPTIAN_HOOK_PAINTING: "CAPTIAN_HOOK_PAINTING",
   BED: "BED",
   STRANGE_PLACES_BOOK: "STRANGE_PLACES_BOOK",
   SIGN: "SIGN",
@@ -63,6 +65,8 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   DOOR_OPEN: "#d9a066",
   DOOR_LOCKED: "#b6b6c2",
   NOTE: "#8b7a35",
+  SHIPWRECK: "#7a5334",
+  CAPTIAN_HOOK_PAINTING: "#5b3f2e",
   BED: "#8ea5b8",
   STRANGE_PLACES_BOOK: "#b3364a",
   SIGN: "#7a5a1f",
@@ -76,9 +80,9 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   GRATE: "#9ca3af",
   CORN: "#b8860b",
   LAMP: "#f4b860",
-  ROPE: "#d2b48c",
-  HOOK: "#b0bec5",
-  KEY: "#f2cc4d",
+  ROPE: "#8a5a2b",
+  HOOK: "#5f646b",
+  KEY: "#8a6a00",
   EGG: "#9f8f67",
   DINOSAUR_EGG: "#6f8f52",
   MAGNET: "#ef4444",
@@ -201,7 +205,7 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
- [ITEM.NOTE]: {
+  [ITEM.NOTE]: {
     id: ITEM.NOTE,
     name: "Note",
     emoji: "📝",
@@ -216,6 +220,47 @@ const ITEM_DEFS_BASE = {
       "| \\___/ |",
       "|  ---  |",
       "|_______|",
+    ],
+  },
+
+  [ITEM.SHIPWRECK]: {
+    id: ITEM.SHIPWRECK,
+    name: "Shipwreck",
+    emoji: "⛵",
+    synonyms: ["shipwreck", "wreck", "boat", "ship", "hull"],
+    examine: "A shattered wooden shipwreck, impossibly stranded among the trees.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " __/\\__  ",
+      "/_/__\\_\\ ",
+      "\\\\_||_// ",
+      " /_||_\\  ",
+      "    ||   ",
+    ],
+  },
+
+  [ITEM.CAPTIAN_HOOK_PAINTING]: {
+    id: ITEM.CAPTIAN_HOOK_PAINTING,
+    name: "Painting",
+    emoji: "🖼️",
+    synonyms: ["painting", "captian hook", "captain hook", "portrait", "picture"],
+    examine: ({ room, isInRoom, isInInventory }) => {
+      const hookAlreadyFound = isInRoom?.(ITEM.HOOK) || isInInventory?.(ITEM.HOOK);
+      if (!hookAlreadyFound && room && window.GameCore?.addToRoomAtRandomInterior) {
+        window.GameCore.addToRoomAtRandomInterior(room, ITEM.HOOK);
+        return "The painting shows Captian Hook glaring into the distance. One hook is real and falls to the ground.";
+      }
+      return "The painting shows Captian Hook glaring into the distance. The frame has already been picked clean.";
+    },
+    visible: true,
+    portable: false,
+    asciiTile: [
+      " +-----+ ",
+      " |  C  | ",
+      " | /)  | ",
+      " | /   | ",
+      " +-----+ ",
     ],
   },
 
@@ -549,11 +594,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      "   |\\    ",
-      "   {     ",
-      "   }     ",
-      "  /      ",
-      "         ",
+      "   /\\    ",
+      "   ||    ",
+      "   ||    ",
+      "   ||    ",
+      "   \\/    ",
     ],
   },
 
@@ -566,11 +611,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-     "    ^    ",
-     "    \\    ",
-     "    |    ",
-     "    /    ",
-     "         "
+     "    __   ",
+     "   |  |  ",
+     "   |  |  ",
+     "   |  |_ ",
+     "    \\__/ ",
    ]
   },
 
@@ -583,11 +628,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-     "   /-o\\  ",
-     "   \\_ /  ",
-     "   <|/   ",
-     "   <|\\   ",
-     "   <|/   "
+     "   .--.  ",
+     "  (o==)  ",
+     "   ||==  ",
+     "   ||==  ",
+     "   ||==  "
    ]
   },
 

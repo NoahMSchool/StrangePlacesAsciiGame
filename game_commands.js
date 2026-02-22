@@ -205,6 +205,31 @@
     return G.state.inventory.filter((x) => x === itemId).length;
   }
 
+  function countConsumedFromInventory(consumeIds) {
+    const want = new Map();
+    for (const id of consumeIds || []) {
+      if (!id) continue;
+      want.set(id, (want.get(id) || 0) + 1);
+    }
+
+    let consumed = 0;
+    for (const [id, needed] of want.entries()) {
+      consumed += Math.min(needed, countInInv(id));
+    }
+    return consumed;
+  }
+
+  function wouldOverflowInventory(consume, produce, placeResult, keepCoordApplies) {
+    if (placeResult !== "inventory") return false;
+
+    const totalProduced = (produce || []).filter(Boolean).length;
+    const producedToInventory = Math.max(0, totalProduced - (keepCoordApplies ? 1 : 0));
+    const consumedFromInventory = countConsumedFromInventory(consume || []);
+
+    const finalCount = G.state.inventory.length - consumedFromInventory + producedToInventory;
+    return finalCount > G.MAX_INVENTORY_SIZE;
+  }
+
   function canConsumeAllHere(consumeIds) {
     const want = new Map();
     for (const id of consumeIds || []) {
@@ -268,16 +293,15 @@
         ? "inventory"
         : "room";
 
-    if (placeResult === "inventory") {
-      const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
-      const needed = produce.filter(Boolean).length;
-      if (needed > space) {
-        G.saySafe(
-          sayFn,
-          `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
-        );
-        return;
-      }
+    const keepCoordApplies =
+      !!(recipe.keepCoord && consume.length >= 1 && produce.length >= 1 && G.isInRoom(consume[0]));
+
+    if (wouldOverflowInventory(consume, produce, placeResult, keepCoordApplies)) {
+      G.saySafe(
+        sayFn,
+        `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
+      );
+      return;
     }
 
     if (recipe.keepCoord && consume.length >= 1 && produce.length >= 1) {
@@ -447,15 +471,14 @@
 
     const placeResult = recipe.placeResult === "inventory" ? "inventory" : "room";
 
-    if (placeResult === "inventory") {
-      const space = G.MAX_INVENTORY_SIZE - G.state.inventory.length;
-      const needed = produce.filter(Boolean).length;
-      if (needed > space) {
-        return G.saySafe(
-          sayFn,
-          `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
-        );
-      }
+    const keepCoordApplies =
+      !!(recipe.keepCoord && consume.length >= 1 && produce.length >= 1 && G.isInRoom(consume[0]));
+
+    if (wouldOverflowInventory(consume, produce, placeResult, keepCoordApplies)) {
+      return G.saySafe(
+        sayFn,
+        `You don't have enough space to carry that. (${G.state.inventory.length}/${G.MAX_INVENTORY_SIZE})`
+      );
     }
 
     if (!canConsumeAllHere(consume)) {

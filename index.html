@@ -186,6 +186,45 @@
       return null;
     }
 
+    function tileFromAsciiTap(clientX, clientY) {
+      const rect = asciiOutputEl.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+
+      const relX = Math.max(0, Math.min(rect.width - 1, clientX - rect.left));
+      const relY = Math.max(0, Math.min(rect.height - 1, clientY - rect.top));
+
+      const x = Math.floor((relX / rect.width) * 7);
+      const y = Math.floor((relY / rect.height) * 7);
+      return { x, y };
+    }
+
+    function visibleItemIdAtTile(x, y) {
+      if (!window.GameRuntime || typeof GameRuntime.getCurrentRoom !== "function") return null;
+      const room = GameRuntime.getCurrentRoom();
+      const items = room?.items || [];
+      let found = null;
+
+      for (const entry of items) {
+        if (!Array.isArray(entry) || !Array.isArray(entry[1])) continue;
+        const id = entry[0];
+        const coord = entry[1];
+        if (coord[0] !== x || coord[1] !== y) continue;
+
+        const def = (typeof ITEM_DEFS !== "undefined") ? ITEM_DEFS[id] : null;
+        if (def?.visible === false) continue;
+        found = id;
+      }
+
+      return found;
+    }
+
+    function commandNounForItem(itemId) {
+      const def = (typeof ITEM_DEFS !== "undefined") ? ITEM_DEFS[itemId] : null;
+      if (Array.isArray(def?.synonyms) && def.synonyms.length > 0) return def.synonyms[0];
+      if (def?.name) return String(def.name).toLowerCase();
+      return String(itemId || "").toLowerCase();
+    }
+
     cmd.disabled = false;
     sendBtn.disabled = false;
     cmd.focus();
@@ -212,6 +251,19 @@
     });
 
     asciiOutputEl.addEventListener("pointerdown", (e) => {
+      const tile = tileFromAsciiTap(e.clientX, e.clientY);
+      if (tile) {
+        const itemId = visibleItemIdAtTile(tile.x, tile.y);
+        if (itemId) {
+          e.preventDefault();
+          const def = (typeof ITEM_DEFS !== "undefined") ? ITEM_DEFS[itemId] : null;
+          const noun = commandNounForItem(itemId);
+          if (def?.portable) runRawCommand(`TAKE ${noun}`);
+          else runRawCommand(`LOOK ${noun}`);
+          return;
+        }
+      }
+
       const dir = directionFromAsciiGapTap(e.clientX, e.clientY);
       if (!dir) return;
       e.preventDefault();
