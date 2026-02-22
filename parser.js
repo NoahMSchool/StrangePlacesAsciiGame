@@ -100,7 +100,7 @@ const VERB_KEYS_LONGEST_FIRST = [...VERB_LOOKUP.keys()].sort((a, b) => b.length 
 
 // ---------------- PARSER ----------------
 
-function parseCommands(input) {
+function parseCommands(input, options = {}) {
   const result = { known: [], unknown: [] };
 
   const normalizeSpaces = (s) => (s ?? "").trim().replace(/\s+/g, " ");
@@ -122,6 +122,11 @@ function parseCommands(input) {
 
   // ✅ returns Set of items currently available (room + inventory), if GameCore is loaded
   function getAvailableItemSet() {
+    // Optional explicit context for tests/tools
+    const explicit = options?.availableItems;
+    if (explicit instanceof Set) return explicit;
+    if (Array.isArray(explicit)) return new Set(explicit);
+
     const G = window.GameCore;
     if (G && typeof G.allAvailableItemsSet === "function") {
       try {
@@ -451,47 +456,12 @@ function parseCommands(input) {
     if (vm.canon === "COMBINE" && allowedCounts.includes(2) && allowedCounts.includes(3)) {
       const got = parseNounList(vm.rest, { min: 2, max: 3 });
 
-      const combineRestWords = stripStopwords(vm.rest).toLowerCase().split(" ").filter(Boolean);
-
-      function normalizeCombineNouns(nouns) {
-        const out = [...nouns];
-        // Parser-only ambiguity: "chicken" can resolve to CHICKEN_IN_WEB first.
-        // For feed/combine with corn, prefer the portable CHICKEN recipe target.
-        if (
-          out.includes(ITEM.CORN) &&
-          out.includes(ITEM.CHICKEN_IN_WEB) &&
-          !out.includes(ITEM.CHICKEN)
-        ) {
-          const idx = out.indexOf(ITEM.CHICKEN_IN_WEB);
-          if (idx >= 0) out[idx] = ITEM.CHICKEN;
-        }
-
-        // Guard ambiguous no-separator parse:
-        // "combine string hook" should mean ROPE + HOOK, not ROPE + STICK.
-        const askedHook = combineRestWords.includes("hook");
-        const askedStick = combineRestWords.includes("stick");
-        if (
-          askedHook &&
-          !askedStick &&
-          out.includes(ITEM.ROPE) &&
-          out.includes(ITEM.STICK) &&
-          !out.includes(ITEM.HOOK)
-        ) {
-          const idx = out.indexOf(ITEM.STICK);
-          if (idx >= 0) out[idx] = ITEM.HOOK;
-        }
-
-        return out;
-      }
-
       if (got.nouns) {
-        const nn = normalizeCombineNouns(got.nouns);
-        result.known.push(`${vm.canon} ${nn.join(" ")}`);
+        result.known.push(`${vm.canon} ${got.nouns.join(" ")}`);
       } else if (got.parts && got.parts.length === 1) {
         const seq = parseNounSequenceNoConnectors(got.parts[0], { min: 2, max: 3 });
         if (seq.nouns) {
-          const nn = normalizeCombineNouns(seq.nouns);
-          result.known.push(`${vm.canon} ${nn.join(" ")}`);
+          result.known.push(`${vm.canon} ${seq.nouns.join(" ")}`);
         } else {
           const rn = resolveNoun(got.parts[0]);
           if (rn.ok && rn.canon) result.known.push(`${vm.canon} ${rn.canon}`);
@@ -601,12 +571,7 @@ function parseCommands(input) {
 
     const rn = resolveNoun(vm.rest);
     if (rn.ok && rn.canon) {
-      let canonNoun = rn.canon;
-      // "FREE chicken" / "rescue chicken" should target the trapped chicken puzzle noun.
-      if (vm.canon === "FREE" && canonNoun === ITEM.CHICKEN) {
-        canonNoun = ITEM.CHICKEN_IN_WEB;
-      }
-      result.known.push(`${vm.canon} ${canonNoun}`);
+      result.known.push(`${vm.canon} ${rn.canon}`);
     } else {
       result.unknown.push({
         raw,

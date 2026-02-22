@@ -123,6 +123,7 @@
             <th>#</th>
             <th>Category</th>
             <th>Input</th>
+            <th>Context</th>
             <th>Expected</th>
             <th>Actual</th>
             <th>Status</th>
@@ -139,6 +140,7 @@
     (function () {
       const rowsEl = document.getElementById("rows");
       const summaryEl = document.getElementById("summary");
+      const A = (...ids) => ids;
 
       const TESTS = [
         // Movement
@@ -163,9 +165,10 @@
         { c: "Core", in: "push leaves", ex: { knownExact: ["PUSH LEAVES"], unknownCount: 0 } },
         { c: "Core", in: "pull lever", ex: { knownExact: ["PULL TIME_LEVER"], unknownCount: 0 } },
         { c: "Core", in: "hit inspector", ex: { knownExact: ["HIT HEALTH_INSPECTOR"], unknownCount: 0 } },
-        { c: "Core", in: "free chicken in web", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 } },
-        { c: "Core", in: "free chicken", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 } },
-        { c: "Core", in: "rescue chicken", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 } },
+        { c: "Core", in: "free chicken in web", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "save chicken in web", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "free chicken", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
+        { c: "Core", in: "rescue chicken", ex: { knownExact: ["FREE CHICKEN_IN_WEB"], unknownCount: 0 }, available: A(ITEM.CHICKEN_IN_WEB, ITEM.STICK) },
         { c: "Core", in: "extinguish fire", ex: { knownExact: ["EXTINGUISH CAMPFIRE"], unknownCount: 0 } },
         { c: "Core", in: "dowse fire", ex: { knownExact: ["EXTINGUISH CAMPFIRE"], unknownCount: 0 } },
         { c: "Core", in: "unlock door", ex: { knownExact: ["UNLOCK DOOR_LOCKED"], unknownCount: 0 } },
@@ -180,11 +183,11 @@
         { c: "Combine", in: "combine hook with rope", ex: { knownExact: ["COMBINE HOOK ROPE"], unknownCount: 0 } },
         { c: "Combine", in: "combine rope and stick", ex: { knownExact: ["COMBINE ROPE STICK"], unknownCount: 0 } },
         { c: "Combine", in: "combine hook rope", ex: { knownExact: ["COMBINE HOOK ROPE"], unknownCount: 0 } },
-        { c: "Combine", in: "combine string hook", ex: { knownExact: ["COMBINE ROPE HOOK"], unknownCount: 0 } },
+        { c: "Combine", in: "combine string hook", ex: { knownExact: ["COMBINE ROPE HOOK"], unknownCount: 0 }, available: A(ITEM.ROPE, ITEM.HOOK) },
         { c: "Combine", in: "combine hook rope stick", ex: { knownExact: ["COMBINE HOOK ROPE STICK"], unknownCount: 0 } },
         { c: "Combine", in: "combine stick hook string", ex: { knownExact: ["COMBINE STICK HOOK ROPE"], unknownCount: 0 } },
         { c: "Combine", in: "combine fishing rod grate", ex: { knownExact: ["COMBINE FISHING_ROD GRATE"], unknownCount: 0 } },
-        { c: "Combine", in: "feed corn chicken", ex: { knownExact: ["COMBINE CORN CHICKEN"], unknownCount: 0 } },
+        { c: "Combine", in: "feed corn chicken", ex: { knownExact: ["COMBINE CORN CHICKEN"], unknownCount: 0 }, available: A(ITEM.CORN, ITEM.CHICKEN) },
         { c: "Combine", in: "make fishing rod", ex: { knownExact: ["MAKE FISHING_ROD"], unknownCount: 0 } },
         { c: "Combine", in: "combine bucket", ex: { knownExact: ["COMBINE EMPTY_BUCKET"], unknownCount: 0 } },
 
@@ -261,7 +264,7 @@
         let actual;
         let crash = null;
         try {
-          actual = parseCommands(t.in);
+          actual = parseCommands(t.in, { availableItems: t.available || null });
         } catch (e) {
           actual = { known: [], unknown: [] };
           crash = e;
@@ -296,11 +299,16 @@
           `unknown: ${JSON.stringify(r.actual.unknown)}` +
           (r.crash ? `\ncrash: ${String(r.crash)}` : "");
 
+        const contextTxt = Array.isArray(t.available) && t.available.length
+          ? t.available.join(", ")
+          : "(none)";
+
         return (
           `<tr class="${className}">` +
             `<td>${r.i}</td>` +
             `<td>${esc(t.c)}${t.expectUnsupported ? `<br><span class="expected-fail">expected unsupported</span>` : ""}</td>` +
             `<td><code>${esc(t.in)}</code></td>` +
+            `<td><pre>${esc(contextTxt)}</pre></td>` +
             `<td><pre>${esc(expectedTxt.join("\n"))}</pre></td>` +
             `<td><pre>${esc(actualTxt)}</pre></td>` +
             `<td><strong class="${r.ev.pass ? "ok" : "bad"}">${status}</strong>` +
