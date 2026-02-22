@@ -95,7 +95,7 @@ const ROOM_DEFS = {
     exits: {
       SOUTH: ROOM.MINE_ENTRANCE,
       NORTH: ROOM.COTTAGE_BEDROOM,
-      EAST: ROOM.COTTAGE_KITCHEN,
+      WEST: ROOM.COTTAGE_KITCHEN,
     },
   },
 
@@ -133,7 +133,7 @@ const ROOM_DEFS = {
       [ITEM.FRIDGE, [3, 3]],
       [ITEM.MAGNET, [4, 3]],
     ],
-    exits: { WEST: ROOM.SHED },
+    exits: { EAST: ROOM.SHED },
   },
 
   [ROOM.MINE_ENTRANCE]: {
@@ -161,7 +161,7 @@ const ROOM_DEFS = {
     exits: {
       NORTH: ROOM.MINE_ENTRANCE,
       WEST: ROOM.COTTAGE_STOREROOM,
-      SOUTH: { to: ROOM.PARTICLE_ROOM, barrier: ITEM.EINSTEIN_BARMAN },
+
     },
   },
 
@@ -174,18 +174,21 @@ const ROOM_DEFS = {
       [ITEM.MEDAL, [5, 3]],
     ],
     exits: {
-      NORTH: ROOM.CAVERN_TAVERN,
+      SOUTH: ROOM.MINE_CAVERN, distance: 3,
+
     },
   },
 
   [ROOM.MINE_CAVERN]: {
     id: ROOM.MINE_CAVERN,
-    name: "Mine Field",
+    name: "MINE CAVERN",
     desc: "A vast cavern opens ahead, dripping and echoing.",
     items: [[ITEM.SEED, [3, 3]]],
     exits: {
       WEST: ROOM.MINE_ENTRANCE,
       SOUTH: ROOM.TIME_WARP,
+      NORTH: { to: ROOM.PARTICLE_ROOM, barrier: ITEM.EINSTEIN_BARMAN, distance: 3},
+
     },
   },
 
