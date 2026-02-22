@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>All Rooms ASCII Breakdown</title>
+  <style>
+    :root {
+      --bg: #2e3d2f;
+      --panel: #d7d2bd;
+      --fg: #c9d1d9;
+      --muted: #8b949e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "JetBrains Mono", "Major Mono Display", monospace;
+    }
+    main {
+      padding: 12px;
+    }
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: var(--fg);
+    }
+    p {
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      border: 1px solid #30363d;
+      overflow: auto;
+      line-height: 1;
+      font-size: 6px;
+      white-space: pre;
+      background: var(--panel);
+      min-height: 70vh;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>All Rooms ASCII Breakdown</h1>
+    <p>Auto-laid out from room exits. Each room is rendered as its full 7x7 ASCII tile grid.</p>
+    <pre id="worldAscii">Loading...</pre>
+  </main>
+
+  <script src="items.js"></script>
+  <script src="rooms.js"></script>
+  <script>
+    (function () {
+      const out = document.getElementById("worldAscii");
+      const ROOM_SIZE = 7;
+      const TILE_W = 9;
+      const TILE_H = 5;
+      const ROOM_PIXEL_W = ROOM_SIZE * TILE_W;
+      const ROOM_PIXEL_H = ROOM_SIZE * TILE_H;
+
+      const DIRS = Object.freeze({
+        NORTH: [0, -1],
+        SOUTH: [0, 1],
+        EAST: [1, 0],
+        WEST: [-1, 0],
+      });
+
+      const BLANK_TILE = Object.freeze([
+        "         ",
+        "         ",
+        "         ",
+        "         ",
+        "         ",
+      ]);
+
+      function getExitToRoomId(exit) {
+        if (typeof exit === "string") return exit;
+        if (exit && typeof exit === "object" && !Array.isArray(exit)) return exit.to || null;
+        return null;
+      }
+
+      function safeTileForItem(itemId) {
+        const def = ITEM_DEFS?.[itemId];
+        const tile = def?.asciiTile;
+        if (!Array.isArray(tile) || tile.length !== TILE_H) return BLANK_TILE;
+        for (let i = 0; i < TILE_H; i++) {
+          if (typeof tile[i] !== "string" || tile[i].length !== TILE_W) return BLANK_TILE;
+        }
+        return tile;
+      }
+
+      function roomGrid(room) {
+        const grid = [];
+        const colorGrid = [];
+        for (let y = 0; y < ROOM_SIZE; y++) {
+          const row = [];
+          const colorRow = [];
+          for (let x = 0; x < ROOM_SIZE; x++) {
+            row.push(BLANK_TILE);
+            colorRow.push(null);
+          }
+          grid.push(row);
+          colorGrid.push(colorRow);
+        }
+
+        const items = Array.isArray(room?.items) ? room.items : [];
+        for (const entry of items) {
+          if (!Array.isArray(entry) || !Array.isArray(entry[1])) continue;
+          const id = entry[0];
+          const x = entry[1][0];
+          const y = entry[1][1];
+          if (x < 0 || x >= ROOM_SIZE || y < 0 || y >= ROOM_SIZE) continue;
+          grid[y][x] = safeTileForItem(id);
+          colorGrid[y][x] = ITEM_DEFS?.[id]?.mapColor || null;
+        }
+        return { grid, colorGrid };
+      }
+
+      function renderRoomAscii(room) {
+        const { grid, colorGrid } = roomGrid(room);
+        const lines = [];
+        const lineColors = [];
+        for (let gy = 0; gy < ROOM_SIZE; gy++) {
+          for (let ty = 0; ty < TILE_H; ty++) {
+            let line = "";
+            const colors = [];
+            for (let gx = 0; gx < ROOM_SIZE; gx++) line += grid[gy][gx][ty];
+            for (let gx = 0; gx < ROOM_SIZE; gx++) {
+              const c = colorGrid[gy][gx];
+              for (let i = 0; i < TILE_W; i++) colors.push(c);
+            }
+            lines.push(line);
+            lineColors.push(colors);
+          }
+        }
+        return { lines, lineColors };
+      }
+
+      function roomPositions(roomDefs) {
+        const ids = Object.keys(roomDefs || {});
+        if (!ids.length) return new Map();
+
+        const pos = new Map();
+        const visited = new Set();
+        const start = (typeof ROOM !== "undefined" && ROOM.DARKFOREST && roomDefs[ROOM.DARKFOREST])
+          ? ROOM.DARKFOREST
+          : ids[0];
+
+        function bfs(seedId, seedX, seedY) {
+          if (visited.has(seedId)) return;
+          const q = [[seedId, seedX, seedY]];
+          visited.add(seedId);
+          pos.set(seedId, [seedX, seedY]);
+
+          while (q.length) {
+            const [id, x, y] = q.shift();
+            const exits = roomDefs[id]?.exits || {};
+            for (const [dir, delta] of Object.entries(DIRS)) {
+              const target = getExitToRoomId(exits[dir]);
+              if (!target || !roomDefs[target]) continue;
+              const nx = x + delta[0];
+              const ny = y + delta[1];
+              if (!visited.has(target)) {
+                visited.add(target);
+                pos.set(target, [nx, ny]);
+                q.push([target, nx, ny]);
+              }
+            }
+          }
+        }
+
+        bfs(start, 0, 0);
+
+        for (const id of ids) {
+          if (visited.has(id)) continue;
+          let maxX = 0;
+          for (const [, p] of pos) maxX = Math.max(maxX, p[0]);
+          bfs(id, maxX + 3, 0);
+        }
+
+        return pos;
+      }
+
+      function makeCanvas(width, height) {
+        const rows = [];
+        for (let y = 0; y < height; y++) rows.push(new Array(width).fill(" "));
+        return rows;
+      }
+
+      function makeColorCanvas(width, height) {
+        const rows = [];
+        for (let y = 0; y < height; y++) rows.push(new Array(width).fill(null));
+        return rows;
+      }
+
+      function drawText(canvas, colorCanvas, x, y, text, color) {
+        if (y < 0 || y >= canvas.length) return;
+        for (let i = 0; i < text.length; i++) {
+          const xx = x + i;
+          if (xx < 0 || xx >= canvas[0].length) continue;
+          canvas[y][xx] = text[i];
+          if (colorCanvas && color) colorCanvas[y][xx] = color;
+        }
+      }
+
+      function drawBlock(canvas, colorCanvas, x, y, lines, lineColors) {
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i] || "";
+          const colors = lineColors?.[i] || [];
+          for (let j = 0; j < line.length; j++) {
+            drawText(canvas, colorCanvas, x + j, y + i, line[j], colors[j] || null);
+          }
+        }
+      }
+
+      function centerText(text, width) {
+        if (text.length >= width) return text.slice(0, width);
+        const left = Math.floor((width - text.length) / 2);
+        return " ".repeat(left) + text;
+      }
+
+      function renderWorld(roomDefs) {
+        const positions = roomPositions(roomDefs);
+        if (!positions.size) return "No rooms found.";
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        for (const [, p] of positions) {
+          minX = Math.min(minX, p[0]);
+          maxX = Math.max(maxX, p[0]);
+          minY = Math.min(minY, p[1]);
+          maxY = Math.max(maxY, p[1]);
+        }
+
+        const CELL_W = ROOM_PIXEL_W + 4;
+        const CELL_H = ROOM_PIXEL_H + 3;
+        const cols = maxX - minX + 1;
+        const rows = maxY - minY + 1;
+        const canvasW = cols * CELL_W;
+        const canvasH = rows * CELL_H;
+        const canvas = makeCanvas(canvasW, canvasH);
+        const colorCanvas = makeColorCanvas(canvasW, canvasH);
+
+        for (const [id, p] of positions) {
+          const room = roomDefs[id];
+          if (!room) continue;
+
+          const cx = p[0] - minX;
+          const cy = p[1] - minY;
+          const ox = cx * CELL_W;
+          const oy = cy * CELL_H;
+
+          const label = "[" + (room.name || id) + "]";
+          drawText(canvas, colorCanvas, ox, oy, centerText(label, ROOM_PIXEL_W), "#8b949e");
+          const rendered = renderRoomAscii(room);
+          drawBlock(canvas, colorCanvas, ox, oy + 1, rendered.lines, rendered.lineColors);
+        }
+
+        function esc(s) {
+          return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        const htmlLines = [];
+        for (let y = 0; y < canvasH; y++) {
+          let line = "";
+          let runColor = null;
+          let runText = "";
+          for (let x = 0; x < canvasW; x++) {
+            const ch = canvas[y][x];
+            const c = colorCanvas[y][x];
+            if (c === runColor) {
+              runText += ch;
+            } else {
+              if (runText.length) {
+                line += runColor ? `<span style="color:${runColor}">${esc(runText)}</span>` : esc(runText);
+              }
+              runColor = c;
+              runText = ch;
+            }
+          }
+          if (runText.length) {
+            line += runColor ? `<span style="color:${runColor}">${esc(runText)}</span>` : esc(runText);
+          }
+          htmlLines.push(line.replace(/\s+$/, ""));
+        }
+        return htmlLines.join("\n");
+      }
+
+      try {
+        if (typeof ROOM_DEFS === "undefined") {
+          out.textContent = "ROOM_DEFS was not found. Make sure rooms.js loaded.";
+          return;
+        }
+        out.innerHTML = renderWorld(ROOM_DEFS);
+      } catch (err) {
+        out.textContent = "Error rendering world map:\n" + String(err && err.stack ? err.stack : err);
+      }
+    })();
+  </script>
+</body>
+</html>
