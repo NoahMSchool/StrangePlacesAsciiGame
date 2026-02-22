@@ -39,6 +39,7 @@ const ROOM_DEFS = {
       [ITEM.TREE, [5, 1]],
       [ITEM.TREE, [1, 3]],
       [ITEM.CAMPFIRE, [3, 3]],
+      [ITEM.HOOK, [5, 3]],
       [ITEM.TREE, [3, 5]],
       [ITEM.TREE, [1, 5]],
       [ITEM.TREE, [5, 5]],
@@ -62,11 +63,10 @@ const ROOM_DEFS = {
         doorText = "An open doorway leads east.";
       }
 
-      return `A bare clearing with flattened leaves. A curious wooden cottage waits to the north. A path slopes down to the south. ${doorText}`;
+      return `A bare clearing with flattened leaves. A path slopes down to the south. ${doorText}`;
     },
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
-      NORTH: ROOM.SHED,
       SOUTH: ROOM.RIVER,
       WEST: ROOM.DARKFOREST,
       EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED },
@@ -79,7 +79,7 @@ const ROOM_DEFS = {
     desc: "A curious wooden cottage sits in the gloom. The entrance room is bare except for a note on the floor.",
     items: [[ITEM.NOTE, [3, 3]]],
     exits: {
-      SOUTH: ROOM.DARKCLEARING,
+      SOUTH: ROOM.MINE_ENTRANCE,
       NORTH: ROOM.COTTAGE_BEDROOM,
       WEST: ROOM.COTTAGE_STOREROOM,
       EAST: ROOM.COTTAGE_KITCHEN,
@@ -90,7 +90,17 @@ const ROOM_DEFS = {
     id: ROOM.COTTAGE_BEDROOM,
     name: "Cottage Bedroom",
     desc: "A small wooden bedroom with a low ceiling and stale air.",
-    items: [[ITEM.BED, [3, 3]]],
+    items: [
+      [ITEM.BED, [2, 2]],
+      [ITEM.BED, [3, 2]],
+      [ITEM.BED, [4, 2]],
+      [ITEM.BED, [2, 3]],
+      [ITEM.BED, [3, 3]],
+      [ITEM.BED, [4, 3]],
+      [ITEM.BED, [2, 4]],
+      [ITEM.BED, [3, 4]],
+      [ITEM.BED, [4, 4]],
+    ],
     exits: { SOUTH: ROOM.SHED },
   },
 
@@ -116,10 +126,11 @@ const ROOM_DEFS = {
   [ROOM.MINE_ENTRANCE]: {
     id: ROOM.MINE_ENTRANCE,
     name: "Mine Entrance",
-    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails.",
+    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails. A wooden cottage sits up to the north.",
     items: [],
     exits: {
       WEST: ROOM.DARKCLEARING,
+      NORTH: ROOM.SHED,
       EAST: { to: ROOM.MINE_CAVERN, barrier: ITEM.HEALTH_INSPECTOR },
     },
   },

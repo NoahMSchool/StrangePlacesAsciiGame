@@ -43,12 +43,12 @@ const RECIPES = Object.freeze({
     text: "You close the door.",
   },
 
-  // magnet + string = magnet-on-a-string (interim)
-  [keyOf([ITEM.MAGNET, ITEM.ROPE])]: {
-    inputs: [ITEM.MAGNET, ITEM.ROPE],
-    consume: [ITEM.MAGNET, ITEM.ROPE],
+  // hook + string = hook-on-a-string (interim)
+  [keyOf([ITEM.HOOK, ITEM.ROPE])]: {
+    inputs: [ITEM.HOOK, ITEM.ROPE],
+    consume: [ITEM.HOOK, ITEM.ROPE],
     produce: [ITEM.MAGNET_STRING],
-    text: "You tie the magnet onto the end of the string.",
+    text: "You tie the hook onto the end of the string.",
   },
 
   // string + stick = stick-with-string (interim)
@@ -59,28 +59,28 @@ const RECIPES = Object.freeze({
     text: "You tie the string securely to the stick.",
   },
 
-  // magnet-string + stick = fishing rod
+  // hook-string + stick = fishing rod
   [keyOf([ITEM.MAGNET_STRING, ITEM.STICK])]: {
     inputs: [ITEM.MAGNET_STRING, ITEM.STICK],
     consume: [ITEM.MAGNET_STRING, ITEM.STICK],
     produce: [ITEM.FISHING_ROD],
-    text: "You fasten the magnet-string to the stick. A weird little fishing rod!",
+    text: "You fasten the hook-string to the stick. A weird little fishing rod!",
   },
 
-  // string-stick + magnet = fishing rod
-  [keyOf([ITEM.STRING_STICK, ITEM.MAGNET])]: {
-    inputs: [ITEM.STRING_STICK, ITEM.MAGNET],
-    consume: [ITEM.STRING_STICK, ITEM.MAGNET],
+  // string-stick + hook = fishing rod
+  [keyOf([ITEM.STRING_STICK, ITEM.HOOK])]: {
+    inputs: [ITEM.STRING_STICK, ITEM.HOOK],
+    consume: [ITEM.STRING_STICK, ITEM.HOOK],
     produce: [ITEM.FISHING_ROD],
-    text: "You attach the magnet to the end of the string-stick. A weird little fishing rod!",
+    text: "You attach the hook to the end of the string-stick. A weird little fishing rod!",
   },
 
   // (keep original 3-item shortcut too)
-  [keyOf([ITEM.MAGNET, ITEM.ROPE, ITEM.STICK])]: {
-    inputs: [ITEM.MAGNET, ITEM.ROPE, ITEM.STICK],
-    consume: [ITEM.MAGNET, ITEM.ROPE, ITEM.STICK],
+  [keyOf([ITEM.HOOK, ITEM.ROPE, ITEM.STICK])]: {
+    inputs: [ITEM.HOOK, ITEM.ROPE, ITEM.STICK],
+    consume: [ITEM.HOOK, ITEM.ROPE, ITEM.STICK],
     produce: [ITEM.FISHING_ROD],
-    text: "You tie the string to the stick and fasten the magnet to the end. A weird little fishing rod!",
+    text: "You tie the string to the stick and fasten the hook to the end. A weird little fishing rod!",
   },
 
   // ---------------------------------------------------------------------------
@@ -109,15 +109,15 @@ const RECIPES = Object.freeze({
     inputs: [ITEM.STRING_STICK, ITEM.GRATE],
     consume: [],
     produce: [],
-    text: "You lower the string into the grate, but it’s too light to catch anything. It needs something heavy or magnetic on the end.",
+    text: "You lower the string into the grate, but it’s too light to catch anything. It needs a hook on the end.",
   },
 
-  // 🧲🧵 Magnet-on-a-string + grate → no rigidity
+  // 🪝🧵 Hook-on-a-string + grate → no rigidity
   [keyOf([ITEM.MAGNET_STRING, ITEM.GRATE])]: {
     inputs: [ITEM.MAGNET_STRING, ITEM.GRATE],
     consume: [],
     produce: [],
-    text: "You dangle the magnet into the grate, but the string has no reach. You need something rigid to guide it.",
+    text: "You dangle the hook into the grate, but the string has no reach. You need something rigid to guide it.",
   },
 
   [keyOf([ITEM.EMPTY_BOTTLE, ITEM.RIVER])]: {
