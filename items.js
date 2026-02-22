@@ -24,7 +24,9 @@ const ITEM = Object.freeze({
   SIGN: "SIGN",
   OIL_DRUM: "OIL_DRUM",
   FRIDGE: "FRIDGE",
+  MEDAL: "MEDAL",
   HEALTH_INSPECTOR: "HEALTH_INSPECTOR",
+  EINSTEIN_BARMAN: "EINSTEIN_BARMAN",
   TEDDYBEAR: "TEDDYBEAR",
   CHICKEN: "CHICKEN",
   CHICKEN_IN_WEB: "CHICKEN_IN_WEB",
@@ -44,8 +46,8 @@ const ITEM = Object.freeze({
   STICK: "STICK",
   RIVER: "RIVER",
   RIVER_TILE: "RIVER_TILE",
-  EMPTY_BOTTLE: "EMPTY_BOTTLE",
-  WATER_BOTTLE: "WATER_BOTTLE",
+  EMPTY_BUCKET: "EMPTY_BUCKET",
+  WATER_BUCKET: "WATER_BUCKET",
   FISHING_ROD: "FISHING_ROD",
   COIN: "COIN",
 
@@ -77,7 +79,9 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   SIGN: "#7a5a1f",
   OIL_DRUM: "#3b3f46",
   FRIDGE: "#4f86a9",
+  MEDAL: "#a77c22",
   HEALTH_INSPECTOR: "#8a6a00",
+  EINSTEIN_BARMAN: "#6c4a2d",
   TEDDYBEAR: "#c58b6f",
   CHICKEN: "#d62828",
   CHICKEN_IN_WEB: "#6f7680",
@@ -96,8 +100,8 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   STICK: "#b17a50",
   RIVER: "#4da3ff",
   RIVER_TILE: "#4da3ff",
-  EMPTY_BOTTLE: "#5e89a5",
-  WATER_BOTTLE: "#60a5fa",
+  EMPTY_BUCKET: "#5e89a5",
+  WATER_BUCKET: "#60a5fa",
   FISHING_ROD: "#c98c58",
   COIN: "#f2c94c",
   ALPHAPARTICLE: "#b388ff",
@@ -385,7 +389,7 @@ const ITEM_DEFS_BASE = {
     name: "Fridge",
     emoji: "🧊",
     synonyms: ["fridge", "refrigerator"],
-    examine: "An old humming fridge. A fridge magnet is stuck to the door, and something bottle-shaped rattles inside.",
+    examine: "An old humming fridge. A fridge magnet is stuck to the door, and something bucket-shaped rattles inside.",
     visible: true,
     portable: false,
     asciiTile: [
@@ -397,7 +401,24 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
- [ITEM.HEALTH_INSPECTOR]: {
+ [ITEM.MEDAL]: {
+    id: ITEM.MEDAL,
+    name: "Medal",
+    emoji: "🏅",
+    synonyms: ["medal", "plaque", "inscription"],
+    examine: "Congratulations on getting this far and thanks for playing! If you'd like more strange rooms and strange puzzles, please let me know in the Itch comments",
+    visible: true,
+    portable: true,
+    asciiTile: [
+      "   .-.   ",
+      "  ( * )  ",
+      "   `-'   ",
+      "   /|\\   ",
+      "   \\|/   ",
+    ],
+  },
+
+  [ITEM.HEALTH_INSPECTOR]: {
     id: ITEM.HEALTH_INSPECTOR,
     name: "Health and Safety Inspector",
     emoji: "🦺",
@@ -414,6 +435,23 @@ const ITEM_DEFS_BASE = {
       "  /|_|\\  ",
       "   / \\   ",
       "  _| |_  ",
+    ],
+  },
+
+  [ITEM.EINSTEIN_BARMAN]: {
+    id: ITEM.EINSTEIN_BARMAN,
+    name: "Einstein Barman",
+    emoji: "🧪",
+    synonyms: ["einstein", "barman", "einstein barman", "bartender"],
+    examine: "A wild-haired barman in a stained apron, muttering equations over empty glasses.",
+    visible: true,
+    portable: false,
+    asciiTile: [
+      "   /^^\\  ",
+      "  (o  o) ",
+      "  / || \\ ",
+      "   /  \\  ",
+      "  _|==|_ ",
     ],
   },
 
@@ -812,12 +850,12 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
-  [ITEM.EMPTY_BOTTLE]: {
-    id: ITEM.EMPTY_BOTTLE,
-    name: "Empty Bottle",
-    emoji: "🧴",
-    synonyms: ["empty bottle", "bottle", "glass bottle", "flask"],
-    examine: "An empty bottle. Good for collecting liquids.",
+  [ITEM.EMPTY_BUCKET]: {
+    id: ITEM.EMPTY_BUCKET,
+    name: "Empty Bucket",
+    emoji: "🪣",
+    synonyms: ["empty bucket", "bucket", "pail", "empty bottle", "bottle"],
+    examine: "An empty bucket. Good for collecting liquids.",
     visible: true,
     portable: true,
     asciiTile: [
@@ -829,20 +867,20 @@ const ITEM_DEFS_BASE = {
     ],
   },
 
-  [ITEM.WATER_BOTTLE]: {
-    id: ITEM.WATER_BOTTLE,
-    name: "Bottle of Water",
-    emoji: "💧",
-    synonyms: ["water bottle", "bottle of water", "full bottle"],
-    examine: "A bottle filled with river water.",
+  [ITEM.WATER_BUCKET]: {
+    id: ITEM.WATER_BUCKET,
+    name: "Water Bucket",
+    emoji: "🪣",
+    synonyms: ["water bucket", "bucket of water", "full bucket", "water", "water bottle"],
+    examine: "A bucket filled with river water.",
     visible: true,
     portable: true,
     asciiTile: [
-      "   ___   ",
-      "  /~~~\\  ",
-      "  |~~~|  ",
-      "  |~~~|  ",
-      "  \\___/  ",
+      "  _____  ",
+      " /~~~~~\\ ",
+      "|~~~~~~~|",
+      "|~~~~~~~|",
+      " \\_____/ ",
     ],
   },
 
@@ -967,6 +1005,13 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     eatText: "Probably not edible. Also, what?",
+    asciiTile: [
+      "    |    ",
+      "    |\\   ",
+      "    | \\  ",
+      "   /___\\ ",
+      "  _|___|_",
+    ],
   },
 };
 

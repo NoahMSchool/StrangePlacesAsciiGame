@@ -17,6 +17,7 @@ const ROOM = Object.freeze({
   COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
   MINE_ENTRANCE: "MINE_ENTRANCE",
   CAVERN_TAVERN: "CAVERN_TAVERN",
+  PARTICLE_ROOM: "PARTICLE_ROOM",
   MINE_CAVERN: "MINE_CAVERN",
   TIME_WARP: "TIME_WARP",
   SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
@@ -160,10 +161,28 @@ const ROOM_DEFS = {
     id: ROOM.CAVERN_TAVERN,
     name: "Cavern Tavern",
     desc: "A rough tavern chamber carved into the rock, reinforced with timber walls. The bar is empty, but the room still smells of smoke and ale.",
-    items: [],
+    items: [
+      [ITEM.WOOD_WALL, [2, 2]],
+      [ITEM.WOOD_WALL, [3, 2]],
+      [ITEM.WOOD_WALL, [4, 2]],
+    ],
     exits: {
       NORTH: ROOM.MINE_ENTRANCE,
       WEST: ROOM.COTTAGE_STOREROOM,
+      SOUTH: { to: ROOM.PARTICLE_ROOM, barrier: ITEM.EINSTEIN_BARMAN },
+    },
+  },
+
+  [ROOM.PARTICLE_ROOM]: {
+    id: ROOM.PARTICLE_ROOM,
+    name: "Particle Room",
+    desc: "Copper coils, glass tubes, and humming machinery surround a single glowing particle.",
+    items: [
+      [ITEM.ALPHAPARTICLE, [3, 3]],
+      [ITEM.MEDAL, [5, 3]],
+    ],
+    exits: {
+      NORTH: ROOM.CAVERN_TAVERN,
     },
   },
 
@@ -527,6 +546,12 @@ const BORDER_THEMES = Object.freeze({
     EAST: ITEM.WOOD_WALL,
     WEST: ITEM.WOOD_WALL,
   },
+  [ROOM.PARTICLE_ROOM]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
 });
 
 function coordIsOnSide(coord, side) {
@@ -719,6 +744,9 @@ function getMoveBlockedMessage(result) {
     if (result.barrier === ITEM.DOOR_LOCKED) return "It's locked.";
     if (result.barrier === ITEM.HEALTH_INSPECTOR) {
       return "The Health and Safety Inspector blocks your way. \"No entry while you've got an open fire.\"";
+    }
+    if (result.barrier === ITEM.EINSTEIN_BARMAN) {
+      return "Einstein Barman blocks your way. \"No entry until the egg and oil experiment is ready.\"";
     }
     const def = result.barrier ? ITEM_DEFS?.[result.barrier] : null;
     const name = def?.name ?? "something";

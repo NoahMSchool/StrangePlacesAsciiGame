@@ -140,6 +140,10 @@
     const consumed = (consume || []).filter(Boolean);
     const produced = (produce || []).filter(Boolean);
 
+    if (consumed.length === 0 && produced.length === 0) {
+      return "";
+    }
+
     if (consumed.length === 0 && produced.length > 0) {
       return `Found ${formatEmojiList(produced)}`;
     }
@@ -150,7 +154,8 @@
   function sayRecipeResult(sayFn, recipe, consume, produce) {
     const suffix = formatProducedList(produce);
     const summary = formatRecipeSummaryLine(consume, produce);
-    G.saySafe(sayFn, (recipe?.text || "Done.") + suffix + "\n" + summary);
+    const msg = (recipe?.text || "Done.") + suffix + (summary ? "\n" + summary : "");
+    G.saySafe(sayFn, msg);
 
     // ✅ SFX on success (respects Settings.audioEnabled via Sound.setEnabled)
     playSuccessSound(recipe);
@@ -179,6 +184,58 @@
 
       G.state.flags.inspectorRelocated = true;
       G.saySafe(sayFn, "The inspector arrives, checks his clipboard, and nods. \"Good work. That's much safer.\"");
+    }
+
+    if (recipe.setFlag === "timeForward1000") {
+      const mineField = window.getRoom ? window.getRoom("MINE_CAVERN") : null;
+      if (mineField && Array.isArray(mineField.items)) {
+        let changed = 0;
+        mineField.items = mineField.items.map((entry) => {
+          if (Array.isArray(entry)) {
+            const id = entry[0];
+            const coord = entry[1];
+            if (id === ITEM.SEED) {
+              changed++;
+              return [ITEM.CORN, coord];
+            }
+            return entry;
+          }
+          if (entry === ITEM.SEED) {
+            changed++;
+            return ITEM.CORN;
+          }
+          return entry;
+        });
+        if (changed > 0) {
+          G.saySafe(sayFn, "Far away in the Mine Field, the seed has become corn.");
+        }
+      }
+    }
+
+    if (recipe.setFlag === "eggOilExperimentReady") {
+      const tavern = window.getRoom ? window.getRoom("CAVERN_TAVERN") : null;
+      if (tavern?.exits?.SOUTH && typeof tavern.exits.SOUTH === "object") {
+        tavern.exits.SOUTH.barrier = null;
+      }
+      if (Array.isArray(tavern?.items)) {
+        const edgeX = 3;
+        const edgeY = 6;
+        const moved = [];
+        tavern.items = tavern.items.map((entry) => {
+          if (!Array.isArray(entry) || !Array.isArray(entry[1])) return entry;
+          const id = entry[0];
+          const c = entry[1];
+          if (id === ITEM.EINSTEIN_BARMAN && c[0] === edgeX && c[1] === edgeY) {
+            moved.push(true);
+            return [ITEM.EINSTEIN_BARMAN, [4, 4]];
+          }
+          return entry;
+        });
+        if (!moved.length && !G.roomHasItem(tavern, ITEM.EINSTEIN_BARMAN)) {
+          G.addToRoomAtRandomInterior(tavern, ITEM.EINSTEIN_BARMAN);
+        }
+      }
+      G.saySafe(sayFn, "Einstein Barman grins. \"Ja! The experiment is complete. You may pass south.\"");
     }
   }
 
@@ -640,6 +697,21 @@
         }
         return G.saySafe(sayFn, "The inspector says, \"All clear now. Proceed safely.\"");
       }
+      if (typeof ITEM !== "undefined" && a === ITEM.EINSTEIN_BARMAN) {
+        if (!G.isInRoom(ITEM.EINSTEIN_BARMAN)) {
+          return G.saySafe(sayFn, "They're not here.");
+        }
+        if (!G.state.flags?.eggOilExperimentReady) {
+          return G.saySafe(
+            sayFn,
+            "Einstein Barman says, \"I have been waiting for an egg to complete my master experiment with eggs and oil.\""
+          );
+        }
+        return G.saySafe(
+          sayFn,
+          "Einstein Barman says, \"Magnificent! Egg plus oil has unlocked new possibilities. The south door is open.\""
+        );
+      }
       return G.saySafe(sayFn, "They have nothing to say.");
     }
 
@@ -749,8 +821,8 @@
 
       const impliedRules = [
         // River convenience
-        { a: ITEM.EMPTY_BOTTLE, b: ITEM.RIVER },
-        { a: ITEM.WATER_BOTTLE, b: ITEM.CAMPFIRE },
+        { a: ITEM.EMPTY_BUCKET, b: ITEM.RIVER },
+        { a: ITEM.WATER_BUCKET, b: ITEM.CAMPFIRE },
         // Grate interactions
         { a: ITEM.FISHING_ROD, b: ITEM.GRATE },
         { a: ITEM.STRING_STICK, b: ITEM.GRATE },

@@ -120,18 +120,18 @@ const RECIPES = Object.freeze({
     text: "You dangle the hook into the grate, but the string has no reach. You need something rigid to guide it.",
   },
 
-  [keyOf([ITEM.EMPTY_BOTTLE, ITEM.RIVER])]: {
-    inputs: [ITEM.EMPTY_BOTTLE, ITEM.RIVER],
-    consume: [ITEM.EMPTY_BOTTLE],
-    produce: [ITEM.WATER_BOTTLE],
+  [keyOf([ITEM.EMPTY_BUCKET, ITEM.RIVER])]: {
+    inputs: [ITEM.EMPTY_BUCKET, ITEM.RIVER],
+    consume: [ITEM.EMPTY_BUCKET],
+    produce: [ITEM.WATER_BUCKET],
     placeResult: "inventory",
-    text: "You dip the bottle into the river and fill it with water.",
+    text: "You dip the container into the river and fill it with water.",
   },
 
-  [keyOf([ITEM.WATER_BOTTLE, ITEM.CAMPFIRE])]: {
-    inputs: [ITEM.WATER_BOTTLE, ITEM.CAMPFIRE],
-    consume: [ITEM.CAMPFIRE, ITEM.WATER_BOTTLE],
-    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BOTTLE],
+  [keyOf([ITEM.WATER_BUCKET, ITEM.CAMPFIRE])]: {
+    inputs: [ITEM.WATER_BUCKET, ITEM.CAMPFIRE],
+    consume: [ITEM.CAMPFIRE, ITEM.WATER_BUCKET],
+    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BUCKET],
     keepCoord: true,
     placeResult: "inventory",
     setFlag: "fireOut",
@@ -142,9 +142,9 @@ const RECIPES = Object.freeze({
   EXTINGUISH_CAMPFIRE: {
     action: "EXTINGUISH",
     target: ITEM.CAMPFIRE,
-    requires: [ITEM.WATER_BOTTLE],
-    consume: [ITEM.CAMPFIRE, ITEM.WATER_BOTTLE],
-    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BOTTLE],
+    requires: [ITEM.WATER_BUCKET],
+    consume: [ITEM.CAMPFIRE, ITEM.WATER_BUCKET],
+    produce: [ITEM.CAMPFIRE_OUT, ITEM.EMPTY_BUCKET],
     keepCoord: true,
     placeResult: "inventory",
     setFlag: "fireOut",
@@ -154,15 +154,15 @@ const RECIPES = Object.freeze({
     text: "You pour the water over the flames. The fire hisses and dies out.",
   },
 
-  OPEN_FRIDGE_FIND_BOTTLE: {
+  OPEN_FRIDGE_FIND_BUCKET: {
     action: "OPEN",
     target: ITEM.FRIDGE,
     consume: [],
-    produce: [ITEM.EMPTY_BOTTLE],
+    produce: [ITEM.EMPTY_BUCKET],
     placeResult: "room",
     setFlag: "fridgeOpened",
     repeatText: "The fridge is already open. Just cold air and old shelves now.",
-    text: "You open the fridge. Inside you find an empty bottle.",
+    text: "You open the fridge. Inside you find an empty bucket.",
   },
 
 
@@ -209,6 +209,26 @@ const RECIPES = Object.freeze({
     successSfx: "Audio/alex_jauk-chicken-noise-228106.mp3",
     missingRequiresText: "The webbing is too tough to tear by hand. You need something sturdy, like a stick.",
     text: "Squaaawk! You free the chicken from the web. It eyes you suspicisouly. Strings of web are all over the floor",
+  },
+
+  PUSH_TIME_LEVER: {
+    action: "PUSH",
+    target: ITEM.TIME_LEVER,
+    consume: [],
+    produce: [],
+    placeResult: "room",
+    setFlag: "timeForward1000",
+    repeatText: "The lever is already set forward. Time won't jump again.",
+    text: "You push the lever forward. You go forward 1000 years.",
+  },
+
+  [keyOf([ITEM.EGG, ITEM.OIL_DRUM])]: {
+    inputs: [ITEM.EGG, ITEM.OIL_DRUM],
+    consume: [ITEM.EGG],
+    produce: [],
+    placeResult: "room",
+    setFlag: "eggOilExperimentReady",
+    text: "You drop the egg into the oil drum. It vanishes with a strange plop.",
   },
 
   // Egg + microwave => dinosaur egg
