@@ -1,0 +1,83 @@
+name: Package itch.io ZIP
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number for the tag (example: 1.0, 1.1.2)"
+        required: true
+        default: "1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          RAW_VERSION="${{ github.event.inputs.version }}"
+          CLEAN_VERSION="${RAW_VERSION#v}"
+          TAG="v${CLEAN_VERSION}"
+
+          if [[ ! "${CLEAN_VERSION}" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "Invalid version '${RAW_VERSION}'. Use format like 1.0 or 1.2.3."
+            exit 1
+          fi
+
+          git fetch --tags
+
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+          echo "TAG=${TAG}" >> "${GITHUB_ENV}"
+          echo "ZIP_NAME=StrangePlaces_itch_${TAG}.zip" >> "${GITHUB_ENV}"
+
+      - name: Build clean ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p stage
+          rsync -a --prune-empty-dirs ./ stage/ \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.DS_Store' \
+            --exclude '*/.DS_Store' \
+            --exclude '.*' \
+            --exclude '*.zip' \
+            --exclude '__MACOSX/'
+
+          if [[ ! -f stage/index.html ]]; then
+            echo "index.html not found at ZIP root staging directory."
+            exit 1
+          fi
+
+          (
+            cd stage
+            zip -r "../${ZIP_NAME}" . -x '.*' -x '__MACOSX/*' -x '*.zip'
+          )
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error
