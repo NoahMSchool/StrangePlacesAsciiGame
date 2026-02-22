@@ -16,7 +16,9 @@ const ROOM = Object.freeze({
   COTTAGE_STOREROOM: "COTTAGE_STOREROOM",
   COTTAGE_KITCHEN: "COTTAGE_KITCHEN",
   MINE_ENTRANCE: "MINE_ENTRANCE",
+  CAVERN_TAVERN: "CAVERN_TAVERN",
   MINE_CAVERN: "MINE_CAVERN",
+  TIME_WARP: "TIME_WARP",
   SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
   RIVER: "RIVER",
   SPIDERFOREST: "SPIDERFOREST",
@@ -100,7 +102,6 @@ const ROOM_DEFS = {
     exits: {
       SOUTH: ROOM.MINE_ENTRANCE,
       NORTH: ROOM.COTTAGE_BEDROOM,
-      WEST: ROOM.COTTAGE_STOREROOM,
       EAST: ROOM.COTTAGE_KITCHEN,
     },
   },
@@ -125,10 +126,10 @@ const ROOM_DEFS = {
 
   [ROOM.COTTAGE_STOREROOM]: {
     id: ROOM.COTTAGE_STOREROOM,
-    name: "Cottage Storeroom",
-    desc: "Shelves sag under old crates. An oil drum rests in the corner.",
+    name: "Tavern Storeroom",
+    desc: "Crates, dusty barrels, and old supplies are stacked to the rafters. An oil drum rests in the corner.",
     items: [[ITEM.OIL_DRUM, [3, 3]]],
-    exits: { EAST: ROOM.SHED },
+    exits: { EAST: ROOM.CAVERN_TAVERN },
   },
 
   [ROOM.COTTAGE_KITCHEN]: {
@@ -145,12 +146,24 @@ const ROOM_DEFS = {
   [ROOM.MINE_ENTRANCE]: {
     id: ROOM.MINE_ENTRANCE,
     name: "Mine Entrance",
-    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails. A wooden cottage sits up to the north.",
+    desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails. A wooden cottage sits up to the north, and a cavern tavern lies to the south.",
     items: [],
     exits: {
       WEST: ROOM.DARKCLEARING,
       NORTH: ROOM.SHED,
+      SOUTH: ROOM.CAVERN_TAVERN,
       EAST: { to: ROOM.MINE_CAVERN, barrier: ITEM.HEALTH_INSPECTOR },
+    },
+  },
+
+  [ROOM.CAVERN_TAVERN]: {
+    id: ROOM.CAVERN_TAVERN,
+    name: "Cavern Tavern",
+    desc: "A rough tavern chamber carved into the rock, reinforced with timber walls. The bar is empty, but the room still smells of smoke and ale.",
+    items: [],
+    exits: {
+      NORTH: ROOM.MINE_ENTRANCE,
+      WEST: ROOM.COTTAGE_STOREROOM,
     },
   },
 
@@ -161,6 +174,17 @@ const ROOM_DEFS = {
     items: [[ITEM.CORN, [3, 3]]],
     exits: {
       WEST: ROOM.MINE_ENTRANCE,
+      SOUTH: ROOM.TIME_WARP,
+    },
+  },
+
+  [ROOM.TIME_WARP]: {
+    id: ROOM.TIME_WARP,
+    name: "Time Warp",
+    desc: "The air bends and shimmers. Echoes run backward, and your footsteps arrive before you move.",
+    items: [],
+    exits: {
+      NORTH: ROOM.MINE_CAVERN,
     },
   },
 
@@ -457,6 +481,18 @@ const BORDER_THEMES = Object.freeze({
     WEST: ITEM.TREE,
     SOUTH: ITEM.RIVER_TILE,
   },
+  [ROOM.MINE_ENTRANCE]: {
+    NORTH: ITEM.WOOD_WALL,
+  },
+  [ROOM.CAVERN_TAVERN]: {
+    NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
+    EAST: ITEM.WOOD_WALL,
+    WEST: ITEM.WOOD_WALL,
+  },
+  [ROOM.MINE_CAVERN]: {
+    SOUTH: ITEM.FORCE_FIELD,
+  },
   [ROOM.SHED]: {
     NORTH: ITEM.WOOD_WALL,
     SOUTH: ITEM.WOOD_WALL,
@@ -684,6 +720,7 @@ function getMoveBlockedMessage(result) {
     if (result.barrier === ITEM.RIVER || result.barrier === ITEM.RIVER_TILE) {
       return "A river blocks your way.";
     }
+    if (result.barrier === ITEM.FORCE_FIELD) return "A force field blocks your way.";
     if (result.barrier === ITEM.WOOD_WALL) return "A wooden wall blocks your way.";
     if (result.barrier === ITEM.WALL) return "A wall blocks your way.";
   }

@@ -8,6 +8,7 @@
 const ITEM = Object.freeze({
   WALL: "WALL",
   WOOD_WALL: "WOOD_WALL",
+  FORCE_FIELD: "FORCE_FIELD",
   TREE: "TREE",
   CAMPFIRE: "CAMPFIRE",
   CAMPFIRE_OUT: "CAMPFIRE_OUT",
@@ -58,6 +59,7 @@ const ITEM = Object.freeze({
 const ITEM_DEF_MAP_COLORS = Object.freeze({
   WALL: "#6b7280",
   WOOD_WALL: "#8b5a2b",
+  FORCE_FIELD: "#3b82f6",
   TREE: "#1f6f3f",
   CAMPFIRE: "#ff8a00",
   CAMPFIRE_OUT: "#7c7f87",
@@ -151,6 +153,23 @@ const ITEM_DEFS_BASE = {
       "||=|=|=||",
       "||=|=|=||",
       "||=|=|=||",
+    ],
+  },
+
+  [ITEM.FORCE_FIELD]: {
+    id: ITEM.FORCE_FIELD,
+    name: "Force Field",
+    emoji: "🌀",
+    synonyms: ["force field", "field", "energy wall", "blue wall"],
+    examine: "A humming wall of blue circular energy.",
+    visible: false,
+    portable: false,
+    asciiTile: [
+      "oOoOoOoOo",
+      "OoOoOoOoO",
+      "oOoOoOoOo",
+      "OoOoOoOoO",
+      "oOoOoOoOo",
     ],
   },
 
@@ -455,9 +474,6 @@ const ITEM_DEFS_BASE = {
     synonyms: [
       "chicken",
       "chick",
-      "chiccie",
-      "hen",
-      "bird",
       "chicken in web",
       "chicken_in_web",
       "web chicken",
