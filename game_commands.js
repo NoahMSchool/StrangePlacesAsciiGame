@@ -935,7 +935,19 @@
     if (verb === "HELP") return G.helpText(sayFn);
 
     if (verb === "USE") {
-      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+      if (a && b) {
+        if (typeof ITEM !== "undefined") {
+          const hasKey = a === ITEM.KEY || b === ITEM.KEY;
+          const doorCandidate = a === ITEM.KEY ? b : a;
+          if (
+            hasKey &&
+            (doorCandidate === ITEM.DOOR_LOCKED || doorCandidate === ITEM.DOOR_CLOSED || doorCandidate === ITEM.DOOR_OPEN)
+          ) {
+            return doAction("UNLOCK", doorCandidate, sayFn);
+          }
+        }
+        return combineItems([a, b, c].filter(Boolean), sayFn);
+      }
       if (!a) return G.saySafe(sayFn, "Use what?");
       if (tryImpliedSecondNoun(a)) return;
       return G.saySafe(sayFn, `You can't figure out how to use ${G.formatItem(a)} here.`);
