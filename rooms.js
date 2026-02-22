@@ -1,14 +1,6 @@
 // rooms.js
 
 const ROOM = Object.freeze({
-  CLEARING: "CLEARING",
-  ENTRANCE_HALL: "ENTRANCE_HALL",
-  DINING_ROOM: "DINING_ROOM",
-  PLAYROOM: "PLAYROOM",
-  KITCHEN: "KITCHEN",
-  BANK: "BANK",
-  NOAHROOM: "NOAHROOM",
-
   DARKFOREST: "DARKFOREST",
   DARKCLEARING: "DARKCLEARING",
   SHED: "SHED",
@@ -250,93 +242,6 @@ const ROOM_DEFS = {
     exits: { WEST: ROOM.RIVER },
   },
 
-  [ROOM.CLEARING]: {
-    id: ROOM.CLEARING,
-    name: "Forest Clearing",
-    desc: "A neat circle of grass in the forest. The house to the north looks closer than it should.",
-    items: [
-      [ITEM.CHICKEN, [5, 3]],
-      ITEM.STICK,
-      ITEM.LEAVES,
-      ITEM.CORN,
-      ITEM.MAGNET,
-      ITEM.ROPE,
-    ],
-    exits: {
-      NORTH: ROOM.ENTRANCE_HALL,
-      EAST: { to: ROOM.BANK, barrier: ITEM.DOOR_CLOSED },
-    },
-  },
-
-  [ROOM.ENTRANCE_HALL]: {
-    id: ROOM.ENTRANCE_HALL,
-    name: "Entrance Hall",
-    desc: "A tall hall with a chandelier that isn’t quite still. Your footsteps sound a fraction late.",
-    items: [ITEM.DINOSAUR],
-    exits: {
-      SOUTH: ROOM.CLEARING,
-      WEST: ROOM.DINING_ROOM,
-      EAST: ROOM.PLAYROOM,
-      NORTH: { to: ROOM.KITCHEN, barrier: ITEM.DOOR_CLOSED },
-    },
-  },
-
-  [ROOM.DINING_ROOM]: {
-    id: ROOM.DINING_ROOM,
-    name: "Dining Room",
-    desc: "A long table laid for a meal that never started. The chairs are all slightly misaligned.",
-    items: [],
-    exits: { EAST: ROOM.ENTRANCE_HALL },
-  },
-
-  [ROOM.PLAYROOM]: {
-    id: ROOM.PLAYROOM,
-    name: "Playroom",
-    desc: "Rows of toys watch from the shelves. One space is empty, recently.",
-    items: [ITEM.MAGNET],
-    exits: { WEST: ROOM.ENTRANCE_HALL },
-  },
-
-  [ROOM.BANK]: {
-    id: ROOM.BANK,
-    name: "Bank",
-    desc: "Coins are piled everywhere, but the room still feels empty. The air smells faintly of paper and dust.",
-    items: [
-      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
-      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
-      ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN, ITEM.COIN,
-    ],
-    exits: {
-      WEST: { to: ROOM.CLEARING, barrier: ITEM.DOOR_OPEN },
-    },
-  },
-
-  [ROOM.KITCHEN]: {
-    id: ROOM.KITCHEN,
-    name: "Kitchen",
-    desc: "Hanging pans sway slightly, though the air is still. Something here was used not long ago.",
-    items: [
-      [ITEM.ROPE, [2, 1]],
-      [ITEM.MICROWAVE, [4, 4]],
-    ],
-    exits: {
-      SOUTH: ROOM.ENTRANCE_HALL,
-      NORTH: ROOM.NOAHROOM,
-    },
-  },
-
-  [ROOM.NOAHROOM]: {
-    id: ROOM.NOAHROOM,
-    name: "Noahs Room",
-    desc: "A test room. Things are placed carefully, as if waiting to see what you’ll do.",
-    items: [
-      [ITEM.TEDDYBEAR, [2, 1]],
-      [ITEM.TEDDYBEAR, [3, 5]],
-      [ITEM.TEDDYBEAR, [4, 3]],
-      [ITEM.CHICKEN, [5, 3]],
-    ],
-    exits: { SOUTH: ROOM.KITCHEN },
-  },
 };
 
 // -----------------------------------------------------------------------------
@@ -480,10 +385,6 @@ const BORDER_THEMES = Object.freeze({
     NORTH: ITEM.TREE,
     SOUTH: ITEM.TREE,
     EAST: ITEM.TREE,
-    WEST: ITEM.TREE,
-  },
-  [ROOM.CLEARING]: {
-    SOUTH: ITEM.TREE,
     WEST: ITEM.TREE,
   },
   [ROOM.DARKCLEARING]: {
