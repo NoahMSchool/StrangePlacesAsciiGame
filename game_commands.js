@@ -28,8 +28,8 @@
     MINE_ENTRANCE: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
     MINE_CAVERN: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
     TIME_WARP: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
-    CAVERN_TAVERN: "Audio/ambient/placidplace-tavern-ambience-with-openfire-effect-no-loops-86151.mp3",
-    COTTAGE_STOREROOM: "Audio/ambient/placidplace-tavern-ambience-with-openfire-effect-no-loops-86151.mp3",
+    CAVERN_TAVERN: "Audio/ambient/freesound_community-eerie-ambience-6836.mp3",
+    COTTAGE_STOREROOM: "Audio/ambient/freesound_community-eerie-ambience-6836.mp3",
     PARTICLE_ROOM: "Audio/ambient/pwlpl-cave-dripping-water-sound-effect-473424.mp3",
   });
 
