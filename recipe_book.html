@@ -34,15 +34,35 @@
       border: 2px solid var(--heading-ink);
       border-radius: 8px;
       padding: 10px;
+      display: grid;
+      gap: 8px;
     }
     .head h1 {
       margin: 0;
       font-size: 1.1rem;
     }
     .head p {
-      margin: 6px 0 0;
-      color: var(--muted);
+      margin: 0;
+      color: #4b3d36;
       font-size: 0.9rem;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      text-decoration: none;
+      border: 1px solid var(--heading-ink);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--heading-ink);
+      background: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+    }
+    .nav a[aria-current="page"] {
+      background: var(--heading-ink);
+      color: var(--heading-bg);
     }
     .toolbar {
       background: var(--panel);
@@ -72,6 +92,14 @@
       display: grid;
       gap: 8px;
     }
+    .recipe {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }
     .flags {
       background: var(--panel);
       border: 2px solid var(--line);
@@ -91,57 +119,6 @@
       background: #f2efdf;
       display: grid;
       gap: 4px;
-    }
-    .recipe {
-      background: var(--panel);
-      border: 2px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      display: grid;
-      gap: 6px;
-    }
-    .items {
-      background: var(--panel);
-      border: 2px solid var(--line);
-      border-radius: 8px;
-      padding: 10px;
-      display: grid;
-      gap: 8px;
-    }
-    .items h2 {
-      margin: 0;
-      font-size: 1rem;
-    }
-    .item-grid {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-    .item-card {
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 8px;
-      background: #f2efdf;
-      display: grid;
-      gap: 5px;
-    }
-    .item-title {
-      font-weight: 700;
-      font-size: 0.95rem;
-    }
-    .ascii {
-      margin: 0;
-      font-family: "JetBrains Mono", ui-monospace, monospace;
-      line-height: 1;
-      font-size: 10px;
-      padding: 6px;
-      border: 1px solid #ccb;
-      background: #ece7d2;
-      white-space: pre;
-      overflow-x: auto;
-    }
-    .muted {
-      color: var(--muted);
     }
     .r-top {
       display: flex;
@@ -180,6 +157,12 @@
     <section class="head">
       <h1>Recipe Book</h1>
       <p>All crafting and action recipes currently in the game.</p>
+      <nav class="nav" aria-label="Debug Pages">
+        <a href="all_rooms_ascii.html">World Map</a>
+        <a href="recipe_book.html" aria-current="page">Recipes</a>
+        <a href="item_catalog.html">Items</a>
+        <a href="parser_test_runner.html">Parser Tests</a>
+      </nav>
     </section>
 
     <section class="toolbar">
@@ -188,13 +171,10 @@
     </section>
 
     <section id="list" class="list"></section>
+
     <section class="flags">
       <h2>Flags & Effects</h2>
       <div id="flagList"></div>
-    </section>
-    <section class="items">
-      <h2>Items</h2>
-      <div id="itemList" class="item-grid"></div>
     </section>
   </div>
 
@@ -206,7 +186,6 @@
       const qEl = document.getElementById("q");
       const countEl = document.getElementById("count");
       const flagListEl = document.getElementById("flagList");
-      const itemListEl = document.getElementById("itemList");
 
       function itemLabel(id) {
         if (!id) return "(none)";
@@ -221,8 +200,7 @@
       }
 
       function classify(recipe) {
-        if (recipe && recipe.action) return "Action";
-        return "Combine";
+        return recipe && recipe.action ? "Action" : "Combine";
       }
 
       function primaryLine(recipe) {
@@ -232,7 +210,7 @@
             : "";
           return `${recipe.action} ${itemLabel(recipe.target)}${req}`;
         }
-        return `${labels(recipe.inputs)} → ${labels(recipe.produce)}`;
+        return `${labels(recipe.inputs)} -> ${labels(recipe.produce)}`;
       }
 
       function normalizeRecipes() {
@@ -285,7 +263,6 @@
         if (r.text) parts.push(`<div class="line"><span class="k">Success Text:</span> ${r.text}</div>`);
         if (r.missingRequiresText) parts.push(`<div class="line"><span class="k">Missing Text:</span> ${r.missingRequiresText}</div>`);
         if (r.repeatText) parts.push(`<div class="line"><span class="k">Repeat Text:</span> ${r.repeatText}</div>`);
-
         return `<article class="recipe">${parts.join("")}</article>`;
       }
 
@@ -324,74 +301,9 @@
         }).join("");
       }
 
-      function boolOrMissing(v) {
-        return typeof v === "boolean" ? String(v) : "(unset)";
-      }
-
-      function asCode(v) {
-        return `<code>${String(v)}</code>`;
-      }
-
-      function renderItems() {
-        const defs = (typeof ITEM_DEFS !== "undefined") ? Object.values(ITEM_DEFS) : [];
-        const sorted = [...defs].sort((a, b) => String(a?.id || "").localeCompare(String(b?.id || "")));
-        const itemToFlags = new Map();
-
-        for (const row of rows) {
-          const flag = row.recipe?.setFlag;
-          if (!flag) continue;
-
-          const touched = new Set();
-          const r = row.recipe || {};
-          const arrays = [r.inputs, r.requires, r.consume, r.produce];
-          for (const arr of arrays) {
-            if (!Array.isArray(arr)) continue;
-            for (const id of arr) if (id) touched.add(id);
-          }
-          if (r.target) touched.add(r.target);
-
-          for (const id of touched) {
-            if (!itemToFlags.has(id)) itemToFlags.set(id, new Set());
-            itemToFlags.get(id).add(flag);
-          }
-        }
-
-        function esc(s) {
-          return String(s)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-        }
-
-        itemListEl.innerHTML = sorted.map((d) => {
-          const syn = Array.isArray(d.synonyms) && d.synonyms.length ? d.synonyms.join(", ") : "(none)";
-          const ascii = Array.isArray(d.asciiTile) ? d.asciiTile.join("\n") : "(no asciiTile)";
-          const asciiHtml = esc(ascii);
-          const colorStyle = d.mapColor ? ` style="color:${d.mapColor}"` : "";
-          const flags = itemToFlags.has(d.id) ? Array.from(itemToFlags.get(d.id)).sort() : [];
-          const flagText = flags.length ? flags.map((f) => `<code>${f}</code>`).join(", ") : '<span class="muted">(none)</span>';
-
-          return `
-            <article class="item-card">
-              <div class="item-title">${d.emoji || ""} ${d.name || d.id || "(unnamed item)"}</div>
-              <div class="line"><span class="k">ID:</span> ${asCode(d.id || "(missing)")}</div>
-              <div class="line"><span class="k">Map Color:</span> ${asCode(d.mapColor || "(none)")}</div>
-              <div class="line"><span class="k">Visible:</span> ${asCode(boolOrMissing(d.visible))} <span class="k">Portable:</span> ${asCode(boolOrMissing(d.portable))}</div>
-              <div class="line"><span class="k">Synonyms:</span> ${syn}</div>
-              <div class="line"><span class="k">Flags Affecting:</span> ${flagText}</div>
-              <div class="line"><span class="k">Examine:</span> ${d.examine || "(none)"}</div>
-              ${d.takeText ? `<div class="line"><span class="k">takeText:</span> ${d.takeText}</div>` : ""}
-              ${d.eatText ? `<div class="line"><span class="k">eatText:</span> ${d.eatText}</div>` : ""}
-              <pre class="ascii"${colorStyle}>${asciiHtml}</pre>
-            </article>
-          `;
-        }).join("");
-      }
-
       qEl.addEventListener("input", render);
       render();
       renderFlags();
-      renderItems();
     })();
   </script>
 </body>

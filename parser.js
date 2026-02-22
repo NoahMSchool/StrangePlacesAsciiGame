@@ -1,6 +1,7 @@
 // ---------------- CONFIG (declare once) ----------------
 
 const STOPWORDS = new Set(["the", "a", "an", "at", "up", "to", "please", "under"]);
+const LEADING_POLITENESS = new Set(["please", "pls", "kindly"]);
 
 // ✅ Noun connectors used to split "X with Y", "X in Y", etc.
 const NOUN_CONNECTORS = ["and", "with", "on", "to", "in", "into"];
@@ -41,7 +42,7 @@ const VERB_SYNONYMS = {
   THROW:   ["throw", "toss", "hurl"],
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
-  LOOK:    ["l","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
+  LOOK:    ["l","x","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
   COMBINE: ["combine", "mix", "put", "join", "attach", "merge", "connect", "tie", "feed"],
   MAKE:    ["make", "craft", "build"],
   EAT:     ["eat", "consume", "devour"]
@@ -103,6 +104,12 @@ function parseCommands(input) {
   const result = { known: [], unknown: [] };
 
   const normalizeSpaces = (s) => (s ?? "").trim().replace(/\s+/g, " ");
+  const stripLeadingPoliteness = (phrase) => {
+    const toks = normalizeSpaces(phrase).split(" ").filter(Boolean);
+    let i = 0;
+    while (i < toks.length && LEADING_POLITENESS.has(toks[i].toLowerCase())) i++;
+    return toks.slice(i).join(" ");
+  };
   const stripStopwords = (phrase) => {
     const tokens = normalizeSpaces(phrase).toLowerCase().split(" ").filter(Boolean);
     const kept = tokens.filter((t) => !STOPWORDS.has(t));
@@ -344,6 +351,7 @@ function parseCommands(input) {
     let clause = normalizeSpaces(rawClause.toLowerCase())
       .replace(/__and__/g, "and")
       .replace(/__AND__/g, "and");
+    clause = stripLeadingPoliteness(clause.toLowerCase());
 
     if (!clause) continue;
 
@@ -443,6 +451,8 @@ function parseCommands(input) {
     if (vm.canon === "COMBINE" && allowedCounts.includes(2) && allowedCounts.includes(3)) {
       const got = parseNounList(vm.rest, { min: 2, max: 3 });
 
+      const combineRestWords = stripStopwords(vm.rest).toLowerCase().split(" ").filter(Boolean);
+
       function normalizeCombineNouns(nouns) {
         const out = [...nouns];
         // Parser-only ambiguity: "chicken" can resolve to CHICKEN_IN_WEB first.
@@ -455,6 +465,22 @@ function parseCommands(input) {
           const idx = out.indexOf(ITEM.CHICKEN_IN_WEB);
           if (idx >= 0) out[idx] = ITEM.CHICKEN;
         }
+
+        // Guard ambiguous no-separator parse:
+        // "combine string hook" should mean ROPE + HOOK, not ROPE + STICK.
+        const askedHook = combineRestWords.includes("hook");
+        const askedStick = combineRestWords.includes("stick");
+        if (
+          askedHook &&
+          !askedStick &&
+          out.includes(ITEM.ROPE) &&
+          out.includes(ITEM.STICK) &&
+          !out.includes(ITEM.HOOK)
+        ) {
+          const idx = out.indexOf(ITEM.STICK);
+          if (idx >= 0) out[idx] = ITEM.HOOK;
+        }
+
         return out;
       }
 

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Item Catalog</title>
+  <style>
+    :root {
+      --bg: #2e3d2f;
+      --panel: #d7d2bd;
+      --ink: #1f1c16;
+      --line: #355447;
+      --heading-bg: #a9d5db;
+      --heading-ink: #b42558;
+      --muted: #4b3d36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      padding: 12px;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+    }
+    .head {
+      background: var(--heading-bg);
+      color: var(--heading-ink);
+      border: 2px solid var(--heading-ink);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .head h1 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    .head p {
+      margin: 0;
+      color: #4b3d36;
+      font-size: 0.9rem;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      text-decoration: none;
+      border: 1px solid var(--heading-ink);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--heading-ink);
+      background: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+    }
+    .nav a[aria-current="page"] {
+      background: var(--heading-ink);
+      color: var(--heading-bg);
+    }
+    .toolbar {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    #q {
+      width: 100%;
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f2efdf;
+      color: var(--ink);
+    }
+    #count {
+      font-size: 0.9rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .item-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f2efdf;
+      display: grid;
+      gap: 5px;
+    }
+    .item-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .ascii {
+      margin: 0;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      line-height: 1;
+      font-size: 10px;
+      padding: 6px;
+      border: 1px solid #ccb;
+      background: #ece7d2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .line {
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+    .k { color: var(--muted); }
+    .muted { color: var(--muted); }
+    code {
+      background: #ece7d2;
+      border: 1px solid #ccb;
+      border-radius: 4px;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="head">
+      <h1>Item Catalog</h1>
+      <p>All item definitions, ASCII tiles, and config values.</p>
+      <nav class="nav" aria-label="Debug Pages">
+        <a href="all_rooms_ascii.html">World Map</a>
+        <a href="recipe_book.html">Recipes</a>
+        <a href="item_catalog.html" aria-current="page">Items</a>
+        <a href="parser_test_runner.html">Parser Tests</a>
+      </nav>
+    </section>
+
+    <section class="toolbar">
+      <input id="q" placeholder="Filter by id, name, synonym, flag..." />
+      <div id="count"></div>
+    </section>
+
+    <section id="itemList" class="item-grid"></section>
+  </div>
+
+  <script src="items.js"></script>
+  <script src="recipes.js"></script>
+  <script>
+    (function () {
+      const itemListEl = document.getElementById("itemList");
+      const qEl = document.getElementById("q");
+      const countEl = document.getElementById("count");
+
+      const rows = Object.entries(typeof RECIPES !== "undefined" ? RECIPES : {}).map(([id, recipe]) => ({ id, recipe }));
+
+      function boolOrMissing(v) {
+        return typeof v === "boolean" ? String(v) : "(unset)";
+      }
+
+      function asCode(v) {
+        return `<code>${String(v)}</code>`;
+      }
+
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      const itemToFlags = new Map();
+      for (const row of rows) {
+        const flag = row.recipe?.setFlag;
+        if (!flag) continue;
+
+        const touched = new Set();
+        const r = row.recipe || {};
+        const arrays = [r.inputs, r.requires, r.consume, r.produce];
+        for (const arr of arrays) {
+          if (!Array.isArray(arr)) continue;
+          for (const id of arr) if (id) touched.add(id);
+        }
+        if (r.target) touched.add(r.target);
+
+        for (const id of touched) {
+          if (!itemToFlags.has(id)) itemToFlags.set(id, new Set());
+          itemToFlags.get(id).add(flag);
+        }
+      }
+
+      const defs = (typeof ITEM_DEFS !== "undefined") ? Object.values(ITEM_DEFS) : [];
+      const sorted = [...defs].sort((a, b) => String(a?.id || "").localeCompare(String(b?.id || "")));
+
+      const enriched = sorted.map((d) => {
+        const syn = Array.isArray(d.synonyms) ? d.synonyms.join(" ") : "";
+        const flags = itemToFlags.has(d.id) ? Array.from(itemToFlags.get(d.id)).sort() : [];
+        const searchBlob = [d.id, d.name, d.examine, d.takeText, d.eatText, d.mapColor, syn, flags.join(" ")].join(" ").toLowerCase();
+        return { d, flags, searchBlob };
+      });
+
+      function render() {
+        const q = qEl.value.trim().toLowerCase();
+        const filtered = q ? enriched.filter((x) => x.searchBlob.includes(q)) : enriched;
+        countEl.textContent = `${filtered.length} / ${enriched.length} items`;
+
+        itemListEl.innerHTML = filtered.map(({ d, flags }) => {
+          const syn = Array.isArray(d.synonyms) && d.synonyms.length ? d.synonyms.join(", ") : "(none)";
+          const ascii = Array.isArray(d.asciiTile) ? d.asciiTile.join("\n") : "(no asciiTile)";
+          const asciiHtml = esc(ascii);
+          const colorStyle = d.mapColor ? ` style="color:${d.mapColor}"` : "";
+          const flagText = flags.length ? flags.map((f) => `<code>${f}</code>`).join(", ") : '<span class="muted">(none)</span>';
+
+          return `
+            <article class="item-card">
+              <div class="item-title">${d.emoji || ""} ${d.name || d.id || "(unnamed item)"}</div>
+              <div class="line"><span class="k">ID:</span> ${asCode(d.id || "(missing)")}</div>
+              <div class="line"><span class="k">Map Color:</span> ${asCode(d.mapColor || "(none)")}</div>
+              <div class="line"><span class="k">Visible:</span> ${asCode(boolOrMissing(d.visible))} <span class="k">Portable:</span> ${asCode(boolOrMissing(d.portable))}</div>
+              <div class="line"><span class="k">Synonyms:</span> ${syn}</div>
+              <div class="line"><span class="k">Flags Affecting:</span> ${flagText}</div>
+              <div class="line"><span class="k">Examine:</span> ${d.examine || "(none)"}</div>
+              ${d.takeText ? `<div class="line"><span class="k">takeText:</span> ${d.takeText}</div>` : ""}
+              ${d.eatText ? `<div class="line"><span class="k">eatText:</span> ${d.eatText}</div>` : ""}
+              <pre class="ascii"${colorStyle}>${asciiHtml}</pre>
+            </article>
+          `;
+        }).join("");
+      }
+
+      qEl.addEventListener("input", render);
+      render();
+    })();
+  </script>
+</body>
+</html>

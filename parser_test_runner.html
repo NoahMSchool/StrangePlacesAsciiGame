@@ -10,6 +10,8 @@
       --panel: #d7d2bd;
       --ink: #1f1c16;
       --line: #355447;
+      --heading-bg: #a9d5db;
+      --heading-ink: #b42558;
       --ok: #1f7a43;
       --bad: #9f2f2f;
       --muted: #4b3d36;
@@ -33,6 +35,37 @@
       border: 2px solid var(--line);
       border-radius: 8px;
       padding: 10px;
+    }
+    .head {
+      background: var(--heading-bg);
+      color: var(--heading-ink);
+      border: 2px solid var(--heading-ink);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .head p {
+      margin: 0;
+      color: #4b3d36;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      text-decoration: none;
+      border: 1px solid var(--heading-ink);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--heading-ink);
+      background: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+    }
+    .nav a[aria-current="page"] {
+      background: var(--heading-ink);
+      color: var(--heading-bg);
     }
     h1 { margin: 0; font-size: 1.1rem; }
     p { margin: 6px 0 0; color: var(--muted); font-size: 0.9rem; }
@@ -72,9 +105,15 @@
 </head>
 <body>
   <div class="wrap">
-    <section class="card">
+    <section class="head">
       <h1>Parser Unit Tests</h1>
       <p>Runs parser checks for known-good commands and human-style inputs that are currently unsupported.</p>
+      <nav class="nav" aria-label="Debug Pages">
+        <a href="all_rooms_ascii.html">World Map</a>
+        <a href="recipe_book.html">Recipes</a>
+        <a href="item_catalog.html">Items</a>
+        <a href="parser_test_runner.html" aria-current="page">Parser Tests</a>
+      </nav>
     </section>
     <section id="summary" class="card">Running tests...</section>
     <section class="card">
@@ -141,6 +180,7 @@
         { c: "Combine", in: "combine hook with rope", ex: { knownExact: ["COMBINE HOOK ROPE"], unknownCount: 0 } },
         { c: "Combine", in: "combine rope and stick", ex: { knownExact: ["COMBINE ROPE STICK"], unknownCount: 0 } },
         { c: "Combine", in: "combine hook rope", ex: { knownExact: ["COMBINE HOOK ROPE"], unknownCount: 0 } },
+        { c: "Combine", in: "combine string hook", ex: { knownExact: ["COMBINE ROPE HOOK"], unknownCount: 0 } },
         { c: "Combine", in: "combine hook rope stick", ex: { knownExact: ["COMBINE HOOK ROPE STICK"], unknownCount: 0 } },
         { c: "Combine", in: "combine stick hook string", ex: { knownExact: ["COMBINE STICK HOOK ROPE"], unknownCount: 0 } },
         { c: "Combine", in: "combine fishing rod grate", ex: { knownExact: ["COMBINE FISHING_ROD GRATE"], unknownCount: 0 } },
@@ -167,14 +207,14 @@
         { c: "Chaining", in: "combine hook and rope and stick", ex: { knownExact: ["COMBINE HOOK ROPE STICK"], unknownCount: 0 } },
 
         // Human-ish unsupported (expected parser failures)
-        { c: "Unsupported", in: "please open the door", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Core", in: "please open the door", ex: { knownExact: ["OPEN DOOR_LOCKED"], unknownCount: 0 } },
         { c: "Unsupported", in: "go northeast", ex: { unknownMin: 1 }, expectUnsupported: true },
         { c: "Unsupported", in: "use", ex: { unknownMin: 1 }, expectUnsupported: true },
         { c: "Unsupported", in: "combine", ex: { unknownMin: 1 }, expectUnsupported: true },
         { c: "Unsupported", in: "fill", ex: { unknownMin: 1 }, expectUnsupported: true },
         { c: "Unsupported", in: "take all coins", ex: { unknownMin: 1 }, expectUnsupported: true },
         { c: "Unsupported", in: "where am i", ex: { unknownMin: 1 }, expectUnsupported: true },
-        { c: "Unsupported", in: "x grate", ex: { unknownMin: 1 }, expectUnsupported: true },
+        { c: "Core", in: "x grate", ex: { knownExact: ["LOOK GRATE"], unknownCount: 0 } },
         { c: "Unsupported", in: "drop", ex: { unknownMin: 1 }, expectUnsupported: true },
         { c: "Unsupported", in: "talk to", ex: { unknownMin: 1 }, expectUnsupported: true },
       ];
