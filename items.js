@@ -469,10 +469,10 @@ const ITEM_DEFS_BASE = {
     visible: false,
     portable: false,
     asciiTile: [
+      "   /^\\   ",
       "  /^^^\\  ",
-      " /^^^^^\\ ",
-      "/^^^|^^^\\",
-      "   |||   ",
+      " /^ | ^\\ ",
+      "/ ^   ^ \\",
       "   |||   "
     ],
   },
