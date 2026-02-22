@@ -72,6 +72,26 @@
       display: grid;
       gap: 8px;
     }
+    .flags {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .flags h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .flag {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f2efdf;
+      display: grid;
+      gap: 4px;
+    }
     .recipe {
       background: var(--panel);
       border: 2px solid var(--line);
@@ -79,6 +99,49 @@
       padding: 10px;
       display: grid;
       gap: 6px;
+    }
+    .items {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .items h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .item-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f2efdf;
+      display: grid;
+      gap: 5px;
+    }
+    .item-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .ascii {
+      margin: 0;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      line-height: 1;
+      font-size: 10px;
+      padding: 6px;
+      border: 1px solid #ccb;
+      background: #ece7d2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .muted {
+      color: var(--muted);
     }
     .r-top {
       display: flex;
@@ -125,6 +188,14 @@
     </section>
 
     <section id="list" class="list"></section>
+    <section class="flags">
+      <h2>Flags & Effects</h2>
+      <div id="flagList"></div>
+    </section>
+    <section class="items">
+      <h2>Items</h2>
+      <div id="itemList" class="item-grid"></div>
+    </section>
   </div>
 
   <script src="items.js"></script>
@@ -134,6 +205,8 @@
       const listEl = document.getElementById("list");
       const qEl = document.getElementById("q");
       const countEl = document.getElementById("count");
+      const flagListEl = document.getElementById("flagList");
+      const itemListEl = document.getElementById("itemList");
 
       function itemLabel(id) {
         if (!id) return "(none)";
@@ -187,6 +260,14 @@
       }
 
       const rows = normalizeRecipes();
+      const FLAG_EFFECTS = Object.freeze({
+        grateKeyTaken: "Marks the grate key as taken so grate-related descriptions/puzzle state update.",
+        fireOut: "Douses the campfire, removes the inspector barrier at Mine Entrance east exit, and relocates the inspector to Dark Forest (one-time).",
+        fridgeOpened: "Marks fridge as opened so open-fridge recipe uses repeat behavior instead of spawning another item.",
+        bedBookFound: "Marks the hidden bed book as found so repeated searches/examines don't reveal it again.",
+        timeForward1000: "Advances time 1000 years and turns Seed into Corn in Mine Field (MINE_CAVERN).",
+        eggOilExperimentReady: "Completes the egg+oil setup, removes Einstein Barman's south-exit barrier, and moves/places him in the tavern.",
+      });
 
       function recipeCard(row) {
         const r = row.recipe;
@@ -200,7 +281,6 @@
         if (Array.isArray(r.produce)) parts.push(`<div class="line"><span class="k">Produces:</span> ${labels(r.produce)}</div>`);
         if (r.placeResult) parts.push(`<div class="line"><span class="k">Place Result:</span> <code>${r.placeResult}</code></div>`);
         if (r.keepCoord) parts.push(`<div class="line"><span class="k">Keep Coords:</span> <code>true</code></div>`);
-        if (r.setFlag) parts.push(`<div class="line"><span class="k">Sets Flag:</span> <code>${r.setFlag}</code></div>`);
         if (r.successSfx) parts.push(`<div class="line"><span class="k">SFX:</span> <code>${r.successSfx}</code></div>`);
         if (r.text) parts.push(`<div class="line"><span class="k">Success Text:</span> ${r.text}</div>`);
         if (r.missingRequiresText) parts.push(`<div class="line"><span class="k">Missing Text:</span> ${r.missingRequiresText}</div>`);
@@ -216,8 +296,102 @@
         listEl.innerHTML = filtered.map(recipeCard).join("");
       }
 
+      function renderFlags() {
+        const byFlag = new Map();
+        for (const row of rows) {
+          const f = row.recipe?.setFlag;
+          if (!f) continue;
+          if (!byFlag.has(f)) byFlag.set(f, []);
+          byFlag.get(f).push(row.id);
+        }
+
+        const flags = Array.from(byFlag.keys()).sort();
+        if (!flags.length) {
+          flagListEl.innerHTML = `<div class="line">No recipe flags found.</div>`;
+          return;
+        }
+
+        flagListEl.innerHTML = flags.map((flag) => {
+          const recipeIds = byFlag.get(flag) || [];
+          const effect = FLAG_EFFECTS[flag] || "Used as a state marker for recipe/room condition checks.";
+          return `
+            <article class="flag">
+              <div class="line"><span class="k">Flag:</span> <code>${flag}</code></div>
+              <div class="line"><span class="k">Set by:</span> ${recipeIds.map((id) => `<code>${id}</code>`).join(", ")}</div>
+              <div class="line"><span class="k">Effect:</span> ${effect}</div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function boolOrMissing(v) {
+        return typeof v === "boolean" ? String(v) : "(unset)";
+      }
+
+      function asCode(v) {
+        return `<code>${String(v)}</code>`;
+      }
+
+      function renderItems() {
+        const defs = (typeof ITEM_DEFS !== "undefined") ? Object.values(ITEM_DEFS) : [];
+        const sorted = [...defs].sort((a, b) => String(a?.id || "").localeCompare(String(b?.id || "")));
+        const itemToFlags = new Map();
+
+        for (const row of rows) {
+          const flag = row.recipe?.setFlag;
+          if (!flag) continue;
+
+          const touched = new Set();
+          const r = row.recipe || {};
+          const arrays = [r.inputs, r.requires, r.consume, r.produce];
+          for (const arr of arrays) {
+            if (!Array.isArray(arr)) continue;
+            for (const id of arr) if (id) touched.add(id);
+          }
+          if (r.target) touched.add(r.target);
+
+          for (const id of touched) {
+            if (!itemToFlags.has(id)) itemToFlags.set(id, new Set());
+            itemToFlags.get(id).add(flag);
+          }
+        }
+
+        function esc(s) {
+          return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+
+        itemListEl.innerHTML = sorted.map((d) => {
+          const syn = Array.isArray(d.synonyms) && d.synonyms.length ? d.synonyms.join(", ") : "(none)";
+          const ascii = Array.isArray(d.asciiTile) ? d.asciiTile.join("\n") : "(no asciiTile)";
+          const asciiHtml = esc(ascii);
+          const colorStyle = d.mapColor ? ` style="color:${d.mapColor}"` : "";
+          const flags = itemToFlags.has(d.id) ? Array.from(itemToFlags.get(d.id)).sort() : [];
+          const flagText = flags.length ? flags.map((f) => `<code>${f}</code>`).join(", ") : '<span class="muted">(none)</span>';
+
+          return `
+            <article class="item-card">
+              <div class="item-title">${d.emoji || ""} ${d.name || d.id || "(unnamed item)"}</div>
+              <div class="line"><span class="k">ID:</span> ${asCode(d.id || "(missing)")}</div>
+              <div class="line"><span class="k">Map Color:</span> ${asCode(d.mapColor || "(none)")}</div>
+              <div class="line"><span class="k">Visible:</span> ${asCode(boolOrMissing(d.visible))} <span class="k">Portable:</span> ${asCode(boolOrMissing(d.portable))}</div>
+              <div class="line"><span class="k">Synonyms:</span> ${syn}</div>
+              <div class="line"><span class="k">Flags Affecting:</span> ${flagText}</div>
+              <div class="line"><span class="k">Examine:</span> ${d.examine || "(none)"}</div>
+              ${d.takeText ? `<div class="line"><span class="k">takeText:</span> ${d.takeText}</div>` : ""}
+              ${d.eatText ? `<div class="line"><span class="k">eatText:</span> ${d.eatText}</div>` : ""}
+              <pre class="ascii"${colorStyle}>${asciiHtml}</pre>
+            </article>
+          `;
+        }).join("");
+      }
+
       qEl.addEventListener("input", render);
       render();
+      renderFlags();
+      renderItems();
     })();
   </script>
 </body>
