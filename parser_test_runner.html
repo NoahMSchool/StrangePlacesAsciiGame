@@ -68,6 +68,12 @@
       color: var(--heading-bg);
     }
     h1 { margin: 0; font-size: 1.1rem; }
+    .ver {
+      font-size: 0.7em;
+      opacity: 0.85;
+      font-weight: 400;
+      margin-left: 4px;
+    }
     p { margin: 6px 0 0; color: var(--muted); font-size: 0.9rem; }
     #summary { font-size: 0.95rem; }
     .ok { color: var(--ok); font-weight: 700; }
@@ -106,7 +112,7 @@
 <body>
   <div class="wrap">
     <section class="head">
-      <h1>Parser Unit Tests</h1>
+      <h1>Parser Unit Tests <span class="ver">(v1.0)</span></h1>
       <p>Runs parser checks for known-good commands and human-style inputs that are currently unsupported.</p>
       <nav class="nav" aria-label="Debug Pages">
         <a href="all_rooms_ascii.html">World Map</a>
