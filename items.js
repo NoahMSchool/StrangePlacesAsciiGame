@@ -193,6 +193,7 @@ const ITEM_DEFS_BASE = {
     emoji: "🔒",
     synonyms: ["door", "locked door"],
     examine: "A locked door. The keyhole looks inviting.",
+    roomDescExtra: "A locked door stands to the east for no obvious reason.",
     visible: true,
     portable: false,
     asciiTile: [
@@ -210,6 +211,7 @@ const ITEM_DEFS_BASE = {
     emoji: "🚪",
     synonyms: ["door", "closed door"],
     examine: "A closed door set into the wall. It blocks the way.",
+    roomDescExtra: "A closed door stands to the east for no obvious reason.",
     visible: true,
     portable: false,
     asciiTile: [
@@ -227,6 +229,7 @@ const ITEM_DEFS_BASE = {
     emoji: "🚪",
     synonyms: ["door", "open door"],
     examine: "A open door set into the wall.",
+    roomDescExtra: "An open doorway leads east.",
     visible: true,
     portable: false,
     asciiTile: [
@@ -486,6 +489,7 @@ const ITEM_DEFS_BASE = {
     emoji: "🔥",
     synonyms: ["campfire", "fire", "bonfire", "flames"],
     examine: "A roaring campfire crackles in the middle of the clearing, throwing orange light across the trees.",
+    roomDescExtra: "A roaring campfire burns in the middle, spitting sparks into the dark.",
     visible: true,
     portable: false,
     takeText: "It's far too hot to pick up.",
@@ -504,6 +508,7 @@ const ITEM_DEFS_BASE = {
     emoji: "🪵",
     synonyms: ["doused fire", "out fire", "embers", "ashes"],
     examine: "Wet ash and smoking wood. The fire is out.",
+    roomDescExtra: "A doused campfire smolders in the middle, sending up thin smoke.",
     visible: true,
     portable: false,
     asciiTile: [
@@ -549,6 +554,8 @@ const ITEM_DEFS_BASE = {
       "web"
     ],
     examine: "A poor chicken trapped by spider webs. The spiders next meal?",
+    roomDescExtra: "A little chicken is thrashing about in the webs.",
+
     visible: true,
     portable: false,
     takeText: "The chicken is stuck fast in the web.",

@@ -143,10 +143,32 @@
       return;
     }
 
-    const roomDesc =
+    const baseRoomDesc =
       typeof room.desc === "function"
         ? room.desc({ room, state })
         : room.desc;
+
+    const uniqueRoomItemIds = [...new Set((room.items || []).map(entryToId))];
+    const roomDescExtras = uniqueRoomItemIds
+      .map((itemId) => {
+        const def = getItemDef(itemId);
+        if (!def?.roomDescExtra) return "";
+        const extra =
+          typeof def.roomDescExtra === "function"
+            ? def.roomDescExtra({
+                itemId,
+                room,
+                roomId: state.currentRoom,
+                state,
+                isInRoom,
+                isInInventory,
+              })
+            : def.roomDescExtra;
+        return typeof extra === "string" ? extra.trim() : "";
+      })
+      .filter(Boolean);
+
+    const roomDesc = [baseRoomDesc, ...roomDescExtras].filter(Boolean).join(" ");
 
     saySafe(sayFn, `You are in ${room.name}.`);
     saySafe(sayFn, roomDesc);

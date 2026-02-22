@@ -22,13 +22,7 @@ const ROOM_DEFS = {
   [ROOM.DARKFOREST]: {
     id: ROOM.DARKFOREST,
     name: "Dark Forest",
-    desc: ({ room }) => {
-      const ids = (room?.items || []).map((entry) => (Array.isArray(entry) ? entry[0] : entry));
-      const fireText = ids.includes(ITEM.CAMPFIRE_OUT)
-        ? "A doused campfire smolders in the middle, sending up thin smoke."
-        : "A roaring campfire burns in the middle, spitting sparks into the dark.";
-      return `The trees stand too close together. ${fireText} There’s a narrow gap to the east.`;
-    },
+    desc: "The trees stand too close together. There’s a narrow gap to the east.",
     items: [
       [ITEM.TREE, [1, 1]],
       [ITEM.TREE, [3, 1]],
@@ -45,21 +39,7 @@ const ROOM_DEFS = {
   [ROOM.DARKCLEARING]: {
     id: ROOM.DARKCLEARING,
     name: "Dark Clearing",
-    desc: ({ room }) => {
-      const items = room?.items || [];
-      const ids = items.map((entry) => (Array.isArray(entry) ? entry[0] : entry));
-
-      let doorText = "A door stands to the east for no obvious reason.";
-      if (ids.includes(ITEM.DOOR_LOCKED)) {
-        doorText = "A locked door stands to the east for no obvious reason.";
-      } else if (ids.includes(ITEM.DOOR_CLOSED)) {
-        doorText = "A closed door stands to the east for no obvious reason.";
-      } else if (ids.includes(ITEM.DOOR_OPEN)) {
-        doorText = "An open doorway leads east.";
-      }
-
-      return `A bare clearing with flattened leaves. A path slopes down to the south. ${doorText}`;
-    },
+    desc: "A bare clearing with flattened leaves. A path slopes down to the south.",
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
       NORTH: ROOM.SHIPWRECK_FOREST,
