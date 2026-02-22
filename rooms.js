@@ -169,9 +169,9 @@ const ROOM_DEFS = {
 
   [ROOM.MINE_CAVERN]: {
     id: ROOM.MINE_CAVERN,
-    name: "Mine Cavern",
+    name: "Mine Field",
     desc: "A vast cavern opens ahead, dripping and echoing.",
-    items: [[ITEM.CORN, [3, 3]]],
+    items: [[ITEM.SEED, [3, 3]]],
     exits: {
       WEST: ROOM.MINE_ENTRANCE,
       SOUTH: ROOM.TIME_WARP,
@@ -182,7 +182,10 @@ const ROOM_DEFS = {
     id: ROOM.TIME_WARP,
     name: "Time Warp",
     desc: "The air bends and shimmers. Echoes run backward, and your footsteps arrive before you move.",
-    items: [],
+    items: [
+      [ITEM.TIME_LEVER, [3, 3]],
+      [ITEM.INSTRUCTIONS_POSTER, [1, 3]],
+    ],
     exits: {
       NORTH: ROOM.MINE_CAVERN,
     },
@@ -483,6 +486,7 @@ const BORDER_THEMES = Object.freeze({
   },
   [ROOM.MINE_ENTRANCE]: {
     NORTH: ITEM.WOOD_WALL,
+    SOUTH: ITEM.WOOD_WALL,
   },
   [ROOM.CAVERN_TAVERN]: {
     NORTH: ITEM.WOOD_WALL,
@@ -492,6 +496,12 @@ const BORDER_THEMES = Object.freeze({
   },
   [ROOM.MINE_CAVERN]: {
     SOUTH: ITEM.FORCE_FIELD,
+  },
+  [ROOM.TIME_WARP]: {
+    NORTH: ITEM.FORCE_FIELD,
+    SOUTH: ITEM.FORCE_FIELD,
+    EAST: ITEM.FORCE_FIELD,
+    WEST: ITEM.FORCE_FIELD,
   },
   [ROOM.SHED]: {
     NORTH: ITEM.WOOD_WALL,
