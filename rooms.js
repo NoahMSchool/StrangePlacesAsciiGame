@@ -63,9 +63,9 @@ const ROOM_DEFS = {
     items: [[ITEM.LEAVES, [5, 4]]],
     exits: {
       NORTH: ROOM.SHIPWRECK_FOREST,
-      SOUTH: ROOM.RIVER,
+      SOUTH: { to: ROOM.RIVER, distance: 2 },
       WEST: ROOM.DARKFOREST,
-      EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED },
+      EAST: { to: ROOM.MINE_ENTRANCE, barrier: ITEM.DOOR_LOCKED, distance: 2 },
     },
   },
 
@@ -142,7 +142,7 @@ const ROOM_DEFS = {
     desc: "A timbered tunnel mouth yawns into darkness. Warning signs hang from bent nails. A wooden cottage sits up to the north, and a cavern tavern lies to the south.",
     items: [],
     exits: {
-      WEST: ROOM.DARKCLEARING,
+      WEST: { to: ROOM.DARKCLEARING, distance: 2 },
       NORTH: ROOM.SHED,
       SOUTH: ROOM.CAVERN_TAVERN,
       EAST: { to: ROOM.MINE_CAVERN, barrier: ITEM.HEALTH_INSPECTOR },
@@ -223,7 +223,7 @@ const ROOM_DEFS = {
       [ITEM.RIVER_TILE, [5, 5]],
     ],
     exits: {
-      NORTH: ROOM.DARKCLEARING,
+      NORTH: { to: ROOM.DARKCLEARING, distance: 2 },
       EAST: ROOM.SPIDERFOREST,
     },
   },

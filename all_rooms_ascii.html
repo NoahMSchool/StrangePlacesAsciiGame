@@ -83,6 +83,13 @@
         return null;
       }
 
+      function getExitDistance(exit) {
+        if (!exit || typeof exit !== "object" || Array.isArray(exit)) return 1;
+        const n = Number(exit.distance);
+        if (!Number.isFinite(n)) return 1;
+        return Math.max(1, Math.floor(n));
+      }
+
       function safeTileForItem(itemId) {
         const def = ITEM_DEFS?.[itemId];
         const tile = def?.asciiTile;
@@ -160,10 +167,12 @@
             const [id, x, y] = q.shift();
             const exits = roomDefs[id]?.exits || {};
             for (const [dir, delta] of Object.entries(DIRS)) {
-              const target = getExitToRoomId(exits[dir]);
+              const exit = exits[dir];
+              const target = getExitToRoomId(exit);
               if (!target || !roomDefs[target]) continue;
-              const nx = x + delta[0];
-              const ny = y + delta[1];
+              const dist = getExitDistance(exit);
+              const nx = x + (delta[0] * dist);
+              const ny = y + (delta[1] * dist);
               if (!visited.has(target)) {
                 visited.add(target);
                 pos.set(target, [nx, ny]);
@@ -246,6 +255,7 @@
         const canvasH = rows * CELL_H;
         const canvas = makeCanvas(canvasW, canvasH);
         const colorCanvas = makeColorCanvas(canvasW, canvasH);
+        const roomOrigin = new Map();
 
         for (const [id, p] of positions) {
           const room = roomDefs[id];
@@ -255,11 +265,68 @@
           const cy = p[1] - minY;
           const ox = cx * CELL_W;
           const oy = cy * CELL_H;
+          roomOrigin.set(id, { ox, oy });
 
           const label = "[" + (room.name || id) + "]";
           drawText(canvas, colorCanvas, ox, oy, centerText(label, ROOM_PIXEL_W), "#8b949e");
           const rendered = renderRoomAscii(room);
           drawBlock(canvas, colorCanvas, ox, oy + 1, rendered.lines, rendered.lineColors);
+        }
+
+        // Draw explicit link lines for long-distance exits so room joins are obvious.
+        const drawnLinks = new Set();
+        const midXOffset = Math.floor(ROOM_PIXEL_W / 2);
+        const midYOffset = 1 + Math.floor(ROOM_PIXEL_H / 2);
+        const linkColor = "#8b949e";
+
+        function drawH(y, x1, x2) {
+          const a = Math.min(x1, x2);
+          const b = Math.max(x1, x2);
+          for (let x = a; x <= b; x++) drawText(canvas, colorCanvas, x, y, "-", linkColor);
+        }
+
+        function drawV(x, y1, y2) {
+          const a = Math.min(y1, y2);
+          const b = Math.max(y1, y2);
+          for (let y = a; y <= b; y++) drawText(canvas, colorCanvas, x, y, "|", linkColor);
+        }
+
+        for (const [id, p] of positions) {
+          const room = roomDefs[id];
+          const src = roomOrigin.get(id);
+          if (!room || !src) continue;
+          const exits = room.exits || {};
+
+          for (const [dir, delta] of Object.entries(DIRS)) {
+            const exit = exits[dir];
+            const target = getExitToRoomId(exit);
+            if (!target || !roomDefs[target] || !positions.has(target)) continue;
+
+            const tPos = positions.get(target);
+            const dist = Math.abs((tPos[0] - p[0])) + Math.abs((tPos[1] - p[1]));
+            if (dist <= 1) continue; // only needed for long links
+
+            const key = [id, target].sort().join("|");
+            if (drawnLinks.has(key)) continue;
+            drawnLinks.add(key);
+
+            const dst = roomOrigin.get(target);
+            if (!dst) continue;
+
+            if (delta[0] !== 0) {
+              // Horizontal neighbor chain (E/W)
+              const y = src.oy + midYOffset;
+              const startX = delta[0] > 0 ? src.ox + ROOM_PIXEL_W : src.ox - 1;
+              const endX = delta[0] > 0 ? dst.ox - 1 : dst.ox + ROOM_PIXEL_W;
+              drawH(y, startX, endX);
+            } else {
+              // Vertical neighbor chain (N/S)
+              const x = src.ox + midXOffset;
+              const startY = delta[1] > 0 ? src.oy + 1 + ROOM_PIXEL_H : src.oy;
+              const endY = delta[1] > 0 ? dst.oy : dst.oy + ROOM_PIXEL_H;
+              drawV(x, startY, endY);
+            }
+          }
         }
 
         function esc(s) {
