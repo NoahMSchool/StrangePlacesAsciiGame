@@ -338,7 +338,7 @@ const RECIPES = Object.freeze({
     placeResult: "inventory",
     setFlag: "museumFossilTradeDone",
     repeatText: "You've already made the fossil trade.",
-    text: "The mueseam man gasps and carefully takes the fossils. \"Perfect! A real exhibit!\" He awards you a medal.",
+    text: "The museum man gasps and carefully takes the fossils. \"Perfect! A real exhibit!\" He awards you a medal.",
   },
 
   [keyOf([ITEM.STRANGE_PLACES_BOOK, ITEM.LIBRARIAN])]: {

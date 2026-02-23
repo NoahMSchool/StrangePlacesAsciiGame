@@ -150,6 +150,7 @@
             <th>Parser</th>
             <th>Game Output</th>
             <th>Current Inventory</th>
+            <th>Flags</th>
             <th>State Changes</th>
             <th>Status</th>
           </tr>
@@ -200,6 +201,7 @@
         "east",
         "north",
         "take note",
+        "ionise chicken",
         "read note",
         "north",
         "search bed",
@@ -221,7 +223,6 @@
         "east",
         "east",
         "drop magnet",
-        "drop empty bucket",
         "east",
         "south",
         "push lever",
@@ -236,6 +237,9 @@
         "north",
         "east",
         "north",
+        "east",
+        "combine down quark anti strange quark",
+        "west",
         "west",
         "give strange places librarian",
         "read physics textbook",
@@ -276,6 +280,7 @@
 
       let stepIndex = 0;
       let passCount = 0;
+      let failCount = 0;
 
       function counts(arr) {
         const map = new Map();
@@ -309,6 +314,10 @@
           parts.push(n > 1 ? `${emoji}x${n}` : emoji);
         }
         return parts.length ? parts.join(", ") : "(empty)";
+      }
+
+      function hasMedal(invIds) {
+        return (invIds || []).includes(ITEM.MEDAL);
       }
 
       function roomItemCountMap(roomId) {
@@ -368,7 +377,7 @@
           const b = after.flags?.[k];
           if (a !== b) flagChanges.push(`${k}: ${String(a)} -> ${String(b)}`);
         }
-        if (flagChanges.length) parts.push(`Flags: ${flagChanges.join("; ")}`);
+        const flagsText = flagChanges.length ? flagChanges.join("; ") : "(no change)";
 
         const roomChanges = [];
         const roomIds = new Set([
@@ -396,7 +405,7 @@
         parts.push(`Now in: ${room?.name || after.currentRoom}`);
         if (visible.length) parts.push(`Visible: ${visible.join(", ")}`);
 
-        return parts;
+        return { parts, flagsText };
       }
 
       function runOne() {
@@ -419,8 +428,11 @@
 
         const parserOk = (parse.known || []).length > 0 && (parse.unknown || []).length === 0;
         const crashed = out.some((line) => line.startsWith("CRASH:"));
-        const statusOk = parserOk && !crashed;
+        const isFinalStep = stepIndex === WALKTHROUGH.length - 1;
+        const medalOk = !isFinalStep || hasMedal(after.inventory);
+        const statusOk = parserOk && !crashed && medalOk;
         if (statusOk) passCount++;
+        else failCount++;
 
         const tr = document.createElement("tr");
         tr.className = statusOk ? "ok" : "bad";
@@ -430,8 +442,9 @@
           `<td><pre>known: ${JSON.stringify(parse.known || [])}\nunknown: ${JSON.stringify(parse.unknown || [])}</pre></td>` +
           `<td><pre>${out.length ? out.join("\n") : "(no output)"}</pre></td>` +
           `<td><pre>${inventoryText(after.inventory)}</pre></td>` +
-          `<td><pre>${changes.join("\n")}</pre></td>` +
-          `<td><span class="${statusOk ? "oktxt" : "badtxt"}">${statusOk ? "OK" : "CHECK"}</span></td>`;
+          `<td><pre>${changes.flagsText}</pre></td>` +
+          `<td><pre>${changes.parts.join("\n")}</pre></td>` +
+          `<td><span class="${statusOk ? "oktxt" : "badtxt"}">${statusOk ? "OK" : (isFinalStep && !medalOk ? "NO MEDAL" : "CHECK")}</span></td>`;
 
         rowsEl.appendChild(tr);
         tableWrapEl.scrollTop = tableWrapEl.scrollHeight;
@@ -449,7 +462,9 @@
       }
 
       function updateSummary() {
-        summaryEl.textContent = `Steps: ${stepIndex}/${WALKTHROUGH.length} | Parser/runtime OK: ${passCount}`;
+        summaryEl.textContent =
+          `Steps: ${stepIndex}/${WALKTHROUGH.length} | OK: ${passCount} | Issues: ${failCount}` +
+          ` | Completion: ${stepIndex >= WALKTHROUGH.length ? (hasMedal(window.GameRuntime.state.inventory) ? "MEDAL OBTAINED" : "MEDAL MISSING") : "pending"}`;
       }
 
       function init() {

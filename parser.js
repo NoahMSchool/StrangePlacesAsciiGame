@@ -117,7 +117,16 @@ function parseCommands(input, options = {}) {
   };
   const stripStopwords = (phrase) => {
     const tokens = normalizeSpaces(phrase).toLowerCase().split(" ").filter(Boolean);
-    const kept = tokens.filter((t) => !STOPWORDS.has(t));
+    const kept = [];
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      // Keep "up" when it is part of the physics noun phrase "up quark".
+      if (t === "up" && tokens[i + 1] === "quark") {
+        kept.push(t);
+        continue;
+      }
+      if (!STOPWORDS.has(t)) kept.push(t);
+    }
     return kept.join(" ");
   };
 

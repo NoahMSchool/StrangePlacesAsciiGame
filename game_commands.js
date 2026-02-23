@@ -202,6 +202,22 @@
         G.addToRoomAtRandomInterior(darkForest, ITEM.HEALTH_INSPECTOR);
       }
 
+      let bucketTaken = false;
+      const bucketIdx = G.state.inventory.indexOf(ITEM.EMPTY_BUCKET);
+      if (bucketIdx >= 0) {
+        G.state.inventory.splice(bucketIdx, 1);
+        bucketTaken = true;
+      } else {
+        const here = G.getRoom(G.state.currentRoom);
+        if (here && G.removeOneFromRoom(here, ITEM.EMPTY_BUCKET)) {
+          bucketTaken = true;
+        }
+      }
+
+      if (bucketTaken) {
+        G.saySafe(sayFn, 'The inspector takes your bucket. "Thanks for the bucket."');
+      }
+
       G.state.flags.inspectorRelocated = true;
       G.saySafe(sayFn, "The inspector arrives, checks his clipboard, and nods. \"Good work. That's much safer.\"");
     }
@@ -595,7 +611,7 @@
       targetId === ITEM.CHICKEN &&
       !G.state.flags?.noteRead
     ) {
-      return G.saySafe(sayFn, "Haven't you read my note");
+      return G.saySafe(sayFn, "Why? Haven't you read my note?");
     }
 
     const inRoom = G.isInRoom(targetId);
@@ -908,10 +924,10 @@
         if (!G.state.flags?.museumFossilTradeDone) {
           return G.saySafe(
             sayFn,
-            "The mueseam man says, \"I need dinosaur fossils for my mueseum. Bring me some and I will give you a medal.\""
+            "The museum man says, \"I need dinosaur fossils for my museum. Bring me some and I will give you a medal.\""
           );
         }
-        return G.saySafe(sayFn, "The mueseam man says, \"Those fossils are the pride of my mueseum.\"");
+        return G.saySafe(sayFn, "The museum man says, \"Those fossils are the pride of my museum.\"");
       }
       return G.saySafe(sayFn, "They have nothing to say.");
     }

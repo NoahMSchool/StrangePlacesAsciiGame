@@ -182,7 +182,7 @@ const ROOM_DEFS = {
 
   [ROOM.MANTLE_MUESEUM]: {
     id: ROOM.MANTLE_MUESEUM,
-    name: "Mantle Mueseum",
+    name: "Mantle Museum",
     desc: "Heat-shimmered displays glow in carved alcoves, each packed with impossible minerals and ancient bones.",
     items: [
       [ITEM.MUSEUM_MAN, [3, 3]],

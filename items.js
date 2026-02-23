@@ -316,7 +316,7 @@ const ITEM_DEFS_BASE = {
     emoji: "📝",
     synonyms: ["note", "paper", "letter"],
     examine:
-      "The note reads: \"We are leaving this cottage. The walls whisper after dark and the paths do not stay put. If you find this, do not sleep here. Please don't ionise my chicken.\"",
+      "The note reads: \"We are leaving this cottage. The walls whisper after dark and the paths do not stay put. If you find this, do not sleep here. And please don't ionise my chicken with an alpha particle.\"",
     visible: true,
     portable: true,
     asciiTile: [
@@ -518,7 +518,7 @@ const ITEM_DEFS_BASE = {
 
   [ITEM.MUSEUM_MAN]: {
     id: ITEM.MUSEUM_MAN,
-    name: "Mueseam Man",
+    name: "Museum Man",
     emoji: "🧔",
     synonyms: ["mueseam man", "museum man", "curator", "museum curator", "man"],
     examine: "A proud curator with soot on his sleeves and a desperate look in his eyes.",
@@ -1016,11 +1016,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-     "   ^    ",
-     "  | |   ",
-     "  | |   ",
-     "  | |/^\\",
-     "   \\__/ ",
+     "    ^    ",
+     "   /|\\   ",
+     "   |||   ",
+     "   |||__ ",
+     "    \\__/ ",
    ]
   },
 
@@ -1086,10 +1086,10 @@ const ITEM_DEFS_BASE = {
     portable: true,
     asciiTile: [
      "   ____  ",
-     "  // \\\   ",
-     "  (( ))  ",
-     "  ^   ^  ",
-     "  -   +  "
+     "  / __ \\ ",
+     " | |  | |",
+     " | |__| |",
+     "  \\____/ "
    ]
   },
 
