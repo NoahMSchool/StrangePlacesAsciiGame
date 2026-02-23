@@ -154,7 +154,7 @@ const ROOM_DEFS = {
       [ITEM.MEDAL, [5, 3]],
     ],
     exits: {
-      SOUTH: ROOM.MINE_CAVERN, distance: 3,
+      SOUTH: {to: ROOM.MINE_CAVERN, distance: 3},
 
     },
   },

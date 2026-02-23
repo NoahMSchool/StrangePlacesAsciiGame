@@ -59,6 +59,7 @@ const ITEM = Object.freeze({
   DOWNQUARK : "DOWNQUARK",
   STRANGEQUARK : "STRANGEQUARK",
   ANTISTRANGEQUARK : "ANTISTRANGEQUARK",
+  HIGGSBOSON : "HIGGSBOSON",
 
   MICROWAVE: "MICROWAVE",
   TIME_LEVER: "TIME_LEVER",
@@ -695,6 +696,7 @@ const ITEM_DEFS_BASE = {
       "  \\---/  ",
       " --_--   ",
     ],
+  },
   [ITEM.ANTISTRANGEQUARK]: {
     id: ITEM.STRANGEQUARK,
     name: "Strange Quark",
@@ -1163,12 +1165,12 @@ const ITEM_DEFS_BASE = {
     portable: false,
     eatText: "Probably not edible. Also, what?",
     asciiTile: [
-      "    |    ",
-      "    |\\   ",
-      "    | \\  ",
-      "   /___\\ ",
-      "  _|___|_",
-    ],
+      "<TIME>   ",
+      "      O  ",
+      "     //  ",
+      "    //   ",
+      " _/___\\_ ",
+    ]
   },
 };
 
