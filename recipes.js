@@ -242,6 +242,28 @@ const RECIPES = Object.freeze({
     text: "The microwave hums loudly. When it stops, the egg has grown… scaly.",
   },
 
+  [keyOf([ITEM.DOWNQUARK, ITEM.ANTISTRANGEQUARK])]: {
+    inputs: [ITEM.DOWNQUARK, ITEM.ANTISTRANGEQUARK],
+    consume: [ITEM.DOWNQUARK, ITEM.ANTISTRANGEQUARK],
+    produce: [ITEM.KAON],
+    text: "The quarks bind in a flash and settle into a kaon.",
+  },
+
+  [keyOf([ITEM.UPQUARK, ITEM.ANTISTRANGEQUARK])]: {
+    inputs: [ITEM.UPQUARK, ITEM.ANTISTRANGEQUARK],
+    consume: [ITEM.UPQUARK, ITEM.ANTISTRANGEQUARK],
+    produce: [ITEM.KAON],
+    text: "The quarks recombine into a kaon with a sharp pop of energy.",
+  },
+
+  [keyOf([ITEM.STRANGE_PLACES_BOOK, ITEM.LIBRARIAN])]: {
+    inputs: [ITEM.STRANGE_PLACES_BOOK, ITEM.LIBRARIAN],
+    consume: [ITEM.STRANGE_PLACES_BOOK, ITEM.PHYSICS_TEXTBOOK],
+    produce: [ITEM.PHYSICS_TEXTBOOK],
+    placeResult: "inventory",
+    text: "You hand over Strange Places. The librarian swaps it for the physics textbook.",
+  },
+
 });
 
 function findRecipe(inputs) {

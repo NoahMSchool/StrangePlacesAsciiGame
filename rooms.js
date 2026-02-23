@@ -10,6 +10,8 @@ const ROOM = Object.freeze({
   MINE_ENTRANCE: "MINE_ENTRANCE",
   CAVERN_TAVERN: "CAVERN_TAVERN",
   PARTICLE_ROOM: "PARTICLE_ROOM",
+  PHYSICS_LIBRARY: "PHYSICS_LIBRARY",
+  PHYSICS_LAB: "PHYSICS_LAB",
   MINE_CAVERN: "MINE_CAVERN",
   TIME_WARP: "TIME_WARP",
   SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
@@ -148,14 +150,47 @@ const ROOM_DEFS = {
   [ROOM.PARTICLE_ROOM]: {
     id: ROOM.PARTICLE_ROOM,
     name: "Particle Room",
-    desc: "Copper coils, glass tubes, and humming machinery surround a single glowing particle.",
+    desc: "Copper coils, glass tubes, and humming machinery line the chamber walls.",
     items: [
-      [ITEM.ALPHAPARTICLE, [3, 3]],
+      [ITEM.PROTON, [2, 2]],
+      [ITEM.NEUTRON, [4, 2]],
       [ITEM.MEDAL, [5, 3]],
     ],
     exits: {
       SOUTH: {to: ROOM.MINE_CAVERN, distance: 3},
+      WEST: ROOM.PHYSICS_LIBRARY,
+      EAST: ROOM.PHYSICS_LAB,
 
+    },
+  },
+
+  [ROOM.PHYSICS_LIBRARY]: {
+    id: ROOM.PHYSICS_LIBRARY,
+    name: "Physics Library",
+    desc: "Shelves of battered science books line the walls. A single blue textbook sits on the desk beside the librarian.",
+    items: [
+      [ITEM.PHYSICS_TEXTBOOK, [3, 3]],
+      [ITEM.LIBRARIAN, [5, 3]],
+      [ITEM.HIGGSBOSON, [2, 2]],
+      [ITEM.KAON, [2, 4]],
+    ],
+    exits: {
+      EAST: ROOM.PARTICLE_ROOM,
+    },
+  },
+
+  [ROOM.PHYSICS_LAB]: {
+    id: ROOM.PHYSICS_LAB,
+    name: "Physics Lab",
+    desc: "Benches are covered in scribbled equations, cracked beakers, and humming detectors.",
+    items: [
+      [ITEM.UPQUARK, [2, 3]],
+      [ITEM.DOWNQUARK, [3, 3]],
+      [ITEM.STRANGEQUARK, [4, 3]],
+      [ITEM.ANTISTRANGEQUARK, [5, 3]],
+    ],
+    exits: {
+      WEST: ROOM.PARTICLE_ROOM,
     },
   },
 
@@ -431,6 +466,18 @@ const BORDER_THEMES = Object.freeze({
     WEST: ITEM.WOOD_WALL,
   },
   [ROOM.PARTICLE_ROOM]: {
+    NORTH: ITEM.STRANGEWALL,
+    SOUTH: ITEM.STRANGEWALL,
+    EAST: ITEM.STRANGEWALL,
+    WEST: ITEM.STRANGEWALL,
+  },
+  [ROOM.PHYSICS_LIBRARY]: {
+    NORTH: ITEM.STRANGEWALL,
+    SOUTH: ITEM.STRANGEWALL,
+    EAST: ITEM.STRANGEWALL,
+    WEST: ITEM.STRANGEWALL,
+  },
+  [ROOM.PHYSICS_LAB]: {
     NORTH: ITEM.STRANGEWALL,
     SOUTH: ITEM.STRANGEWALL,
     EAST: ITEM.STRANGEWALL,

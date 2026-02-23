@@ -733,6 +733,12 @@
           "Einstein Barman says, \"Magnificent! Egg plus oil has unlocked new possibilities. The south door is open.\""
         );
       }
+      if (typeof ITEM !== "undefined" && a === ITEM.LIBRARIAN) {
+        if (!G.isInRoom(ITEM.LIBRARIAN)) {
+          return G.saySafe(sayFn, "They're not here.");
+        }
+        return G.saySafe(sayFn, "The librarian says, \"I only swap books.\"");
+      }
       return G.saySafe(sayFn, "They have nothing to say.");
     }
 
