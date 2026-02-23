@@ -513,7 +513,7 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      "   . .   "
+      "   . .   ",
       "  .  * ` ",
       ":( . ` ):",
       " \\     / ",
@@ -1035,7 +1035,7 @@ const ITEM_DEFS_BASE = {
     asciiTile: [
       "         ",
       "  |---|  ",
-      " C|~ ~|  ",
+      " C|~  |  ",
       "  | ~ |  ",
       "  \\___/  ",
     ],
