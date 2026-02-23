@@ -24,6 +24,7 @@ const VERB_SYNONYMS = {
   FXTEST:  ["fxtest"],
   ROCCO:   ["rocco"],
   MCBOOF:  ["mcboof"],
+  RAMBO:   ["rambo"],
   READ:    ["read"],
   TALK:    ["talk", "speak", "chat", "talk to", "speak to"],
   SLEEP:   ["sleep", "rest", "nap", "lie down"],
@@ -57,6 +58,7 @@ const VERB_NOUN_COUNTS = {
   FXTEST: [0, 1],
   ROCCO: [0],
   MCBOOF: [1],
+  RAMBO: [1],
   READ: [1],
   TALK: [1],
   SLEEP: [0, 1],
@@ -420,6 +422,23 @@ function parseCommands(input, options = {}) {
         result.known.push("FXTEST");
       } else {
         result.known.push(`FXTEST ${normalizeSpaces(vm.rest)}`);
+      }
+      continue;
+    }
+
+    // RAMBO: room teleport debug command with free-text room id/name
+    if (vm.canon === "RAMBO") {
+      const roomArg = normalizeSpaces(vm.rest);
+      if (!roomArg) {
+        result.unknown.push({
+          raw,
+          verb: vm.verbToken,
+          object: null,
+          reason: "missing_object",
+          error: "Rambo where?",
+        });
+      } else {
+        result.known.push(`RAMBO ${roomArg}`);
       }
       continue;
     }

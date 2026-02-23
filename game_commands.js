@@ -777,6 +777,56 @@
       return G.saySafe(sayFn, `MCBOOF: spawned ${G.formatItem(a)}.`);
     }
 
+    if (verb === "RAMBO") {
+      const roomArg = String(argText || "").trim();
+      if (!roomArg) return G.saySafe(sayFn, "Rambo where?");
+
+      const roomDefs =
+        window.ROOM_DEFS ||
+        (typeof ROOM_DEFS !== "undefined" ? ROOM_DEFS : null) ||
+        {};
+
+      const normalize = (s) =>
+        String(s || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "");
+
+      const argNorm = normalize(roomArg);
+
+      // 1) exact ID match
+      let targetId = Object.keys(roomDefs).find((id) => id === roomArg.toUpperCase()) || null;
+
+      // 2) normalized ID/name exact match
+      if (!targetId) {
+        for (const [id, room] of Object.entries(roomDefs)) {
+          if (normalize(id) === argNorm || normalize(room?.name) === argNorm) {
+            targetId = id;
+            break;
+          }
+        }
+      }
+
+      // 3) normalized name partial match
+      if (!targetId) {
+        for (const [id, room] of Object.entries(roomDefs)) {
+          const nameNorm = normalize(room?.name);
+          if (nameNorm.includes(argNorm) || argNorm.includes(nameNorm)) {
+            targetId = id;
+            break;
+          }
+        }
+      }
+
+      if (!targetId || !G.getRoom(targetId)) {
+        return G.saySafe(sayFn, `RAMBO: room "${roomArg}" not found.`);
+      }
+
+      G.state.currentRoom = targetId;
+      G.saySafe(sayFn, `RAMBO: teleported to ${G.getRoom(targetId)?.name || targetId}.`);
+      G.renderRoom(sayFn);
+      return;
+    }
+
     if (verb === "FXTEST") {
       runFxTest(argText, sayFn);
       return;
