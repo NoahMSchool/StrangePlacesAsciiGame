@@ -233,29 +233,30 @@
     }
 
     if (recipe.setFlag === "eggOilExperimentReady") {
-      const tavern = window.getRoom ? window.getRoom("CAVERN_TAVERN") : null;
-      if (tavern?.exits?.SOUTH && typeof tavern.exits.SOUTH === "object") {
-        tavern.exits.SOUTH.barrier = null;
+      const mineCavern = window.getRoom ? window.getRoom("MINE_CAVERN") : null;
+      const oilRoom = window.getRoom ? window.getRoom("COTTAGE_STOREROOM") : null;
+
+      // Current gating is on Mine Cavern NORTH -> Particle Room.
+      if (mineCavern?.exits?.NORTH && typeof mineCavern.exits.NORTH === "object") {
+        mineCavern.exits.NORTH.barrier = null;
       }
-      if (Array.isArray(tavern?.items)) {
-        const edgeX = 3;
-        const edgeY = 6;
-        const moved = [];
-        tavern.items = tavern.items.map((entry) => {
-          if (!Array.isArray(entry) || !Array.isArray(entry[1])) return entry;
+
+      // Remove barman from the blocking edge tile in Mine Cavern (3,0).
+      if (Array.isArray(mineCavern?.items)) {
+        mineCavern.items = mineCavern.items.filter((entry) => {
+          if (!Array.isArray(entry) || !Array.isArray(entry[1])) return true;
           const id = entry[0];
           const c = entry[1];
-          if (id === ITEM.EINSTEIN_BARMAN && c[0] === edgeX && c[1] === edgeY) {
-            moved.push(true);
-            return [ITEM.EINSTEIN_BARMAN, [4, 4]];
-          }
-          return entry;
+          return !(id === ITEM.EINSTEIN_BARMAN && c[0] === 3 && c[1] === 0);
         });
-        if (!moved.length && !G.roomHasItem(tavern, ITEM.EINSTEIN_BARMAN)) {
-          G.addToRoomAtRandomInterior(tavern, ITEM.EINSTEIN_BARMAN);
-        }
       }
-      G.saySafe(sayFn, "Einstein Barman grins. \"Ja! The experiment is complete. You may pass south.\"");
+
+      // Move him to the oil drum room for flavor/talk.
+      if (oilRoom && !G.roomHasItem(oilRoom, ITEM.EINSTEIN_BARMAN)) {
+        G.addToRoomAtRandomInterior(oilRoom, ITEM.EINSTEIN_BARMAN);
+      }
+
+      G.saySafe(sayFn, "Einstein Barman grins. \"Ja! The experiment is complete. You may pass north.\"");
     }
   }
 
