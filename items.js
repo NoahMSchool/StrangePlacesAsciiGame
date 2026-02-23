@@ -53,11 +53,12 @@ const ITEM = Object.freeze({
 
   ALPHAPARTICLE: "ALPHAPARTICLE",
   PROTON : "PROTON",
-  NEUTRON : "NEUTRON"
-  UPQUARK : "UPQUARK"
-  DOWNQUARK : "DOWNQUARK"
-  STRANGEQUARK : "STRANGEQUARK"
-  ANTISTRANGEQUARK : "ANTISTRANGEQUARK"
+  NEUTRON : "NEUTRON",
+  KAON : "KAON",
+  UPQUARK : "UPQUARK",
+  DOWNQUARK : "DOWNQUARK",
+  STRANGEQUARK : "STRANGEQUARK",
+  ANTISTRANGEQUARK : "ANTISTRANGEQUARK",
 
   MICROWAVE: "MICROWAVE",
   TIME_LEVER: "TIME_LEVER",
@@ -179,11 +180,11 @@ const ITEM_DEFS_BASE = {
     visible: false,
     portable: false,
     asciiTile: [
-      "oOoOoOoOo",
-      "OoOoOoOoO",
-      "oOoOoOoOo",
-      "OoOoOoOoO",
-      "oOoOoOoOo",
+      "oOoUuUoSo",
+      "OsUoOoouO",
+      "oOuOoSoOo",
+      "OoUoOoOsO",
+      "oOoSuSoOo",
     ],
   },
 
@@ -251,11 +252,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      " _______ ",
-      "|\\  *  /|",
-      "| \\___/ |",
-      "|  ---  |",
-      "|_______|",
+      " ;_____ ",
+      " | =-- | ",
+      " |~~~~ | ",
+      " |~~~. |",
+      " |_____| ",
     ],
   },
 
@@ -285,11 +286,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      " __/\\__  ",
-      "/_/__\\_\\ ",
-      "\\\\_||_// ",
-      " /_||_\\  ",
-      "    ||   ",
+      "   ^-_   ",
+      "__/_  &^\\",
+      "\\{}_{}_/ ",
+      " \\- _ /  ",
+      "   ---   ",
     ],
   },
 
@@ -311,8 +312,8 @@ const ITEM_DEFS_BASE = {
     portable: false,
     asciiTile: [
       " +-----+ ",
-      " |  C  | ",
-      " | /)  | ",
+      " |  C^ | ",
+      " |  )  | ",
       " | /   | ",
       " +-----+ ",
     ],
@@ -335,11 +336,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      "_________",
-      "|=======|",
-      "|  ___  |",
-      "|_|___|_|",
-      "  | | |  ",
+      "   ___   ",
+      "  |BED|  ",
+      "  | z |  ",
+      "  |z z|  ",
+      "  |___|  ",
     ],
   },
 
@@ -352,11 +353,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      " _______ ",
-      "/|=====|\\",
-      "||     ||",
-      "||_____/|",
-      "\\_______/",
+      " *-----i ",
+      " ll    } ",
+      " ll    } ",
+      " ll    } ",
+      " ll----i "
     ],
   },
 
@@ -370,10 +371,10 @@ const ITEM_DEFS_BASE = {
     portable: false,
     asciiTile: [
       " _______ ",
-      "| NO F. |",
-      "|NOT    |",
-      "|GRATE  |",
-      "   ||    ",
+      "|NO FISH|",
+      "| OT    |",
+      "|_GRATE_|",
+      "   |_|   ",
     ],
   },
 
@@ -386,11 +387,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      "  _____  ",
-      " /=====\\ ",
-      "|  OIL  |",
-      "|       |",
-      " \\_____/ ",
+      "  /=u=\\  ",
+      " |     | ",
+      "{  OIL  }",
+      " |   o | ",
+      "  \\-n-/  ",
     ],
   },
 
@@ -403,11 +404,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      " _______ ",
-      "| _____ |",
-      "||     ||",
-      "||  o  ||",
-      "||_____||",
+      "  _____  ",
+      " /  *** \\",
+      "| [___] |",
+      "| | o ] |",
+      "|_|___|_|",
     ],
   },
 
@@ -420,11 +421,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      "   .-.   ",
-      "  ( * )  ",
-      "   `-'   ",
-      "   /|\\   ",
-      "   \\|/   ",
+      " \\     / ",
+      "  \\   /  ",
+      "   \\*/   ",
+      " (ascii) ",
+      "   (m)   ",
     ],
   },
 
@@ -440,10 +441,10 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      "   ___   ",
+      "   +-+   ",
       "  (o-o)  ",
       "  /|+|\\  ",
-      "   / \\   ",
+      " u / \\   ",
       "  _| |_  ",
     ],
   },
@@ -475,10 +476,10 @@ const ITEM_DEFS_BASE = {
     visible: false,
     portable: false,
     asciiTile: [
-      "   / \\   ",
-      "  /^^^\\  ",
-      " /    ^\\ ",
-      "/ ^   ^ \\",
+      "   /*\\   ",
+      "  /^ ^\\  ",
+      " /^ ^ ^\\ ",
+      "/__ ^ __\\",
       "   |_|   "
     ],
   },
@@ -512,11 +513,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: false,
     asciiTile: [
-      "  .---.  ",
-      " (_____) ",
-      "  /___\\  ",
-      "  _|||_  ",
-      "   |_|   ",
+      "   . .   "
+      "  .  * ` ",
+      ":( . ` ):",
+      " \\     / ",
+      " |_____| ",
     ],
   },
 
@@ -859,11 +860,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-     "    __   ",
-     "   |  |  ",
-     "   |  |  ",
-     "   |  |_ ",
-     "    \\__/ ",
+     "   ^    ",
+     "  | |   ",
+     "  | |   ",
+     "  | |/^\\",
+     "   \\__/ ",
    ]
   },
 
@@ -912,9 +913,9 @@ const ITEM_DEFS_BASE = {
   eatText: "That would crunch.",
     asciiTile: [
      "         ",
-     "   .-.   ",
-     "  (   )  ",
-     "   '-'   ",
+     "   oOo   ",
+     "  (din)  ",
+     "   oOo   ",
      "         "
    ]
   },
@@ -981,10 +982,10 @@ const ITEM_DEFS_BASE = {
     portable: false,
     takeText: "You can't carry an entire river.",
     asciiTile: [
-      "~~~~~~~~~",
+      "~~~-~~~~~",
       " ~~ ~~ ~~",
-      "~~~~~~~~~",
-      " ~~ ~~ ~~",
+      "~~~ ~~-~~",
+      " ~~ -~ ~~",
       "~~~~~~~~~",
     ],
   },
@@ -998,10 +999,10 @@ const ITEM_DEFS_BASE = {
     visible: false,
     portable: false,
     asciiTile: [
-      "~~~~~~~~~",
+      "~~~-~~~~~",
       " ~~ ~~ ~~",
-      "~~~~~~~~~",
-      " ~~ ~~ ~~",
+      "~~~ ~~-~~",
+      " ~~ -~ ~~",
       "~~~~~~~~~",
     ],
   },
@@ -1015,9 +1016,9 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      "   ___   ",
-      "  /   \\  ",
+      "         ",
       "  |   |  ",
+      " C|   |  ",
       "  |   |  ",
       "  \\___/  ",
     ],
@@ -1032,11 +1033,11 @@ const ITEM_DEFS_BASE = {
     visible: true,
     portable: true,
     asciiTile: [
-      "  _____  ",
-      " /~~~~~\\ ",
-      "|~~~~~~~|",
-      "|~~~~~~~|",
-      " \\_____/ ",
+      "         ",
+      "  |---|  ",
+      " C|~ ~|  ",
+      "  | ~ |  ",
+      "  \\___/  ",
     ],
   },
 
