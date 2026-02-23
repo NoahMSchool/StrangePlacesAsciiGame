@@ -494,6 +494,8 @@
   function lockedDoorFailMessage(verb, targetId) {
     if (verb === "OPEN" && typeof ITEM !== "undefined" && targetId === ITEM.DOOR_LOCKED)
       return "It's locked.";
+    if (verb === "OPEN" && typeof ITEM !== "undefined" && targetId === ITEM.KAON_LOCKED_DOOR)
+      return "It's locked. Maybe this particle is kaeyon.";
     return null;
   }
 
@@ -517,9 +519,14 @@
       if (
         verb === "OPEN" &&
         typeof ITEM !== "undefined" &&
-        targetId === ITEM.DOOR_LOCKED
+        (targetId === ITEM.DOOR_LOCKED || targetId === ITEM.KAON_LOCKED_DOOR)
       ) {
-        return G.saySafe(sayFn, "It's locked.");
+        return G.saySafe(
+          sayFn,
+          targetId === ITEM.KAON_LOCKED_DOOR
+            ? "It's locked. Maybe this particle is kaeyon."
+            : "It's locked."
+        );
       }
       return G.saySafe(sayFn, "Nothing happens.");
     }

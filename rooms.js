@@ -12,6 +12,7 @@ const ROOM = Object.freeze({
   PARTICLE_ROOM: "PARTICLE_ROOM",
   PHYSICS_LIBRARY: "PHYSICS_LIBRARY",
   PHYSICS_LAB: "PHYSICS_LAB",
+  DEEP_MINE: "DEEP_MINE",
   MINE_CAVERN: "MINE_CAVERN",
   TIME_WARP: "TIME_WARP",
   SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
@@ -154,13 +155,25 @@ const ROOM_DEFS = {
     items: [
       [ITEM.PROTON, [2, 2]],
       [ITEM.NEUTRON, [4, 2]],
-      [ITEM.MEDAL, [5, 3]],
     ],
     exits: {
+      NORTH: { to: ROOM.DEEP_MINE, barrier: ITEM.KAON_LOCKED_DOOR },
       SOUTH: {to: ROOM.MINE_CAVERN, distance: 3},
       WEST: ROOM.PHYSICS_LIBRARY,
       EAST: ROOM.PHYSICS_LAB,
 
+    },
+  },
+
+  [ROOM.DEEP_MINE]: {
+    id: ROOM.DEEP_MINE,
+    name: "Deep Mine",
+    desc: "A deep shaft opens into a black chamber where old supports creak and dust hangs in the cold air.",
+    items: [
+      [ITEM.MEDAL, [3, 3]],
+    ],
+    exits: {
+      SOUTH: ROOM.PARTICLE_ROOM,
     },
   },
 
@@ -478,6 +491,12 @@ const BORDER_THEMES = Object.freeze({
     WEST: ITEM.STRANGEWALL,
   },
   [ROOM.PHYSICS_LAB]: {
+    NORTH: ITEM.STRANGEWALL,
+    SOUTH: ITEM.STRANGEWALL,
+    EAST: ITEM.STRANGEWALL,
+    WEST: ITEM.STRANGEWALL,
+  },
+  [ROOM.DEEP_MINE]: {
     NORTH: ITEM.STRANGEWALL,
     SOUTH: ITEM.STRANGEWALL,
     EAST: ITEM.STRANGEWALL,

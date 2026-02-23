@@ -21,6 +21,18 @@ const RECIPES = Object.freeze({
     text: "You unlock the door. The key breaks.",
   },
 
+  UNLOCK_KAON_DOOR: {
+    action: "UNLOCK",
+    target: ITEM.KAON_LOCKED_DOOR,
+    requires: [ITEM.KAON],
+    consume: [ITEM.KAON_LOCKED_DOOR, ITEM.KAON],
+    produce: [ITEM.DOOR_OPEN],
+    keepCoord: true,
+    placeResult: "room",
+    missingRequiresText: "The lock vibrates and rejects you. Maybe this particle is kaeyon.",
+    text: "The kaon resonates with the lock. The door clicks open.",
+  },
+
   OPEN_CLOSED_DOOR: {
     action: "OPEN",
     target: ITEM.DOOR_CLOSED,

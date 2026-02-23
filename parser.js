@@ -44,7 +44,7 @@ const VERB_SYNONYMS = {
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
   LOOK:    ["l","x","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
-  COMBINE: ["combine", "mix", "put", "join", "attach", "merge", "connect", "tie", "feed", "give", "offer", "hand"],
+  COMBINE: ["combine", "mix", "put", "join", "attach", "merge", "connect", "tie", "feed", "give", "offer", "hand", "swap", "trade", "barter"],
   MAKE:    ["make", "craft", "build"],
   EAT:     ["eat", "consume", "devour"]
 };
