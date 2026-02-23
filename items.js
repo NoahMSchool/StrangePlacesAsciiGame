@@ -73,6 +73,7 @@ const ITEM_DEF_MAP_COLORS = Object.freeze({
   WALL: "#6b7280",
   WOOD_WALL: "#8b5a2b",
   FORCE_FIELD: "#8b5cf6",
+  STRANGEWALL: "#7c3aed",
   TREE: "#1f6f3f",
   CAMPFIRE: "#ff8a00",
   CAMPFIRE_OUT: "#7c7f87",
@@ -197,10 +198,10 @@ const ITEM_DEFS_BASE = {
     examine: "A wierd wall",
     visible: false,
     portable: false,
-    asciiTile: [
+   asciiTile: [
       ".*-q=/q<-",
       "{w;e-+|ty",
-      ".}*-y-<r",
+      ".}*-y-<r>",
       "}|:qw;'.}",
       ">,{{wq;:{",
     ],
