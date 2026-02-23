@@ -119,6 +119,7 @@
         <a href="recipe_book.html">Recipes</a>
         <a href="item_catalog.html">Items</a>
         <a href="parser_test_runner.html" aria-current="page">Parser Tests</a>
+        <a href="full_game_test_harness.html">Full Harness</a>
       </nav>
     </section>
     <section id="summary" class="card">Running tests...</section>
@@ -194,7 +195,11 @@
         { c: "Combine", in: "combine stick hook string", ex: { knownExact: ["COMBINE STICK HOOK ROPE"], unknownCount: 0 } },
         { c: "Combine", in: "combine fishing rod grate", ex: { knownExact: ["COMBINE FISHING_ROD GRATE"], unknownCount: 0 } },
         { c: "Combine", in: "feed corn chicken", ex: { knownExact: ["COMBINE CORN CHICKEN"], unknownCount: 0 }, available: A(ITEM.CORN, ITEM.CHICKEN) },
+        { c: "Combine", in: "combine up quark up quark down quark", ex: { knownExact: ["COMBINE UPQUARK UPQUARK DOWNQUARK"], unknownCount: 0 }, available: A(ITEM.UPQUARK, ITEM.DOWNQUARK) },
+        { c: "Combine", in: "combine down quark down quark up quark", ex: { knownExact: ["COMBINE DOWNQUARK DOWNQUARK UPQUARK"], unknownCount: 0 }, available: A(ITEM.UPQUARK, ITEM.DOWNQUARK) },
         { c: "Combine", in: "make fishing rod", ex: { knownExact: ["MAKE FISHING_ROD"], unknownCount: 0 } },
+        { c: "Combine", in: "make proton", ex: { knownExact: ["MAKE PROTON"], unknownCount: 0 } },
+        { c: "Combine", in: "make proton; make proton", ex: { knownExact: ["MAKE PROTON", "MAKE PROTON"], unknownCount: 0 } },
         { c: "Combine", in: "combine bucket", ex: { knownExact: ["COMBINE EMPTY_BUCKET"], unknownCount: 0 } },
 
         // Utility/commands

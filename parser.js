@@ -41,6 +41,7 @@ const VERB_SYNONYMS = {
   HIT:     ["hit", "whack", "smack", "strike", "bash", "bonk", "clobber", "punch", "attack"],
   SEARCH:  ["search", "rummage", "dig through", "look in"],
   THROW:   ["throw", "toss", "hurl"],
+  IONISE:  ["ionise", "ionize", "irradiate", "mutate"],
   PUSH:    ["push", "shove", "kick", "move", "rustle", "clear"],
   PULL:    ["pull", "drag"],
   LOOK:    ["l","x","look", "look at", "examine", "ex", "inspect", "check", "view", "see"], // merged LOOK+EXAMINE
@@ -68,10 +69,12 @@ const VERB_NOUN_COUNTS = {
   FREE: [1],
   HIT: [1],
   SEARCH: [1],
+  THROW: [1, 2],
+  IONISE: [1, 2],
   FILL: [1, 2],
   COOK: [1, 2],
   USE: [1, 2],
-  COMBINE: [2, 3],
+  COMBINE: [2, 3, 4],
 };
 
 const NOUN_SYNONYMS = buildNounSynonymsFromItems(ITEM_DEFS);
@@ -471,14 +474,14 @@ function parseCommands(input, options = {}) {
       continue;
     }
 
-    // COMBINE: allow 1 noun for implied-target commands, otherwise 2 or 3 nouns.
+    // COMBINE: allow 1 noun for implied-target commands, otherwise 2-4 nouns.
     if (vm.canon === "COMBINE" && allowedCounts.includes(2) && allowedCounts.includes(3)) {
-      const got = parseNounList(vm.rest, { min: 2, max: 3 });
+      const got = parseNounList(vm.rest, { min: 2, max: 4 });
 
       if (got.nouns) {
         result.known.push(`${vm.canon} ${got.nouns.join(" ")}`);
       } else if (got.parts && got.parts.length === 1) {
-        const seq = parseNounSequenceNoConnectors(got.parts[0], { min: 2, max: 3 });
+        const seq = parseNounSequenceNoConnectors(got.parts[0], { min: 2, max: 4 });
         if (seq.nouns) {
           result.known.push(`${vm.canon} ${seq.nouns.join(" ")}`);
         } else {
@@ -508,7 +511,7 @@ function parseCommands(input, options = {}) {
           verb: vm.verbToken,
           object: restClean || null,
           reason: "bad_noun_count",
-          error: `That command needs 2 or 3 things (try: "${vm.verbToken} X with Y" or "... with Y and Z").`,
+          error: `That command needs 2 to 4 things (try: "${vm.verbToken} X with Y").`,
         });
       }
       continue;

@@ -12,7 +12,11 @@ const ROOM = Object.freeze({
   PARTICLE_ROOM: "PARTICLE_ROOM",
   PHYSICS_LIBRARY: "PHYSICS_LIBRARY",
   PHYSICS_LAB: "PHYSICS_LAB",
+  FRANKENSTEIN_PROJECT: "FRANKENSTEIN_PROJECT",
+  LARGE_HADRON_COLLIDER: "LARGE_HADRON_COLLIDER",
+  MANHATTEN_PROJECT: "MANHATTEN_PROJECT",
   DEEP_MINE: "DEEP_MINE",
+  MANTLE_MUESEUM: "MANTLE_MUESEUM",
   MINE_CAVERN: "MINE_CAVERN",
   TIME_WARP: "TIME_WARP",
   SHIPWRECK_FOREST: "SHIPWRECK_FOREST",
@@ -169,11 +173,22 @@ const ROOM_DEFS = {
     id: ROOM.DEEP_MINE,
     name: "Deep Mine",
     desc: "A deep shaft opens into a black chamber where old supports creak and dust hangs in the cold air.",
-    items: [
-      [ITEM.MEDAL, [3, 3]],
-    ],
+    items: [],
     exits: {
       SOUTH: ROOM.PARTICLE_ROOM,
+      EAST: { to: ROOM.MANTLE_MUESEUM, barrier: ITEM.CAVE_GUARD },
+    },
+  },
+
+  [ROOM.MANTLE_MUESEUM]: {
+    id: ROOM.MANTLE_MUESEUM,
+    name: "Mantle Mueseum",
+    desc: "Heat-shimmered displays glow in carved alcoves, each packed with impossible minerals and ancient bones.",
+    items: [
+      [ITEM.MUSEUM_MAN, [3, 3]],
+    ],
+    exits: {
+      WEST: ROOM.DEEP_MINE,
     },
   },
 
@@ -203,7 +218,67 @@ const ROOM_DEFS = {
       [ITEM.ANTISTRANGEQUARK, [5, 3]],
     ],
     exits: {
+      NORTH: ROOM.LARGE_HADRON_COLLIDER,
+      SOUTH: ROOM.MANHATTEN_PROJECT,
       WEST: ROOM.PARTICLE_ROOM,
+      EAST: ROOM.FRANKENSTEIN_PROJECT,
+    },
+  },
+
+  [ROOM.FRANKENSTEIN_PROJECT]: {
+    id: ROOM.FRANKENSTEIN_PROJECT,
+    name: "The Frankenstein Project",
+    desc: "Crackling coils and stitched-up experiment notes surround trays of unstable quarks.",
+    items: [
+      [ITEM.UPQUARK, [2, 2]],
+      [ITEM.UPQUARK, [3, 2]],
+      [ITEM.UPQUARK, [4, 2]],
+      [ITEM.UPQUARK, [1, 3]],
+      [ITEM.UPQUARK, [3, 3]],
+      [ITEM.UPQUARK, [5, 3]],
+      [ITEM.DOWNQUARK, [2, 4]],
+      [ITEM.DOWNQUARK, [3, 4]],
+      [ITEM.DOWNQUARK, [4, 4]],
+      [ITEM.DOWNQUARK, [1, 5]],
+      [ITEM.DOWNQUARK, [3, 5]],
+      [ITEM.DOWNQUARK, [5, 5]],
+    ],
+    exits: {
+      WEST: ROOM.PHYSICS_LAB,
+    },
+  },
+
+  [ROOM.LARGE_HADRON_COLLIDER]: {
+    id: ROOM.LARGE_HADRON_COLLIDER,
+    name: "The Large Hadron Collider",
+    desc: "A huge circular tunnel hums with magnets and cold vapor.",
+    items: [
+      [ITEM.UPQUARK, [1, 2]],
+      [ITEM.UPQUARK, [2, 2]],
+      [ITEM.UPQUARK, [3, 2]],
+      [ITEM.UPQUARK, [4, 2]],
+      [ITEM.UPQUARK, [2, 4]],
+      [ITEM.UPQUARK, [4, 4]],
+    ],
+    exits: {
+      SOUTH: ROOM.PHYSICS_LAB,
+    },
+  },
+
+  [ROOM.MANHATTEN_PROJECT]: {
+    id: ROOM.MANHATTEN_PROJECT,
+    name: "The Manhatten Project",
+    desc: "Clipboards, warning lights, and old machinery fill the bunker-like chamber.",
+    items: [
+      [ITEM.DOWNQUARK, [1, 2]],
+      [ITEM.DOWNQUARK, [2, 2]],
+      [ITEM.DOWNQUARK, [3, 2]],
+      [ITEM.DOWNQUARK, [4, 2]],
+      [ITEM.DOWNQUARK, [2, 4]],
+      [ITEM.DOWNQUARK, [4, 4]],
+    ],
+    exits: {
+      NORTH: ROOM.PHYSICS_LAB,
     },
   },
 
@@ -496,11 +571,35 @@ const BORDER_THEMES = Object.freeze({
     EAST: ITEM.STRANGEWALL,
     WEST: ITEM.STRANGEWALL,
   },
+  [ROOM.FRANKENSTEIN_PROJECT]: {
+    NORTH: ITEM.STRANGEWALL,
+    SOUTH: ITEM.STRANGEWALL,
+    EAST: ITEM.STRANGEWALL,
+    WEST: ITEM.STRANGEWALL,
+  },
+  [ROOM.LARGE_HADRON_COLLIDER]: {
+    NORTH: ITEM.STRANGEWALL,
+    SOUTH: ITEM.STRANGEWALL,
+    EAST: ITEM.STRANGEWALL,
+    WEST: ITEM.STRANGEWALL,
+  },
+  [ROOM.MANHATTEN_PROJECT]: {
+    NORTH: ITEM.STRANGEWALL,
+    SOUTH: ITEM.STRANGEWALL,
+    EAST: ITEM.STRANGEWALL,
+    WEST: ITEM.STRANGEWALL,
+  },
   [ROOM.DEEP_MINE]: {
     NORTH: ITEM.STRANGEWALL,
     SOUTH: ITEM.STRANGEWALL,
     EAST: ITEM.STRANGEWALL,
     WEST: ITEM.STRANGEWALL,
+  },
+  [ROOM.MANTLE_MUESEUM]: {
+    NORTH: ITEM.MANTLE_WALL,
+    SOUTH: ITEM.MANTLE_WALL,
+    EAST: ITEM.MANTLE_WALL,
+    WEST: ITEM.MANTLE_WALL,
   },
 });
 
@@ -722,20 +821,22 @@ function getVisibleItems(roomId) {
   const room = ROOM_DEFS[roomId];
   if (!room) return [];
 
-  const seen = new Set();
-  const out = [];
+  const counts = new Map();
 
   for (const entry of room.items || []) {
     const id = getItemId(entry);
-    if (!id || seen.has(id)) continue;
-
+    if (!id) continue;
     const def = ITEM_DEFS[id];
     if (!def || def.visible === false) continue;
-
-    seen.add(id);
-    out.push(`${def.emoji} ${def.name}`);
+    counts.set(id, (counts.get(id) || 0) + 1);
   }
 
+  const out = [];
+  for (const [id, n] of counts.entries()) {
+    const def = ITEM_DEFS[id];
+    if (!def) continue;
+    out.push(`${def.emoji} ${def.name}${n > 1 ? ` x${n}` : ""}`);
+  }
   return out;
 }
 

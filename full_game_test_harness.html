@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Full Game Harness</title>
+  <style>
+    :root {
+      --bg: #2e3d2f;
+      --panel: #d7d2bd;
+      --ink: #1f1c16;
+      --line: #355447;
+      --heading-bg: #a9d5db;
+      --heading-ink: #b42558;
+      --ok: #1f7a43;
+      --bad: #9f2f2f;
+      --muted: #4b3d36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+    }
+    .head {
+      background: var(--heading-bg);
+      color: var(--heading-ink);
+      border: 2px solid var(--heading-ink);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .head h1 { margin: 0; font-size: 1.1rem; }
+    .ver {
+      font-size: 0.7em;
+      opacity: 0.85;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      text-decoration: none;
+      border: 1px solid var(--heading-ink);
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: var(--heading-ink);
+      background: rgba(255,255,255,0.35);
+      font-size: 0.85rem;
+    }
+    .nav a[aria-current="page"] {
+      background: var(--heading-ink);
+      color: var(--heading-bg);
+    }
+    .card {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .tableWrap {
+      max-height: 72vh;
+      overflow: auto;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    button {
+      font: inherit;
+      border: 1px solid #5a6f62;
+      border-radius: 6px;
+      padding: 6px 10px;
+      background: #ece7d2;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #summary { font-size: 0.92rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th, td {
+      border: 1px solid #8a8776;
+      padding: 6px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: #ece7d2;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr.ok { background: #edf7ef; }
+    tr.bad { background: #f9ecec; }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: inherit;
+    }
+    .small { font-size: 0.74rem; color: var(--muted); }
+    .oktxt { color: var(--ok); font-weight: 700; }
+    .badtxt { color: var(--bad); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="head">
+      <h1>Full Game Test Harness <span class="ver">(v1.0)</span></h1>
+      <div class="small">Runs a command-by-command full walkthrough on the real parser/runtime and shows output plus state diffs.</div>
+      <nav class="nav" aria-label="Debug Pages">
+        <a href="all_rooms_ascii.html">World Map</a>
+        <a href="recipe_book.html">Recipes</a>
+        <a href="item_catalog.html">Items</a>
+        <a href="parser_test_runner.html">Parser Tests</a>
+        <a href="full_game_test_harness.html" aria-current="page">Full Harness</a>
+      </nav>
+    </section>
+
+    <section class="card controls">
+      <button id="nextBtn" type="button">Run Next</button>
+      <button id="allBtn" type="button">Run All</button>
+      <button id="resetBtn" type="button">Reset</button>
+      <span id="summary"></span>
+    </section>
+
+    <section class="card tableWrap" id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Command</th>
+            <th>Parser</th>
+            <th>Game Output</th>
+            <th>Current Inventory</th>
+            <th>State Changes</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>window.START_ROOM = "DARKFOREST";</script>
+  <script src="items.js"></script>
+  <script src="recipes.js"></script>
+  <script src="rooms.js"></script>
+  <script src="parser.js"></script>
+  <script src="sounds.js"></script>
+  <script src="game_core.js"></script>
+  <script src="game_commands.js"></script>
+
+  <script>
+    (function () {
+      const rowsEl = document.getElementById("rows");
+      const summaryEl = document.getElementById("summary");
+      const nextBtn = document.getElementById("nextBtn");
+      const allBtn = document.getElementById("allBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const tableWrapEl = document.getElementById("tableWrap");
+
+      const WALKTHROUGH = [
+        "look",
+        "east",
+        "search leaves",
+        "north",
+        "examine painting",
+        "take hook",
+        "south",
+        "south",
+        "take stick",
+        "east",
+        "free chicken in web",
+        "take chicken",
+        "take rope",
+        "west",
+        "combine hook rope stick",
+        "north",
+        "combine fishing rod grate",
+        "unlock door",
+        "open door",
+        "east",
+        "north",
+        "take note",
+        "read note",
+        "north",
+        "search bed",
+        "take strange places",
+        "south",
+        "west",
+        "open fridge",
+        "take magnet",
+        "take empty bucket",
+        "drop note",
+        "east",
+        "south",
+        "west",
+        "south",
+        "fill bucket",
+        "north",
+        "west",
+        "extinguish fire",
+        "east",
+        "east",
+        "drop magnet",
+        "drop empty bucket",
+        "east",
+        "south",
+        "push lever",
+        "north",
+        "take corn",
+        "feed chicken",
+        "west",
+        "south",
+        "west",
+        "put egg into oil drum",
+        "east",
+        "north",
+        "east",
+        "north",
+        "west",
+        "give strange places librarian",
+        "read physics textbook",
+        "east",
+        "east",
+        "combine down quark anti strange quark",
+        "take kaon",
+        "west",
+        "unlock kaon door",
+        "north",
+        "south",
+        "east",
+        "east",
+        "make proton",
+        "make proton",
+        "make neutron",
+        "make neutron",
+        "combine proton proton neutron neutron",
+        "take alpha particle",
+        "west",
+        "west",
+        "north",
+        "drop chicken",
+        "ionise chicken",
+        "combine dinosaur cave guard",
+        "south",
+        "south",
+        "south",
+        "pull lever",
+        "north",
+        "north",
+        "north",
+        "take dinosaur fossils",
+        "east",
+        "give dinosaur fossils museum man",
+        "read medal"
+      ];
+
+      let stepIndex = 0;
+      let passCount = 0;
+
+      function counts(arr) {
+        const map = new Map();
+        for (const id of arr || []) map.set(id, (map.get(id) || 0) + 1);
+        return map;
+      }
+
+      function countsToDiff(before, after) {
+        const keys = new Set([...before.keys(), ...after.keys()]);
+        const adds = [];
+        const rems = [];
+        for (const k of keys) {
+          const a = before.get(k) || 0;
+          const b = after.get(k) || 0;
+          if (b > a) adds.push([k, b - a]);
+          if (a > b) rems.push([k, a - b]);
+        }
+        return { adds, rems };
+      }
+
+      function nameFor(id) {
+        const def = window.GameCore?.getItemDef?.(id) || null;
+        return def ? `${def.emoji} ${def.name}` : id;
+      }
+
+      function inventoryText(invIds) {
+        const c = counts(invIds || []);
+        const parts = [];
+        for (const [id, n] of c.entries()) {
+          const emoji = window.GameCore?.getItemDef?.(id)?.emoji || "❓";
+          parts.push(n > 1 ? `${emoji}x${n}` : emoji);
+        }
+        return parts.length ? parts.join(", ") : "(empty)";
+      }
+
+      function roomItemCountMap(roomId) {
+        const room = window.getRoom ? window.getRoom(roomId) : null;
+        const map = new Map();
+        for (const entry of room?.items || []) {
+          const id = Array.isArray(entry) ? entry[0] : entry;
+          map.set(id, (map.get(id) || 0) + 1);
+        }
+        return map;
+      }
+
+      function allRoomDefs() {
+        if (window.ROOM_DEFS && typeof window.ROOM_DEFS === "object") return window.ROOM_DEFS;
+        if (typeof ROOM_DEFS !== "undefined" && ROOM_DEFS && typeof ROOM_DEFS === "object") return ROOM_DEFS;
+        return {};
+      }
+
+      function snapshot() {
+        const state = window.GameRuntime.state;
+        const roomIds = Object.keys(allRoomDefs());
+        const roomCounts = {};
+        for (const rid of roomIds) {
+          const c = roomItemCountMap(rid);
+          roomCounts[rid] = Object.fromEntries(c.entries());
+        }
+        return {
+          currentRoom: state.currentRoom,
+          inventory: [...state.inventory],
+          flags: { ...(state.flags || {}) },
+          roomCounts,
+        };
+      }
+
+      function diffState(before, after) {
+        const parts = [];
+
+        if (before.currentRoom !== after.currentRoom) {
+          const from = window.getRoom(before.currentRoom)?.name || before.currentRoom;
+          const to = window.getRoom(after.currentRoom)?.name || after.currentRoom;
+          parts.push(`Room: ${from} -> ${to}`);
+        }
+
+        const invDiff = countsToDiff(counts(before.inventory), counts(after.inventory));
+        if (invDiff.adds.length || invDiff.rems.length) {
+          if (invDiff.adds.length) parts.push(`Inv+ ${invDiff.adds.map(([id, n]) => `${nameFor(id)} x${n}`).join(", ")}`);
+          if (invDiff.rems.length) parts.push(`Inv- ${invDiff.rems.map(([id, n]) => `${nameFor(id)} x${n}`).join(", ")}`);
+        }
+
+        const flagKeys = new Set([
+          ...Object.keys(before.flags || {}),
+          ...Object.keys(after.flags || {}),
+        ]);
+        const flagChanges = [];
+        for (const k of flagKeys) {
+          const a = before.flags?.[k];
+          const b = after.flags?.[k];
+          if (a !== b) flagChanges.push(`${k}: ${String(a)} -> ${String(b)}`);
+        }
+        if (flagChanges.length) parts.push(`Flags: ${flagChanges.join("; ")}`);
+
+        const roomChanges = [];
+        const roomIds = new Set([
+          ...Object.keys(before.roomCounts || {}),
+          ...Object.keys(after.roomCounts || {}),
+        ]);
+        for (const rid of roomIds) {
+          const bMap = new Map(Object.entries(before.roomCounts?.[rid] || {}));
+          const aMap = new Map(Object.entries(after.roomCounts?.[rid] || {}));
+          const d = countsToDiff(bMap, aMap);
+          if (!d.adds.length && !d.rems.length) continue;
+
+          const roomName = window.getRoom(rid)?.name || rid;
+          const delta = [];
+          if (d.adds.length) delta.push("+" + d.adds.map(([id, n]) => `${nameFor(id)} x${n}`).join(", "));
+          if (d.rems.length) delta.push("-" + d.rems.map(([id, n]) => `${nameFor(id)} x${n}`).join(", "));
+          roomChanges.push(`${roomName}: ${delta.join(" | ")}`);
+        }
+        if (roomChanges.length) parts.push(`Rooms: ${roomChanges.slice(0, 4).join("; ")}${roomChanges.length > 4 ? ` (+${roomChanges.length - 4} more)` : ""}`);
+
+        const room = window.getRoom(after.currentRoom);
+        const visible = (typeof window.getVisibleItems === "function")
+          ? window.getVisibleItems(after.currentRoom)
+          : [];
+        parts.push(`Now in: ${room?.name || after.currentRoom}`);
+        if (visible.length) parts.push(`Visible: ${visible.join(", ")}`);
+
+        return parts;
+      }
+
+      function runOne() {
+        if (stepIndex >= WALKTHROUGH.length) return;
+
+        const cmd = WALKTHROUGH[stepIndex];
+        const before = snapshot();
+        const parse = window.parseCommands(cmd);
+        const out = [];
+        const say = (t) => out.push(String(t));
+
+        try {
+          window.GameRuntime.executeParseResult(parse, say);
+        } catch (err) {
+          out.push(`CRASH: ${String(err)}`);
+        }
+
+        const after = snapshot();
+        const changes = diffState(before, after);
+
+        const parserOk = (parse.known || []).length > 0 && (parse.unknown || []).length === 0;
+        const crashed = out.some((line) => line.startsWith("CRASH:"));
+        const statusOk = parserOk && !crashed;
+        if (statusOk) passCount++;
+
+        const tr = document.createElement("tr");
+        tr.className = statusOk ? "ok" : "bad";
+        tr.innerHTML =
+          `<td>${stepIndex + 1}</td>` +
+          `<td><pre>${cmd}</pre></td>` +
+          `<td><pre>known: ${JSON.stringify(parse.known || [])}\nunknown: ${JSON.stringify(parse.unknown || [])}</pre></td>` +
+          `<td><pre>${out.length ? out.join("\n") : "(no output)"}</pre></td>` +
+          `<td><pre>${inventoryText(after.inventory)}</pre></td>` +
+          `<td><pre>${changes.join("\n")}</pre></td>` +
+          `<td><span class="${statusOk ? "oktxt" : "badtxt"}">${statusOk ? "OK" : "CHECK"}</span></td>`;
+
+        rowsEl.appendChild(tr);
+        tableWrapEl.scrollTop = tableWrapEl.scrollHeight;
+        stepIndex++;
+        updateSummary();
+
+        if (stepIndex >= WALKTHROUGH.length) {
+          nextBtn.disabled = true;
+          allBtn.disabled = true;
+        }
+      }
+
+      function runAll() {
+        while (stepIndex < WALKTHROUGH.length) runOne();
+      }
+
+      function updateSummary() {
+        summaryEl.textContent = `Steps: ${stepIndex}/${WALKTHROUGH.length} | Parser/runtime OK: ${passCount}`;
+      }
+
+      function init() {
+        if (!window.GameRuntime || !window.parseCommands) {
+          summaryEl.textContent = "Runtime not loaded.";
+          nextBtn.disabled = true;
+          allBtn.disabled = true;
+          return;
+        }
+
+        if (typeof window.GameRuntime.setBgmEnabled === "function") window.GameRuntime.setBgmEnabled(false);
+        if (typeof window.GameRuntime.setSfxEnabled === "function") window.GameRuntime.setSfxEnabled(false);
+
+        // Baseline room render in real state before the first command.
+        window.GameRuntime.renderRoom(() => {});
+        updateSummary();
+      }
+
+      nextBtn.addEventListener("click", runOne);
+      allBtn.addEventListener("click", runAll);
+      resetBtn.addEventListener("click", () => window.location.reload());
+
+      init();
+    })();
+  </script>
+</body>
+</html>

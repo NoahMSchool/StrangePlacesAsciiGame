@@ -230,6 +230,30 @@
           G.saySafe(sayFn, "Far away in the Mine Field, the seed has become corn.");
         }
       }
+
+      let fossilized = 0;
+      for (const room of Object.values(getAllRoomDefs())) {
+        if (!Array.isArray(room?.items)) continue;
+        room.items = room.items.map((entry) => {
+          if (Array.isArray(entry)) {
+            const id = entry[0];
+            const coord = entry[1];
+            if (id === ITEM.DINOSAUR) {
+              fossilized++;
+              return [ITEM.DINOSAUR_FOSSILS, coord];
+            }
+            return entry;
+          }
+          if (entry === ITEM.DINOSAUR) {
+            fossilized++;
+            return ITEM.DINOSAUR_FOSSILS;
+          }
+          return entry;
+        });
+      }
+      if (fossilized > 0) {
+        G.saySafe(sayFn, "Time surges. A dinosaur crumbles into fossils.");
+      }
     }
 
     if (recipe.setFlag === "eggOilExperimentReady") {
@@ -258,6 +282,19 @@
 
       G.saySafe(sayFn, "Einstein Barman grins. \"Ja! The experiment is complete. You may pass north.\"");
     }
+
+    if (recipe.setFlag === "caveGuardScaredOff") {
+      const deepMine = window.getRoom ? window.getRoom("DEEP_MINE") : null;
+      if (deepMine?.exits?.EAST && typeof deepMine.exits.EAST === "object") {
+        deepMine.exits.EAST.barrier = null;
+      }
+      if (Array.isArray(deepMine?.items)) {
+        deepMine.items = deepMine.items.filter((entry) => {
+          if (!Array.isArray(entry)) return entry !== ITEM.CAVE_GUARD;
+          return entry[0] !== ITEM.CAVE_GUARD;
+        });
+      }
+    }
   }
 
   // ---------------- availability helpers (prevent partial consume bugs) ----------------
@@ -281,6 +318,37 @@
 
   function countInInv(itemId) {
     return G.state.inventory.filter((x) => x === itemId).length;
+  }
+
+  function getAllRoomDefs() {
+    if (window.ROOM_DEFS && typeof window.ROOM_DEFS === "object") return window.ROOM_DEFS;
+    if (typeof ROOM_DEFS !== "undefined" && ROOM_DEFS && typeof ROOM_DEFS === "object") return ROOM_DEFS;
+    return {};
+  }
+
+  function roomHasItemId(room, itemId) {
+    return Array.isArray(room?.items)
+      && room.items.some((entry) => (Array.isArray(entry) ? entry[0] : entry) === itemId);
+  }
+
+  function anyRoomHasItem(itemId) {
+    const rooms = getAllRoomDefs();
+    return Object.values(rooms).some((room) => roomHasItemId(room, itemId));
+  }
+
+  const PARTICLE_ITEM_IDS = new Set([
+    ITEM.UPQUARK,
+    ITEM.DOWNQUARK,
+    ITEM.STRANGEQUARK,
+    ITEM.ANTISTRANGEQUARK,
+    ITEM.PROTON,
+    ITEM.NEUTRON,
+    ITEM.ALPHAPARTICLE,
+    ITEM.KAON,
+  ]);
+
+  function isParticleItem(itemId) {
+    return PARTICLE_ITEM_IDS.has(itemId);
   }
 
   function countConsumedFromInventory(consumeIds) {
@@ -328,8 +396,8 @@
 
   function combineItems(itemIds, sayFn) {
     const inputs = Array.isArray(itemIds) ? itemIds.filter(Boolean) : [];
-    if (inputs.length < 2 || inputs.length > 3) {
-      G.saySafe(sayFn, "That command needs 2 or 3 things.");
+    if (inputs.length < 2 || inputs.length > 4) {
+      G.saySafe(sayFn, "That command needs 2 to 4 things.");
       return;
     }
 
@@ -340,9 +408,26 @@
       }
     }
 
+    if (inputs.some(isParticleItem) && !G.state.flags?.physicsTextRead) {
+      G.saySafe(sayFn, "You should read the physics textbook before combining particles.");
+      return;
+    }
+
     const recipe =
       typeof window.findRecipe === "function" ? window.findRecipe(inputs) : null;
     if (!recipe) return G.saySafe(sayFn, "Nothing happens.");
+
+    if (recipe.setFlag && G.state.flags?.[recipe.setFlag]) {
+      // Allow re-using the time lever while any dinosaur still exists.
+      if (recipe.setFlag === "timeForward1000") {
+        const canStillFossilize = anyRoomHasItem(ITEM.DINOSAUR);
+        if (!canStillFossilize) {
+          return G.saySafe(sayFn, recipe.repeatText || "You've already done that.");
+        }
+      } else {
+        return G.saySafe(sayFn, recipe.repeatText || "You've already done that.");
+      }
+    }
 
     const consume = Array.isArray(recipe.consume)
       ? recipe.consume
@@ -504,6 +589,15 @@
 
     const verb = String(action || "").toUpperCase();
 
+    if (
+      (verb === "IONISE" || verb === "THROW") &&
+      typeof ITEM !== "undefined" &&
+      targetId === ITEM.CHICKEN &&
+      !G.state.flags?.noteRead
+    ) {
+      return G.saySafe(sayFn, "Haven't you read my note");
+    }
+
     const inRoom = G.isInRoom(targetId);
     const inInv = G.isInInventory(targetId);
 
@@ -532,7 +626,14 @@
     }
 
     if (recipe.setFlag && G.state.flags?.[recipe.setFlag]) {
-      return G.saySafe(sayFn, recipe.repeatText || "You've already done that.");
+      if (recipe.setFlag === "timeForward1000") {
+        const canStillFossilize = anyRoomHasItem(ITEM.DINOSAUR);
+        if (!canStillFossilize) {
+          return G.saySafe(sayFn, recipe.repeatText || "You've already done that.");
+        }
+      } else {
+        return G.saySafe(sayFn, recipe.repeatText || "You've already done that.");
+      }
     }
 
     if (!hasAllRequired(recipe.requires)) {
@@ -634,15 +735,53 @@
   }
 
   function canMake(recipe) {
-    const have = G.allAvailableItemsSet();
     const inputs = Array.isArray(recipe.inputs) ? recipe.inputs : [];
-    return inputs.every((id) => have.has(id));
+    const room = G.getRoom(G.state.currentRoom);
+    const counts = new Map();
+
+    for (const id of G.state.inventory || []) {
+      counts.set(id, (counts.get(id) || 0) + 1);
+    }
+    for (const e of room?.items || []) {
+      const id = entryId(e);
+      counts.set(id, (counts.get(id) || 0) + 1);
+    }
+
+    const need = new Map();
+    for (const id of inputs) {
+      need.set(id, (need.get(id) || 0) + 1);
+    }
+
+    for (const [id, n] of need.entries()) {
+      if ((counts.get(id) || 0) < n) return false;
+    }
+    return true;
   }
 
   function missingFor(recipe) {
-    const have = G.allAvailableItemsSet();
     const inputs = Array.isArray(recipe.inputs) ? recipe.inputs : [];
-    return inputs.filter((id) => !have.has(id));
+    const room = G.getRoom(G.state.currentRoom);
+    const counts = new Map();
+
+    for (const id of G.state.inventory || []) {
+      counts.set(id, (counts.get(id) || 0) + 1);
+    }
+    for (const e of room?.items || []) {
+      const id = entryId(e);
+      counts.set(id, (counts.get(id) || 0) + 1);
+    }
+
+    const need = new Map();
+    for (const id of inputs) {
+      need.set(id, (need.get(id) || 0) + 1);
+    }
+
+    const miss = [];
+    for (const [id, n] of need.entries()) {
+      const lacking = n - (counts.get(id) || 0);
+      for (let i = 0; i < Math.max(0, lacking); i++) miss.push(id);
+    }
+    return miss;
   }
 
   function makeTarget(targetId, sayFn) {
@@ -686,6 +825,7 @@
     const a = parts[1] || null;
     const b = parts[2] || null;
     const c = parts[3] || null;
+    const d = parts[4] || null;
     const argText = parts.slice(1).join(" ");
 
     if (verb === "L") return G.renderRoom(sayFn);
@@ -707,6 +847,21 @@
 
     if (verb === "READ") {
       if (!a) return G.saySafe(sayFn, "Read what?");
+      if (!G.state.flags) G.state.flags = {};
+      if (
+        typeof ITEM !== "undefined" &&
+        a === ITEM.NOTE &&
+        (G.isInRoom(ITEM.NOTE) || G.isInInventory(ITEM.NOTE))
+      ) {
+        G.state.flags.noteRead = true;
+      }
+      if (
+        typeof ITEM !== "undefined" &&
+        a === ITEM.PHYSICS_TEXTBOOK &&
+        (G.isInRoom(ITEM.PHYSICS_TEXTBOOK) || G.isInInventory(ITEM.PHYSICS_TEXTBOOK))
+      ) {
+        G.state.flags.physicsTextRead = true;
+      }
       G.examineItem(a, sayFn);
       return;
     }
@@ -745,6 +900,18 @@
           return G.saySafe(sayFn, "They're not here.");
         }
         return G.saySafe(sayFn, "The librarian says, \"I only swap books.\"");
+      }
+      if (typeof ITEM !== "undefined" && a === ITEM.MUSEUM_MAN) {
+        if (!G.isInRoom(ITEM.MUSEUM_MAN)) {
+          return G.saySafe(sayFn, "They're not here.");
+        }
+        if (!G.state.flags?.museumFossilTradeDone) {
+          return G.saySafe(
+            sayFn,
+            "The mueseam man says, \"I need dinosaur fossils for my mueseum. Bring me some and I will give you a medal.\""
+          );
+        }
+        return G.saySafe(sayFn, "The mueseam man says, \"Those fossils are the pride of my mueseum.\"");
       }
       return G.saySafe(sayFn, "They have nothing to say.");
     }
@@ -929,7 +1096,7 @@
 
     if (verb === "COMBINE") {
       if (a && !b && tryImpliedSecondNoun(a)) return;
-      return combineItems([a, b, c].filter(Boolean), sayFn);
+      return combineItems([a, b, c, d].filter(Boolean), sayFn);
     }
     if (verb === "MAKE") {
       if (!a) return G.saySafe(sayFn, "Make what?");
@@ -968,6 +1135,16 @@
     if (verb === "SEARCH") {
       if (!a) return G.saySafe(sayFn, "Search what?");
       return doAction("SEARCH", a, sayFn);
+    }
+    if (verb === "IONISE") {
+      if (a && b) return combineItems([a, b, c, d].filter(Boolean), sayFn);
+      if (!a) return G.saySafe(sayFn, "Ionise what?");
+      return doAction("IONISE", a, sayFn);
+    }
+    if (verb === "THROW") {
+      if (a && b) return combineItems([a, b, c, d].filter(Boolean), sayFn);
+      if (!a) return G.saySafe(sayFn, "Throw what?");
+      return doAction("THROW", a, sayFn);
     }
     if (verb === "PULL") {
       if (!a) return G.saySafe(sayFn, "Pull what?");
@@ -1033,7 +1210,7 @@
             return doAction("UNLOCK", doorCandidate, sayFn);
           }
         }
-        return combineItems([a, b, c].filter(Boolean), sayFn);
+        return combineItems([a, b, c, d].filter(Boolean), sayFn);
       }
       if (!a) return G.saySafe(sayFn, "Use what?");
       if (tryImpliedSecondNoun(a)) return;
@@ -1041,14 +1218,14 @@
     }
 
     if (verb === "FILL") {
-      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+      if (a && b) return combineItems([a, b, c, d].filter(Boolean), sayFn);
       if (!a) return G.saySafe(sayFn, "Fill what?");
       if (tryImpliedSecondNoun(a)) return;
       return G.saySafe(sayFn, "Fill it with what?");
     }
 
     if (verb === "COOK") {
-      if (a && b) return combineItems([a, b, c].filter(Boolean), sayFn);
+      if (a && b) return combineItems([a, b, c, d].filter(Boolean), sayFn);
       if (!a) return G.saySafe(sayFn, "Cook what?");
       if (tryImpliedSecondNoun(a)) return;
       return G.saySafe(sayFn, "Cook it with what?");

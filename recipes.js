@@ -237,6 +237,18 @@ const RECIPES = Object.freeze({
     text: "You push the lever forward. You go forward 1000 years.",
   },
 
+  PULL_TIME_LEVER: {
+    action: "PULL",
+    target: ITEM.TIME_LEVER,
+    consume: [],
+    produce: [],
+    placeResult: "room",
+    setFlag: "timeForward1000",
+    successSfx: "Audio/recipes/freesound_community-sci-fi-portal-83746.mp3",
+    repeatText: "The lever is already set forward. Time won't jump again.",
+    text: "You pull the lever. Time lurches forward 1000 years.",
+  },
+
   [keyOf([ITEM.EGG, ITEM.OIL_DRUM])]: {
     inputs: [ITEM.EGG, ITEM.OIL_DRUM],
     consume: [ITEM.EGG],
@@ -266,6 +278,67 @@ const RECIPES = Object.freeze({
     consume: [ITEM.UPQUARK, ITEM.ANTISTRANGEQUARK],
     produce: [ITEM.KAON],
     text: "The quarks recombine into a kaon with a sharp pop of energy.",
+  },
+
+  [keyOf([ITEM.UPQUARK, ITEM.UPQUARK, ITEM.DOWNQUARK])]: {
+    inputs: [ITEM.UPQUARK, ITEM.UPQUARK, ITEM.DOWNQUARK],
+    consume: [ITEM.UPQUARK, ITEM.UPQUARK, ITEM.DOWNQUARK],
+    produce: [ITEM.PROTON],
+    text: "Two up quarks and a down quark bind into a proton.",
+  },
+
+  [keyOf([ITEM.DOWNQUARK, ITEM.DOWNQUARK, ITEM.UPQUARK])]: {
+    inputs: [ITEM.DOWNQUARK, ITEM.DOWNQUARK, ITEM.UPQUARK],
+    consume: [ITEM.DOWNQUARK, ITEM.DOWNQUARK, ITEM.UPQUARK],
+    produce: [ITEM.NEUTRON],
+    text: "Two down quarks and an up quark lock together as a neutron.",
+  },
+
+  [keyOf([ITEM.PROTON, ITEM.PROTON, ITEM.NEUTRON, ITEM.NEUTRON])]: {
+    inputs: [ITEM.PROTON, ITEM.PROTON, ITEM.NEUTRON, ITEM.NEUTRON],
+    consume: [ITEM.PROTON, ITEM.PROTON, ITEM.NEUTRON, ITEM.NEUTRON],
+    produce: [ITEM.ALPHAPARTICLE],
+    text: "The particles fuse into an alpha particle.",
+  },
+
+  IONISE_CHICKEN_TO_DINOSAUR: {
+    action: "IONISE",
+    target: ITEM.CHICKEN,
+    requires: [ITEM.ALPHAPARTICLE],
+    consume: [ITEM.CHICKEN, ITEM.ALPHAPARTICLE],
+    produce: [ITEM.DINOSAUR],
+    placeResult: "room",
+    missingRequiresText: "You need an alpha particle to ionise the chicken.",
+    text: "You ionise the chicken. It grows rapidly, feathers hardening into scales. Dinosaur.",
+  },
+
+  THROW_ALPHA_AT_CHICKEN_TO_DINOSAUR: {
+    action: "THROW",
+    target: ITEM.CHICKEN,
+    requires: [ITEM.ALPHAPARTICLE],
+    consume: [ITEM.CHICKEN, ITEM.ALPHAPARTICLE],
+    produce: [ITEM.DINOSAUR],
+    placeResult: "room",
+    missingRequiresText: "Throw what? You need an alpha particle to mutate the chicken.",
+    text: "You throw the alpha particle at the chicken. There is a blinding flash. Dinosaur.",
+  },
+
+  [keyOf([ITEM.DINOSAUR, ITEM.CAVE_GUARD])]: {
+    inputs: [ITEM.DINOSAUR, ITEM.CAVE_GUARD],
+    consume: [ITEM.CAVE_GUARD],
+    produce: [],
+    setFlag: "caveGuardScaredOff",
+    text: "The cave guard sees the dinosaur and bolts into the darkness. The way is clear.",
+  },
+
+  [keyOf([ITEM.DINOSAUR_FOSSILS, ITEM.MUSEUM_MAN])]: {
+    inputs: [ITEM.DINOSAUR_FOSSILS, ITEM.MUSEUM_MAN],
+    consume: [ITEM.DINOSAUR_FOSSILS],
+    produce: [ITEM.MEDAL],
+    placeResult: "inventory",
+    setFlag: "museumFossilTradeDone",
+    repeatText: "You've already made the fossil trade.",
+    text: "The mueseam man gasps and carefully takes the fossils. \"Perfect! A real exhibit!\" He awards you a medal.",
   },
 
   [keyOf([ITEM.STRANGE_PLACES_BOOK, ITEM.LIBRARIAN])]: {
