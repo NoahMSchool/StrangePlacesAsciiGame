@@ -65,6 +65,13 @@ body {
   font-weight: 400;
 }
 
+.neatHeader .ver {
+  font-size: 0.6em;
+  opacity: 0.85;
+  font-family: "simpleMonoFont", ui-monospace, monospace;
+  vertical-align: middle;
+}
+
 .neatHeader h2 {
   font-size: 0.95rem;
   opacity: 0.9;
